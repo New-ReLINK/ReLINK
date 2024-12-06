@@ -8,6 +8,7 @@ public enum DonationStatus {
     DONATION_COMPLETED("기부 완료"),
     INSPECTION_REJECTED("검수 부적합")
     ;
+    
     private final String message;
 
     DonationStatus(String message) {
