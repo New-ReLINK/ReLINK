@@ -30,7 +30,7 @@ public class Trade extends BaseEntity {
     private ExchangeItem requesterExchangeItem;
 
     @Enumerated(EnumType.STRING)
-    private TradeStatus tradeStatus;
+    private TradeStatus tradeStatus = TradeStatus.AVAILABLE;
 
     @Column(length = 40)
     private String ownerTrackingNumber;
@@ -39,9 +39,19 @@ public class Trade extends BaseEntity {
     private String requesterTrackingNumber;
 
     @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(column = @Column(name = "owner_base_address"), name = "baseAddress"),
+            @AttributeOverride(column = @Column(name = "owner_detail_address"), name = "detailAddress"),
+            @AttributeOverride(column = @Column(name = "owner_zipcode"), name = "zipcode")
+    })
     private Address ownerAddress;
 
     @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(column = @Column(name = "requester_base_address"), name = "baseAddress"),
+            @AttributeOverride(column = @Column(name = "requester_detail_address"), name = "detailAddress"),
+            @AttributeOverride(column = @Column(name = "requester_zipcode"), name = "zipcode")
+    })
     private Address requesterAddress;
 
     @Column(nullable = false)
@@ -55,4 +65,7 @@ public class Trade extends BaseEntity {
 
     @Column(nullable = false)
     private Boolean hasRequesterRequested = false;
+
+    @Enumerated(EnumType.STRING)
+    private TradeCancelReason cancelReason;
 }

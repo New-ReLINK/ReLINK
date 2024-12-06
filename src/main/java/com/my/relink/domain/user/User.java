@@ -12,7 +12,7 @@ import org.hibernate.annotations.Where;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "users")
 @Getter
-@SQLRestriction("isDeleted = false")
+@SQLRestriction("is_deleted = false")
 public class User extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

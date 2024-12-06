@@ -10,6 +10,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -35,5 +36,6 @@ public class Review extends BaseEntity {
     private User writer;
 
     @Enumerated(EnumType.STRING)
-    private TradeReview tradeReview;
+    @ElementCollection
+    private List<TradeReview> tradeReview;
 }
