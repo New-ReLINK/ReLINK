@@ -1,6 +1,6 @@
 package com.my.relink.domain.notification.donation;
 
-import com.my.relink.domain.history.donation.status.DonationStatus;
+import com.my.relink.domain.item.donation.DonationStatus;
 import com.my.relink.domain.notification.Notification;
 import jakarta.persistence.*;
 import lombok.AccessLevel;

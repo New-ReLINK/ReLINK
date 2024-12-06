@@ -3,7 +3,6 @@ package com.my.relink.domain.item.donation;
 
 import com.my.relink.domain.BaseEntity;
 import com.my.relink.domain.category.Category;
-import com.my.relink.domain.history.donation.status.DonationStatus;
 import com.my.relink.domain.user.Address;
 import com.my.relink.domain.user.User;
 import jakarta.persistence.*;
