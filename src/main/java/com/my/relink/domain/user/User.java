@@ -3,6 +3,7 @@ package com.my.relink.domain.user;
 import com.my.relink.domain.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.SQLRestriction;
@@ -41,4 +42,16 @@ public class User extends BaseEntity {
     @Embedded
     private Address address;
 
+    @Builder
+    public User(Long id, String name, String nickname, String email, String password, String contact, boolean isDeleted, Role role, Address address) {
+        this.id = id;
+        this.name = name;
+        this.nickname = nickname;
+        this.email = email;
+        this.password = password;
+        this.contact = contact;
+        this.isDeleted = isDeleted;
+        this.role = role;
+        this.address = address;
+    }
 }
