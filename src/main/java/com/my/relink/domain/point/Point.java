@@ -24,4 +24,9 @@ public class Point extends BaseEntity {
     @JoinColumn(name = "user_id")
     private User user;
 
+    public void deduct(Integer amountToDeduct){
+        this.amount -= amountToDeduct;
+    }
+
+
 }

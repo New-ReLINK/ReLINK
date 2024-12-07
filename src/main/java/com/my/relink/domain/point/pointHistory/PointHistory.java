@@ -31,4 +31,11 @@ public class PointHistory extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     private PointTransactionType pointTransactionType;
+
+    public static PointHistory create(Integer amount, PointTransactionType pointTransactionType) {
+        PointHistory pointHistory = new PointHistory();
+        pointHistory.amount = amount;
+        pointHistory.pointTransactionType = pointTransactionType;
+        return pointHistory;
+    }
 }
