@@ -13,6 +13,7 @@ public class CustomUserDetails implements UserDetails {
 
     private final String email;
     private final String role;
+    private final String password;
 
     @Override
     public boolean isAccountNonExpired() {
@@ -41,7 +42,7 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public String getPassword() {
-        return null;
+        return password;
     }
 
     @Override
