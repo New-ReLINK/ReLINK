@@ -1,5 +1,6 @@
 package com.my.relink.config.security.jwt;
 
+import com.my.relink.config.security.domain.CustomUserDetails;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SecurityException;
@@ -21,7 +22,7 @@ public class JwtProvider {
     private String secretKey;
 
     private static final long EXPIRATION_TIME = 1000 * 60 * 60 * 24 * 7;
-    private static final String TOKEN_PREFIX = "Bearer ";
+    public static final String TOKEN_PREFIX = "Bearer ";
 
     private Key key;
 
@@ -55,5 +56,20 @@ public class JwtProvider {
         } catch (IllegalArgumentException e) {
             log.warn("잘못된 JWT 토큰입니다.");
         }
+    }
+
+    public CustomUserDetails getUserDetailsForToken(String token) {
+        Jws<Claims> claims = Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token);
+
+        String email = claims.getBody().getSubject();
+        String role = (String) claims.getBody().get("Role");
+
+        log.info("Token Claim Email : {}", email);
+        log.info("Token Claim Role : {}", role);
+
+        return new CustomUserDetails(email, role);
     }
 }
