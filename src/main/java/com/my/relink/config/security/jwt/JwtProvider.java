@@ -1,6 +1,8 @@
 package com.my.relink.config.security.jwt;
 
 import com.my.relink.config.security.domain.CustomUserDetails;
+import com.my.relink.domain.user.Role;
+import com.my.relink.domain.user.User;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SecurityException;
@@ -70,6 +72,6 @@ public class JwtProvider {
         log.info("Token Claim Email : {}", email);
         log.info("Token Claim Role : {}", role);
 
-        return new CustomUserDetails(email, role);
+        return new CustomUserDetails(User.builder().email(email).role(Role.valueOf(role)).build());
     }
 }
