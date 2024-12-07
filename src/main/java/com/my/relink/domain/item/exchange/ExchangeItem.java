@@ -9,10 +9,12 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
+@SQLRestriction("is_deleted = false")
 public class ExchangeItem extends BaseEntity {
 
     @Id
@@ -49,5 +51,8 @@ public class ExchangeItem extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     private TradeStatus tradeStatus;
+
+    @Column(nullable = false)
+    private Boolean isDeleted = false;
 
 }

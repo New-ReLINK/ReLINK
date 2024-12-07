@@ -7,7 +7,8 @@ public enum TradeStatus {
     AVAILABLE("교환 가능"),
     IN_EXCHANGE("교환 중"),
     EXCHANGED("교환 완료"),
-    CANCELED("교환 취소")
+    CANCELED("교환 취소"),
+    IN_DELIVERY("배송 중")
 
     ;
 
