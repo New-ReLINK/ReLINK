@@ -2,8 +2,8 @@ package com.my.relink.service;
 
 import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.UserRepository;
-import com.my.relink.dto.req.UserCreateReqDto;
-import com.my.relink.dto.resp.UserCreateRespDto;
+import com.my.relink.dto.user.req.UserCreateReqDto;
+import com.my.relink.dto.user.resp.UserCreateRespDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
