@@ -1,10 +1,15 @@
 package com.my.relink.service;
 
+import com.my.relink.domain.image.EntityType;
+import com.my.relink.domain.image.Image;
+import com.my.relink.domain.image.ImageRepository;
 import com.my.relink.domain.user.Address;
 import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.UserRepository;
 import com.my.relink.dto.req.UserCreateReqDto;
 import com.my.relink.dto.resp.UserCreateRespDto;
+import com.my.relink.dto.resp.UserInfoRespDto;
+import com.my.relink.ex.BusinessException;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,6 +19,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -28,6 +36,9 @@ class UserServiceTest {
 
     @Mock
     private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private ImageRepository imageRepository;
 
     @InjectMocks
     private UserService userService;
@@ -67,5 +78,82 @@ class UserServiceTest {
         assertThat(register.userId()).isEqualTo(1L);
         verify(userRepository).save(any());
         verify(passwordEncoder).encode(any());
+    }
+
+    @Test
+    @DisplayName("이메일로 사용자 정보를 정상적으로 조회한다")
+    void findUserInfo_WithValidEmail_ReturnsUserInfo() {
+        // given
+        String email = "test@example.com";
+        User user = User.builder()
+                .id(1L)
+                .email(email)
+                .name("Test User")
+                .nickname("Test Nick")
+                .build();
+
+        Image image = Image.builder()
+                .id(1L)
+                .imageUrl("http://example.com/image.jpg")
+                .entityId(user.getId())
+                .entityType(EntityType.USER)
+                .build();
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+        when(imageRepository.findByEntityIdAndEntityType(user.getId(), EntityType.USER))
+                .thenReturn(Optional.of(image));
+
+        // when
+        UserInfoRespDto result = userService.findUserInfo(email);
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(user.getName()).isEqualTo(result.getName());
+        assertThat(user.getNickname()).isEqualTo(result.getNickname());
+        assertThat(image.getImageUrl()).isEqualTo(result.getImageUrl());
+
+        verify(userRepository).findByEmail(email);
+        verify(imageRepository).findByEntityIdAndEntityType(user.getId(), EntityType.USER);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 이메일로 조회시 예외가 발생한다")
+    void findUserInfo_WithInvalidEmail_ThrowsException() {
+        // given
+        String email = "test@example.com";
+        when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
+
+        // when & then
+        assertThrows(BusinessException.class, () -> userService.findUserInfo(email));
+        verify(userRepository).findByEmail(email);
+    }
+
+    @Test
+    @DisplayName("이미지가 없는 사용자 정보를 정상적으로 조회한다")
+    void findUserInfo_WithNoImage_ReturnsUserInfoWithoutImage() {
+        // given
+        String email = "test@example.com";
+        User user = User.builder()
+                .id(1L)
+                .email(email)
+                .name("Test User")
+                .nickname("Test Nick")
+                .build();
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+        when(imageRepository.findByEntityIdAndEntityType(user.getId(), EntityType.USER))
+                .thenReturn(Optional.empty());
+
+        // when
+        UserInfoRespDto result = userService.findUserInfo(email);
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(user.getName()).isEqualTo(result.getName());
+        assertThat(user.getNickname()).isEqualTo(result.getNickname());
+        assertThat(result.getImageUrl()).isNull();
+
+        verify(userRepository).findByEmail(email);
+        verify(imageRepository).findByEntityIdAndEntityType(user.getId(), EntityType.USER);
     }
 }
