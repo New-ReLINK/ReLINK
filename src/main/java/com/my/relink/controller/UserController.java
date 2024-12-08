@@ -1,10 +1,9 @@
 package com.my.relink.controller;
 
 import com.my.relink.config.security.AuthUser;
-import com.my.relink.config.security.LoginAuthentication;
-import com.my.relink.dto.req.UserCreateReqDto;
-import com.my.relink.dto.resp.UserCreateRespDto;
 import com.my.relink.dto.resp.UserInfoRespDto;
+import com.my.relink.dto.user.req.UserCreateReqDto;
+import com.my.relink.dto.user.resp.UserCreateRespDto;
 import com.my.relink.service.UserService;
 import com.my.relink.util.api.ApiResult;
 import jakarta.validation.Valid;

@@ -1,4 +1,4 @@
-package com.my.relink.dto.resp;
+package com.my.relink.dto.user.resp;
 
 import com.my.relink.domain.image.Image;
 import com.my.relink.domain.user.User;

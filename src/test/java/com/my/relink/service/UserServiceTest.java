@@ -3,14 +3,13 @@ package com.my.relink.service;
 import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.image.Image;
 import com.my.relink.domain.image.ImageRepository;
-import com.my.relink.domain.user.Address;
 import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.UserRepository;
-import com.my.relink.dto.req.UserCreateReqDto;
-import com.my.relink.dto.resp.UserCreateRespDto;
 import com.my.relink.dto.resp.UserInfoRespDto;
+import com.my.relink.dto.user.req.AddressCreateReqDto;
+import com.my.relink.dto.user.req.UserCreateReqDto;
+import com.my.relink.dto.user.resp.UserCreateRespDto;
 import com.my.relink.ex.BusinessException;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,9 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -54,7 +51,7 @@ class UserServiceTest {
                 .nickname("test")
                 .contact("010-1111-1111")
                 .password("password1234")
-                .address(new Address(12345, "test", "test"))
+                .address(new AddressCreateReqDto(12345, "test", "test"))
                 .build();
         User user = reqDto.toEntity(reqDto);
 

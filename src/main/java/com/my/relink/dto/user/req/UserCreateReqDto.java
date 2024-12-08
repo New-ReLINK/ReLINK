@@ -1,6 +1,5 @@
-package com.my.relink.dto.req;
+package com.my.relink.dto.user.req;
 
-import com.my.relink.domain.user.Address;
 import com.my.relink.domain.user.Role;
 import com.my.relink.domain.user.User;
 import jakarta.validation.Valid;
@@ -40,10 +39,10 @@ public class UserCreateReqDto {
     private String contact;
 
     @Valid
-    private Address address;
+    private AddressCreateReqDto address;
 
     @Builder
-    public UserCreateReqDto(String name, String nickname, String email, String password, String contact, Address address) {
+    public UserCreateReqDto(String name, String nickname, String email, String password, String contact, AddressCreateReqDto address) {
         this.name = name;
         this.nickname = nickname;
         this.email = email;
@@ -59,12 +58,12 @@ public class UserCreateReqDto {
                 .email(dto.getEmail())
                 .password(dto.getPassword())
                 .contact(dto.getContact())
-                .address(dto.getAddress())
+                .address(dto.address.toEntity(dto.getAddress()))
                 .role(Role.USER)
                 .build();
     }
 
-    public void changePassword(String password){
+    public void changePassword(String password) {
         this.password = password;
     }
 }
