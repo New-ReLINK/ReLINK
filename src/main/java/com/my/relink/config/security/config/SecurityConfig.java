@@ -1,7 +1,8 @@
 package com.my.relink.config.security.config;
 
-import com.my.relink.config.security.filter.CustomAuthenticationFilter;
-import com.my.relink.config.security.filter.CustomAuthorizationFilter;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.my.relink.config.security.JwtAuthorizationFilter;
+import com.my.relink.config.security.LoginAuthenticationFilter;
 import com.my.relink.config.security.jwt.JwtProvider;
 import jakarta.servlet.DispatcherType;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final JwtProvider jwtProvider;
+    private final ObjectMapper objectMapper;
     private final AuthenticationConfiguration authenticationConfiguration;
 
     @Value("${spring.profiles.active}")
@@ -59,9 +61,9 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .httpBasic(AbstractHttpConfigurer::disable)
-                .addFilterBefore(new CustomAuthorizationFilter(authenticationManager(authenticationConfiguration), jwtProvider),
-                        CustomAuthenticationFilter.class)
-                .addFilterBefore(new CustomAuthenticationFilter(authenticationManager(authenticationConfiguration), jwtProvider),
+                .addFilterBefore(new JwtAuthorizationFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class)
+                .addFilterAt(
+                        new LoginAuthenticationFilter(authenticationManager(authenticationConfiguration), objectMapper, jwtProvider),
                         UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
