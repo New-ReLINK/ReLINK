@@ -1,5 +1,7 @@
 package com.my.relink.config.security.jwt;
 
+import com.my.relink.config.security.AuthUser;
+import com.my.relink.domain.user.Role;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SecurityException;
@@ -7,6 +9,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
@@ -21,7 +24,8 @@ public class JwtProvider {
     private String secretKey;
 
     private static final long EXPIRATION_TIME = 1000 * 60 * 60 * 24 * 7;
-    private static final String TOKEN_PREFIX = "Bearer ";
+    public static final String TOKEN_PREFIX = "Bearer ";
+    public static final String AUTHENTICATION_HEADER_PREFIX = "Authorization";
 
     private Key key;
 
@@ -37,7 +41,14 @@ public class JwtProvider {
     public String generateToken(Authentication authentication) {
         return TOKEN_PREFIX + Jwts.builder()
                 .setSubject(authentication.getName())
-                .claim("Role", authentication.getAuthorities().stream().findFirst().toString())
+                .claim("Role", String.valueOf(
+                        authentication.getAuthorities().stream()
+                                .findFirst()
+                                .map(GrantedAuthority::getAuthority)
+                                .map(role -> role.replace("ROLE_", ""))
+                                .orElse("")
+                        )
+                )
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .signWith(key, signatureAlgorithm)
                 .compact();
@@ -55,5 +66,20 @@ public class JwtProvider {
         } catch (IllegalArgumentException e) {
             log.warn("잘못된 JWT 토큰입니다.");
         }
+    }
+
+    public AuthUser getAuthUserForToken(String token) {
+        Jws<Claims> claims = Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token);
+
+        String email = claims.getBody().getSubject();
+        String role = (String) claims.getBody().get("Role");
+
+        log.info("Token Claim Email : {}", email);
+        log.info("Token Claim Role : {}", role);
+
+        return new AuthUser(email, Role.valueOf(role));
     }
 }
