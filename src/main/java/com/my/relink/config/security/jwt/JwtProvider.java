@@ -37,7 +37,11 @@ public class JwtProvider {
     public String generateToken(Authentication authentication) {
         return TOKEN_PREFIX + Jwts.builder()
                 .setSubject(authentication.getName())
-                .claim("Role", authentication.getAuthorities().stream().findFirst().toString().replace("ROLE_", ""))
+                .claim("Role", authentication.getAuthorities()
+                        .iterator()
+                        .next()
+                        .toString()
+                        .replace("ROLE_", ""))
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .signWith(key, signatureAlgorithm)
                 .compact();
