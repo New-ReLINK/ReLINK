@@ -1,8 +1,7 @@
 package com.my.relink.config.security.jwt;
 
-import com.my.relink.config.security.domain.CustomUserDetails;
+import com.my.relink.config.security.AuthUser;
 import com.my.relink.domain.user.Role;
-import com.my.relink.domain.user.User;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SecurityException;
@@ -10,6 +9,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
@@ -24,7 +24,9 @@ public class JwtProvider {
     private String secretKey;
 
     private static final long EXPIRATION_TIME = 1000 * 60 * 60 * 24 * 7;
+
     public static final String TOKEN_PREFIX = "Bearer ";
+    public static final String AUTHENTICATION_HEADER_PREFIX = "Authorization";
 
     private Key key;
 
@@ -37,10 +39,10 @@ public class JwtProvider {
     }
 
 
-    public String generateToke(Authentication authentication) {
+    public String generateToken(Authentication authentication) {
         return TOKEN_PREFIX + Jwts.builder()
                 .setSubject(authentication.getName())
-                .claim("Role", authentication.getAuthorities().stream().findFirst().toString())
+                .claim("Role", authentication.getAuthorities().stream().findFirst().map(GrantedAuthority::getAuthority))
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .signWith(key, signatureAlgorithm)
                 .compact();
@@ -51,16 +53,16 @@ public class JwtProvider {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
         } catch (SecurityException | MalformedJwtException e) {
             log.warn("유효하지 않는 JWT 서명입니다.");
-        } catch (ExpiredJwtException e) {
-            log.warn("만료된 JWT token 입니다.");
         } catch (UnsupportedJwtException e) {
             log.warn("지원되지 않는 JWT 토큰입니다.");
         } catch (IllegalArgumentException e) {
             log.warn("잘못된 JWT 토큰입니다.");
+        } catch (ExpiredJwtException e) {
+            log.info("만료된 JWT token 입니다.");
         }
     }
 
-    public CustomUserDetails getUserDetailsForToken(String token) {
+    public AuthUser getAuthUserForToken(String token) {
         Jws<Claims> claims = Jwts.parserBuilder()
                 .setSigningKey(key)
                 .build()
@@ -72,6 +74,6 @@ public class JwtProvider {
         log.info("Token Claim Email : {}", email);
         log.info("Token Claim Role : {}", role);
 
-        return new CustomUserDetails(User.builder().email(email).role(Role.valueOf(role)).build());
+        return new AuthUser(email, Role.valueOf(role));
     }
 }
