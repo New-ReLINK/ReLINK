@@ -1,11 +1,10 @@
 package com.my.relink.service;
 
-import com.my.relink.domain.user.Address;
 import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.UserRepository;
-import com.my.relink.dto.req.UserCreateReqDto;
-import com.my.relink.dto.resp.UserCreateRespDto;
-import org.assertj.core.api.Assertions;
+import com.my.relink.dto.user.req.AddressCreateReqDto;
+import com.my.relink.dto.user.req.UserCreateReqDto;
+import com.my.relink.dto.user.resp.UserCreateRespDto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,7 +14,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -43,7 +41,7 @@ class UserServiceTest {
                 .nickname("test")
                 .contact("010-1111-1111")
                 .password("password1234")
-                .address(new Address(12345, "test", "test"))
+                .address(new AddressCreateReqDto(12345, "test", "test"))
                 .build();
         User user = reqDto.toEntity(reqDto);
 
