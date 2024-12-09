@@ -3,6 +3,7 @@ package com.my.relink.service;
 import com.my.relink.domain.point.Point;
 import com.my.relink.domain.point.pointHistory.PointHistory;
 import com.my.relink.domain.point.pointHistory.PointTransactionType;
+import com.my.relink.domain.point.pointHistory.repository.PointHistoryRepository;
 import com.my.relink.domain.point.repository.PointRepository;
 import com.my.relink.domain.trade.Trade;
 import com.my.relink.domain.trade.TradeStatus;
@@ -21,6 +22,7 @@ public class TradeService {
     private final TradeRepository tradeRepository;
     private final UserRepository userRepository;
     private final PointRepository pointRepository;
+    private final PointHistoryRepository pointHistoryRepository;
 
     @Transactional
     public TradeRequestResponseDto requestTrade(Long tradeId, Long userId) {//추후 로그인 유저로 바뀔 예정
@@ -44,6 +46,7 @@ public class TradeService {
 
         //포인트 이력 생성
         PointHistory pointHistory = PointHistory.create(-trade.getOwnerExchangeItem().getDeposit(), PointTransactionType.DEPOSIT);
+        pointHistoryRepository.save(pointHistory);
 
         //요청자/소유자 여부에 따라 적절한 요청 상태 필드 업데이트
         if(trade.getRequester().getId().equals(currentUser.getId())){
