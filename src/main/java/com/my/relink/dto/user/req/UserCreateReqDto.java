@@ -23,6 +23,7 @@ public class UserCreateReqDto {
 
     @NotBlank(message = "이메일을 적어주세요.")
     @Email(message = "올바른 이메일 형식이 아닙니다.")
+    @Length(max = 30)
     private String email;
 
     @NotBlank(message = "패스워드를 적어주세요.")
