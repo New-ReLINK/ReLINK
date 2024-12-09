@@ -1,12 +1,31 @@
 package com.my.relink.util;
 
 import com.my.relink.domain.item.exchange.ExchangeItem;
+import com.my.relink.domain.message.Message;
 import com.my.relink.domain.trade.Trade;
 import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.domain.user.Role;
 import com.my.relink.domain.user.User;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class DummyObject {
+
+    protected List<Message> mockMessageList(Trade trade, User sender){
+        List<Message> messageList = new ArrayList<>();
+        for(int i = 1; i <= 10; i++){
+            messageList.add(
+                    Message.builder()
+                    .content("hi..")
+                    .trade(trade)
+                    .id((long) i)
+                    .user(sender)
+                    .build()
+            );
+        }
+        return messageList;
+    }
 
     protected User mockOwnerUser(){
         return User.builder()
