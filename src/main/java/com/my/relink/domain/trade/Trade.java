@@ -4,6 +4,8 @@ import com.my.relink.domain.BaseEntity;
 import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.user.Address;
 import com.my.relink.domain.user.User;
+import com.my.relink.ex.BusinessException;
+import com.my.relink.ex.ErrorCode;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -68,4 +70,22 @@ public class Trade extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     private TradeCancelReason cancelReason;
+
+    public User getOwner(){
+        return this.getOwnerExchangeItem().getUser();
+    }
+
+    public boolean isParticipant(User user){
+        return getOwner().equals(user) || getRequester().equals(user);
+    }
+
+    public void validateAccess(User user){
+        if(!isParticipant(user)){
+            throw new BusinessException(ErrorCode.TRADE_ACCESS_DENIED);
+        }
+    }
+
+    public User getPartner(User user){
+        return getRequester().equals(user)? getOwner() : getRequester();
+    }
 }
