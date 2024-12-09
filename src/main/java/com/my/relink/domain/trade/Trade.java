@@ -75,18 +75,18 @@ public class Trade extends BaseEntity {
         return this.getOwnerExchangeItem().getUser();
     }
 
-    public boolean isParticipant(User user){
-        return getOwner().getId().equals(user.getId()) || getRequester().getId().equals(user.getId());
+    public boolean isParticipant(Long userId){
+        return getOwner().getId().equals(userId) || getRequester().getId().equals(userId);
     }
 
-    public void validateAccess(User user){
-        if(!isParticipant(user)){
+    public void validateAccess(Long userId){
+        if(!isParticipant(userId)){
             throw new BusinessException(ErrorCode.TRADE_ACCESS_DENIED);
         }
     }
 
-    public User getPartner(User user){
-        return getRequester().getId().equals(user.getId())? getOwner() : getRequester();
+    public User getPartner(Long userId){
+        return getRequester().getId().equals(userId)? getOwner() : getRequester();
     }
 
     public void updateTradeStatus(TradeStatus tradeStatus) {

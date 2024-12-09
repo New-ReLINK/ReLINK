@@ -45,7 +45,7 @@ class TradeServiceTest extends DummyObject {
         when(imageService.getExchangeItemUrl(trade.getRequesterExchangeItem())).thenReturn(imageUrl);
         when(userService.getTrustScore(partner)).thenReturn(trustScore);
 
-        TradeInquiryDetailRespDto result = tradeService.getTradeInquiryDetail(trade.getId(), user);
+        TradeInquiryDetailRespDto result = tradeService.getTradeInquiryDetail(trade.getId(), user.getId());
 
         assertAll(
                 () -> assertNotNull(result),
@@ -66,7 +66,7 @@ class TradeServiceTest extends DummyObject {
                 .thenReturn(Optional.empty());
 
         BusinessException exception = assertThrows(BusinessException.class,
-                () -> tradeService.getTradeInquiryDetail(tradeId, user));
+                () -> tradeService.getTradeInquiryDetail(tradeId, user.getId()));
         assertEquals(exception.getErrorCode(), ErrorCode.TRADE_NOT_FOUND);
     }
 
@@ -79,7 +79,7 @@ class TradeServiceTest extends DummyObject {
         when(tradeRepository.findByIdWithItemsAndUser(trade.getId())).thenReturn(Optional.of(trade));
 
         BusinessException exception = assertThrows(BusinessException.class,
-                () -> tradeService.getTradeInquiryDetail(trade.getId(), user));
+                () -> tradeService.getTradeInquiryDetail(trade.getId(), user.getId()));
         assertEquals(exception.getErrorCode(), ErrorCode.TRADE_ACCESS_DENIED);
     }
 }
