@@ -7,13 +7,13 @@ import com.my.relink.domain.user.User;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
+@AllArgsConstructor
+@Builder
 public class Trade extends BaseEntity {
 
     @Id @GeneratedValue
