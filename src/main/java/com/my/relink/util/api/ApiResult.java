@@ -1,37 +1,32 @@
 package com.my.relink.util.api;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.my.relink.ex.ErrorCode;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-import java.time.LocalDateTime;
-
 @Getter
-@JsonPropertyOrder({"success", "data", "apiError", "timestamp"})
+@JsonPropertyOrder({"success", "data", "error"})
 public class ApiResult<T> {
-
-    private final ApiError apiError;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
-    private final LocalDateTime timestamp = LocalDateTime.now();
-    private final boolean success;
     private final T data;
+    private final boolean success;
+    private final ApiError error;
 
-    public ApiResult(boolean success, T data, ApiError apiError) {
-        this.apiError = apiError;
-        this.success = success;
+    private ApiResult(T data, boolean success, ApiError error) {
         this.data = data;
+        this.success = success;
+        this.error = error;
     }
 
-    public static <T> ApiResult<T> success(T data) {
-        return new ApiResult<>(true, data, null);
+    public static <T>ApiResult<T> success(T data){
+        return new ApiResult<>(data, true, null);
     }
 
-    public static <T> ApiResult<T> error(int status, String msg) {
-        return new ApiResult<>(false, null, new ApiError(msg, status));
+    public static <T>ApiResult<T> error(ErrorCode errorCode){
+        return new ApiResult<>(null, false, new ApiError(errorCode.getMessage(), errorCode.getStatus()));
     }
 
-    public static <T> ApiResult<T> error(int status, String msg, T errorMap) {
-        return new ApiResult<>(false, errorMap, new ApiError(msg, status));
+    public static <T>ApiResult<T> error(T errorData, ErrorCode errorCode){
+        return new ApiResult<>(errorData, false, new ApiError(errorCode.getMessage(), errorCode.getStatus()));
     }
-
 }

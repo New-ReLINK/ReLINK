@@ -1,4 +1,10 @@
-
+---
+name: Feature Request
+about: Suggest an idea for this project
+title: ""
+labels: 
+assignees: ''
+---
 ## 📌 이슈 내용
 [이슈에 대한 간단한 설명을 작성해주세요]
 
