@@ -54,4 +54,9 @@ public class User extends BaseEntity {
         this.role = role;
         this.address = address;
     }
+
+    public void changeInfo(String name, String nickname) {
+        this.name = name;
+        this.nickname = nickname;
+    }
 }

@@ -1,5 +1,6 @@
 package com.my.relink.service;
 
+import com.my.relink.controller.user.dto.req.UserInfoEditReqDto;
 import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.image.Image;
 import com.my.relink.domain.image.ImageRepository;
@@ -23,8 +24,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -153,5 +153,49 @@ class UserServiceTest {
 
         verify(userRepository).findByEmail(email);
         verify(imageRepository).findByEntityIdAndEntityType(user.getId(), EntityType.USER);
+    }
+
+    @Test
+    @DisplayName("유저 정보 수정 시 유저를 찾을 수 없을 때 USER_NOT_FOUND Exception 이 발생한다.")
+    void userNotFoundEditFailTest() {
+        // given
+        Long userId = 1L;
+
+        UserInfoEditReqDto reqDto = UserInfoEditReqDto.builder()
+                .name("editName")
+                .nickname("editNickname")
+                .build();
+
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+        // when & then
+        assertThrows(BusinessException.class, () -> userService.userInfoEdit(userId, reqDto));
+        verify(userRepository, times(1)).findById(any());
+    }
+
+    @Test
+    @DisplayName("유저 정보 수정 시 해당 유저를 찾았을 때 정보를 수정한다.")
+    void editUserSuccessTest() {
+        // given
+        Long userId = 1L;
+
+        UserInfoEditReqDto reqDto = UserInfoEditReqDto.builder()
+                .name("editName")
+                .nickname("editNickname")
+                .build();
+
+        User user = User.builder()
+                .email("test@example.com")
+                .name("test")
+                .nickname("testNickname")
+                .build();
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+
+        // when
+        userService.userInfoEdit(userId, reqDto);
+
+        // then
+        verify(userRepository, times(1)).findById(any());
     }
 }
