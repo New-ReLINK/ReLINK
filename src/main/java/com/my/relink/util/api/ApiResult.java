@@ -13,15 +13,15 @@ public class ApiResult<T> {
     private final boolean success;
     private final ApiError error;
 
-    public static <T>ApiResult<T> success(T data){
+    public static <T> ApiResult<T> success(T data) {
         return new ApiResult<>(data, true, null);
     }
 
-    public static <T>ApiResult<T> error(ErrorCode errorCode){
+    public static <T> ApiResult<T> error(ErrorCode errorCode) {
         return new ApiResult<>(null, false, new ApiError(errorCode.getMessage(), errorCode.getStatus()));
     }
 
-    public static <T>ApiResult<T> error(T errorData, ErrorCode errorCode){
+    public static <T> ApiResult<T> error(T errorData, ErrorCode errorCode) {
         return new ApiResult<>(errorData, false, new ApiError(errorCode.getMessage(), errorCode.getStatus()));
     }
 }
