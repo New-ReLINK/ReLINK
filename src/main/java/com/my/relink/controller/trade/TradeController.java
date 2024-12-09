@@ -1,7 +1,6 @@
 package com.my.relink.controller.trade;
 
 import com.my.relink.config.security.AuthUser;
-import com.my.relink.controller.trade.dto.response.MessageRespDto;
 import com.my.relink.controller.trade.dto.response.TradeInquiryDetailRespDto;
 import com.my.relink.controller.trade.dto.request.TradeReqDto;
 import com.my.relink.controller.trade.dto.response.TradeRequestRespDto;
@@ -36,12 +35,6 @@ public class TradeController {
     }
 
 
-    @GetMapping("/{tradeId}/messages")
-    public ResponseEntity<ApiResult<MessageRespDto>> getChatRoomMessages(
-            @PathVariable("tradeId") Long tradeId,
-            @RequestParam(value = "size", required = false, defaultValue = "10") int size,
-            @RequestParam(value = "cursor", required = false) Long cursor) {
-        return ResponseEntity.ok(ApiResult.success(tradeService.getChatRoomMessage(tradeId, size, cursor)));
-    }
+
 
 }

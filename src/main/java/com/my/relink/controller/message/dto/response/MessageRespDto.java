@@ -1,4 +1,4 @@
-package com.my.relink.controller.trade.dto.response;
+package com.my.relink.controller.message.dto.response;
 
 import com.my.relink.domain.message.Message;
 import lombok.Getter;
