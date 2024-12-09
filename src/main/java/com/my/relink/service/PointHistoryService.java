@@ -1,5 +1,6 @@
 package com.my.relink.service;
 
+import com.my.relink.config.security.AuthUser;
 import com.my.relink.domain.point.Point;
 import com.my.relink.domain.point.pointHistory.PointHistory;
 import com.my.relink.domain.point.pointHistory.PointTransactionType;
@@ -17,12 +18,12 @@ public class PointHistoryService {
     private final PointHistoryRepository pointHistoryRepository;
     private final PointRepository pointRepository;
 
-    public void restorePoints(Long tradeId, Long userId){
+    public void restorePoints(Long tradeId, AuthUser authUser){
         // 해당 Trade에 연결된 PointHistory 확인
         PointHistory pointHistory = pointHistoryRepository.findByTradeIdOrderByCreatedAtDesc(tradeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.POINT_HISTORY_NOT_FOUND));
 
-        Point point = pointRepository.findByUserId(userId)
+        Point point = pointRepository.findByUserId(authUser.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.POINT_NOT_FOUND));
 
         Integer amount = pointHistory.getAmount();

@@ -1,5 +1,6 @@
 package com.my.relink.service;
 
+import com.my.relink.config.security.AuthUser;
 import com.my.relink.domain.point.Point;
 import com.my.relink.domain.point.repository.PointRepository;
 import com.my.relink.domain.point.pointHistory.PointHistory;
@@ -28,16 +29,16 @@ public class TradeService {
     private final PointHistoryService pointHistoryService;
 
     @Transactional
-    public TradeRequestRespDto requestTrade(Long tradeId, Long userId) {//추후 로그인 유저로 바뀔 예정
+    public TradeRequestRespDto requestTrade(Long tradeId, AuthUser authUser) {//추후 로그인 유저로 바뀔 예정
 
-        User currentUser = userRepository.findById(userId)
+        User currentUser = userRepository.findById(authUser.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         Trade trade = tradeRepository.findById(tradeId).
                 orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
 
         //해당 로그인 유저의 포인트를 조회
-        Point point = pointRepository.findByUserId(userId)
+        Point point = pointRepository.findByUserId(authUser.getId())
                 .orElseThrow(()-> new BusinessException(ErrorCode.POINT_NOT_FOUND));
         if(point.getAmount()<trade.getOwnerExchangeItem().getDeposit()){
             throw new BusinessException(ErrorCode.POINT_SHORTAGE);
@@ -67,16 +68,16 @@ public class TradeService {
     }
 
     @Transactional
-    public void cancelTradeRequest(Long tradeId, Long userId) {
+    public void cancelTradeRequest(Long tradeId, AuthUser authUser) {
 
-        User currentUser = userRepository.findById(userId)
+        User currentUser = userRepository.findById(authUser.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         Trade trade = tradeRepository.findById(tradeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
 
         //복원 메서드 위임
-        pointHistoryService.restorePoints(tradeId, userId);
+        pointHistoryService.restorePoints(tradeId, authUser);
 
         // 요청 상태 업데이트
         if (trade.getRequester().getId().equals(currentUser.getId())) {
