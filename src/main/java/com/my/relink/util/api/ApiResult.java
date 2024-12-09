@@ -6,12 +6,17 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
-@AllArgsConstructor
 @JsonPropertyOrder({"success", "data", "error"})
 public class ApiResult<T> {
     private final T data;
     private final boolean success;
     private final ApiError error;
+
+    private ApiResult(T data, boolean success, ApiError error) {
+        this.data = data;
+        this.success = success;
+        this.error = error;
+    }
 
     public static <T>ApiResult<T> success(T data){
         return new ApiResult<>(data, true, null);
