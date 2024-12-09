@@ -5,6 +5,7 @@ import com.my.relink.ex.ErrorCode;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+
 @Getter
 @AllArgsConstructor
 @JsonPropertyOrder({"success", "data", "error"})
@@ -25,3 +26,4 @@ public class ApiResult<T> {
         return new ApiResult<>(errorData, false, new ApiError(errorCode.getMessage(), errorCode.getStatus()));
     }
 }
+
