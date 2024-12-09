@@ -1,5 +1,7 @@
 package com.my.relink.service;
 
+import com.my.relink.controller.user.dto.req.UserValidNicknameRepDto;
+import com.my.relink.controller.user.dto.resp.UserValidNicknameRespDto;
 import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.image.Image;
 import com.my.relink.domain.image.ImageRepository;
@@ -35,5 +37,9 @@ public class UserService {
         Image image = imageRepository.findByEntityIdAndEntityType(user.getId(), EntityType.USER).orElse(null);
 
         return new UserInfoRespDto(user, image);
+    }
+
+    public UserValidNicknameRespDto validNickname(UserValidNicknameRepDto dto) {
+        return new UserValidNicknameRespDto(userRepository.findByNickname(dto.getNickname()).isPresent());
     }
 }
