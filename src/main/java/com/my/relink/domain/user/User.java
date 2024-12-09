@@ -54,4 +54,8 @@ public class User extends BaseEntity {
         this.role = role;
         this.address = address;
     }
+
+    public void changeIsDeleted(){
+        this.isDeleted = true;
+    }
 }
