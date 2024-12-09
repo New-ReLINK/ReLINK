@@ -9,7 +9,6 @@ import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
@@ -42,6 +41,7 @@ public class JwtProvider {
     public String generateToken(Authentication authentication) {
         return TOKEN_PREFIX + Jwts.builder()
                 .setSubject(authentication.getName())
+                .claim("Id", ((AuthUser) authentication.getPrincipal()).getId())
                 .claim("Role", authentication.getAuthorities()
                         .iterator()
                         .next()
@@ -73,11 +73,12 @@ public class JwtProvider {
                 .parseClaimsJws(token);
 
         String email = claims.getBody().getSubject();
+        Long id = (Long) claims.getBody().get("Id");
         String role = (String) claims.getBody().get("Role");
 
         log.info("Token Claim Email : {}", email);
         log.info("Token Claim Role : {}", role);
 
-        return new AuthUser(email, Role.valueOf(role));
+        return new AuthUser(id, email, Role.valueOf(role));
     }
 }
