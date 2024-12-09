@@ -1,5 +1,6 @@
 package com.my.relink.service;
 
+import com.my.relink.controller.user.dto.req.UserDeleteReqDto;
 import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.image.Image;
 import com.my.relink.domain.image.ImageRepository;
@@ -23,8 +24,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -153,5 +153,66 @@ class UserServiceTest {
 
         verify(userRepository).findByEmail(email);
         verify(imageRepository).findByEntityIdAndEntityType(user.getId(), EntityType.USER);
+    }
+
+    @Test
+    @DisplayName("회원 탈퇴 시 유저정보를 찾을 수 없는 경우 USER_NOT_FOUND Exception 이 발생한다.")
+    void notFoundUserFailTest() {
+        // given
+        UserDeleteReqDto reqDto = UserDeleteReqDto.builder()
+                .email("test@example.com")
+                .password("password1234")
+                .build();
+
+        when(userRepository.findByEmail(reqDto.getEmail())).thenReturn(Optional.empty());
+        // when & then
+        assertThrows(BusinessException.class, () -> userService.deleteUser(reqDto));
+        verify(userRepository, times(1)).findByEmail(any());
+    }
+
+    @Test
+    @DisplayName("회원 탈퇴 시 비밀번호가 맞지 않는 경우 MISS_MATCH_PASSWORD Exception 이 발생한다.")
+    void missMatchPasswordFailTest() {
+        // given
+        UserDeleteReqDto reqDto = UserDeleteReqDto.builder()
+                .email("test@example.com")
+                .password("password1234")
+                .build();
+
+        User user = User.builder()
+                .email("test@example.com")
+                .password("password1111")
+                .build();
+
+        when(userRepository.findByEmail(reqDto.getEmail())).thenReturn(Optional.of(user));
+
+        // when & then
+        assertThrows(BusinessException.class, () -> userService.deleteUser(reqDto));
+        verify(userRepository, times(1)).findByEmail(any());
+    }
+
+    @Test
+    @DisplayName("회원 탈퇴 시 비밀번호와 이메일이 일치하는 경우 isDeleted 가 True 가 된다.")
+    void signOutSuccessTest() {
+        // given
+        UserDeleteReqDto reqDto = UserDeleteReqDto.builder()
+                .email("test@example.com")
+                .password("password1234")
+                .build();
+
+        User user = User.builder()
+                .email("test@example.com")
+                .password("password1234")
+                .build();
+
+        when(userRepository.findByEmail(reqDto.getEmail())).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches(any(), any())).thenReturn(true);
+
+        // when
+        userService.deleteUser(reqDto);
+
+        // then
+        verify(userRepository, times(1)).findByEmail(any());
+        verify(passwordEncoder, times(1)).matches(any(), any());
     }
 }
