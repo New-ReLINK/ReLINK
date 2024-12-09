@@ -2,8 +2,10 @@ package com.my.relink.controller.user;
 
 import com.my.relink.config.security.AuthUser;
 import com.my.relink.controller.user.dto.req.UserCreateReqDto;
+import com.my.relink.controller.user.dto.req.UserValidNicknameRepDto;
 import com.my.relink.controller.user.dto.resp.UserCreateRespDto;
 import com.my.relink.controller.user.dto.resp.UserInfoRespDto;
+import com.my.relink.controller.user.dto.resp.UserValidNicknameRespDto;
 import com.my.relink.service.UserService;
 import com.my.relink.util.api.ApiResult;
 import jakarta.validation.Valid;
@@ -34,5 +36,12 @@ public class UserController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ApiResult.success(userService.findUserInfo(authUser.getEmail())));
+    }
+
+    @GetMapping("/users/check-nickname")
+    public ResponseEntity<ApiResult<UserValidNicknameRespDto>> duplicatedNickname(
+            @Valid @RequestBody UserValidNicknameRepDto dto
+    ) {
+        return ResponseEntity.status(HttpStatus.OK).body(ApiResult.success(userService.validNickname(dto)));
     }
 }
