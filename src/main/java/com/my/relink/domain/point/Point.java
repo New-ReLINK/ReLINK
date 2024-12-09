@@ -27,7 +27,7 @@ public class Point extends BaseEntity {
     private User user;
 
     public void deduct(Integer amountToDeduct){
-        if(amount<0){
+        if(amount-amountToDeduct<0){
             throw new BusinessException(ErrorCode.POINT_SHORTAGE);
         }
         this.amount -= amountToDeduct;
