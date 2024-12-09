@@ -5,8 +5,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface PointHistoryRepository extends JpaRepository<PointHistory, Long> {
-    List<PointHistory> findByTradeIdOrderByCreatedAtDesc(Long tradeId);
+    Optional<PointHistory> findByTradeIdOrderByCreatedAtDesc(Long tradeId);
 }
