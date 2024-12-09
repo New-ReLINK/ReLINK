@@ -2,7 +2,7 @@ package com.my.relink.service;
 
 import com.my.relink.controller.trade.dto.response.TradeInquiryDetailRespDto;
 import com.my.relink.domain.trade.Trade;
-import com.my.relink.domain.trade.TradeRepository;
+import com.my.relink.domain.trade.repository.TradeRepository;
 import com.my.relink.domain.user.User;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
