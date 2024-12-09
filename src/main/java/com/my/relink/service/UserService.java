@@ -18,10 +18,10 @@ public class UserService {
     /**
      * 유저 신뢰도 구하기
      * @param user
-     * @return 별점 평균 백분율 전환 값 (정수)
+     * @return 별점 평균 백분율 전환 값 (정수). 리뷰가 존재하지 않을 경우 0 반환
      */
     public int getTrustScore(User user){
         Double starAvg = reviewRepository.getTotalStarAvg(user);
-        return (int) (starAvg * 20);
+        return starAvg == null? 0 : (int) (starAvg * 20);
     }
 }
