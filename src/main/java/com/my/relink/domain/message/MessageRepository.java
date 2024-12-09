@@ -13,6 +13,6 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
             "join fetch m.user " +
             "where m.trade.id = :tradeId " +
             "and m.id < :cursor " +
-            "order by m.createdAt desc")
+            "order by m.id desc")
     List<Message> findMessagesBeforeCursor(@Param("tradeId")Long tradeId, @Param("cursor") Long cursor, Pageable pageable);
 }
