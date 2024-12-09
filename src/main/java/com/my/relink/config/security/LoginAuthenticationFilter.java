@@ -5,7 +5,7 @@ import com.my.relink.config.security.dto.req.LoginRepDto;
 import com.my.relink.config.security.dto.resp.LoginRespDto;
 import com.my.relink.config.security.jwt.JwtProvider;
 import com.my.relink.domain.user.User;
-import com.my.relink.domain.user.UserRepository;
+import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.ErrorCode;
 import com.my.relink.ex.SecurityFilterChainException;
 import com.my.relink.util.api.ApiResult;

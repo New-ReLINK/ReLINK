@@ -1,4 +1,4 @@
-package com.my.relink.dto.user.req;
+package com.my.relink.controller.user.dto.req;
 
 import com.my.relink.domain.user.Address;
 import jakarta.persistence.Column;

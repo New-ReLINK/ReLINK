@@ -1,4 +1,4 @@
-package com.my.relink.dto.user.resp;
+package com.my.relink.controller.user.dto.resp;
 
 public record UserCreateRespDto(
         Long userId
