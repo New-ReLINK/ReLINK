@@ -24,7 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class TradeService {
 
     private final TradeRepository tradeRepository;
-    private final UserService userService;
+    private final UserTrustScoreService userTrustScoreService;
     private final ImageService imageService;
     private final UserRepository userRepository;
     private final PointRepository pointRepository;
@@ -46,7 +46,7 @@ public class TradeService {
 
         String requestedItemImageUrl = imageService.getExchangeItemUrl(trade.getRequesterExchangeItem());
         User partner = trade.getPartner(userId);
-        int trustScoreOfPartner = userService.getTrustScore(partner);
+        int trustScoreOfPartner = userTrustScoreService.getTrustScore(partner);
 
         return new TradeInquiryDetailRespDto(trade, partner, trustScoreOfPartner, requestedItemImageUrl);
     }

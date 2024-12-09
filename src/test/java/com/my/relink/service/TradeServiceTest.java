@@ -24,7 +24,7 @@ class TradeServiceTest extends DummyObject {
     @Mock
     private TradeRepository tradeRepository;
     @Mock
-    private UserService userService;
+    private UserTrustScoreService userTrustScoreService;
     @Mock
     private ImageService imageService;
 
@@ -43,14 +43,14 @@ class TradeServiceTest extends DummyObject {
 
         when(tradeRepository.findByIdWithItemsAndUser(trade.getId())).thenReturn(Optional.of(trade));
         when(imageService.getExchangeItemUrl(trade.getRequesterExchangeItem())).thenReturn(imageUrl);
-        when(userService.getTrustScore(partner)).thenReturn(trustScore);
+        when(userTrustScoreService.getTrustScore(partner)).thenReturn(trustScore);
 
         TradeInquiryDetailRespDto result = tradeService.getTradeInquiryDetail(trade.getId(), user.getId());
 
         assertAll(
                 () -> assertNotNull(result),
                 () -> verify(imageService).getExchangeItemUrl(trade.getRequesterExchangeItem()),
-                () -> verify(userService).getTrustScore(partner),
+                () -> verify(userTrustScoreService).getTrustScore(partner),
                 () -> assertEquals(imageUrl, result.getExchangeItemInfoDto().getRequestedItem().getImgUrl()),
                 () -> assertEquals(trustScore, result.getTradePartnerInfoDto().getTrustScore())
         );
