@@ -23,4 +23,10 @@ public class TradeController {
         return new ResponseEntity<>(ApiResult.success(responseDto), HttpStatus.OK);
     }
 
+    @PostMapping("/trades/{tradeId}/request-cancel")
+    public ResponseEntity<Void> cancelTradeRequest(@PathVariable(name = "tradeId") Long tradeId, @RequestBody TradeRequestDto tradeRequestDto) {
+        tradeService.cancelTradeRequest(tradeId, tradeRequestDto.getUserId()); // 서비스에서 취소 로직 처리
+        return ResponseEntity.noContent().build(); // 본문 없이 204 No Content 응답 반환
+    }
+
 }
