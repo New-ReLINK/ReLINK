@@ -59,11 +59,13 @@ public class TradeService {
         // 양쪽 모두 requested가 true라면 거래 상태를 in_exchange로 변경
         if(trade.getHasRequesterRequested()&&trade.getHasOwnerRequested()){
             trade.updateTradeStatus(TradeStatus.IN_EXCHANGE);
+            tradeRepository.save(trade);
         }
 
         return new TradeRequestResponseDto(tradeId);
     }
 
+    @Transactional
     public void cancelTradeRequest(Long tradeId, Long userId) {
         // 로그인 유저 확인
         User currentUser = userRepository.findById(userId)
@@ -102,6 +104,7 @@ public class TradeService {
         // 거래 상태 확인 및 업데이트 (양쪽 중 하나가 false라면 초기 상태로 되돌리기)
         if (!trade.getHasRequesterRequested() || !trade.getHasOwnerRequested()) {
             trade.updateTradeStatus(TradeStatus.AVAILABLE);
+            tradeRepository.save(trade);
         }
     }
 }
