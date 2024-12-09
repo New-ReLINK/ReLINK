@@ -16,6 +16,10 @@ import java.util.List;
 public class MessageService {
 
     private final MessageRepository messageRepository;
+    private final TradeService tradeService;
+    private static final Long DEFAULT_CURSOR = Long.MAX_VALUE;
+    private static final int DEFAULT_PAGE = 0;
+
 
     /**
      * 채팅방 이전 대화 내역 조회하기
@@ -26,17 +30,29 @@ public class MessageService {
      * @return
      */
     public MessageRespDto getChatRoomMessage(Long tradeId, int size, Long cursor) {
-        // cursor에 값이 없을 시 가장 최근 메시지부터 조회 위해 값 설정
-        cursor = (cursor == null || cursor == 0) ? Long.MAX_VALUE : cursor;
+        tradeService.findByIdOrFail(tradeId);
+        cursor = getInitialCursor(cursor);
 
-        List<Message> messageList = messageRepository.findMessagesBeforeCursor(tradeId, cursor, PageRequest.of(0, size + 1));
-        List<Message> pageMessageList = messageList.size() > size
-                ? messageList.subList(0, size)
-                : messageList;
-        Long nextCursor = !pageMessageList.isEmpty()
-                ? pageMessageList.get(pageMessageList.size() - 1).getId()
-                : null;
+        List<Message> messageList = messageRepository.findMessagesBeforeCursor(
+                tradeId,
+                cursor,
+                PageRequest.of(DEFAULT_PAGE, size + 1)
+        );
+        List<Message> pageMessageList = limitMessages(messageList, size);
+        Long nextCursor = getNextCursor(pageMessageList);
 
         return new MessageRespDto(pageMessageList, nextCursor);
+    }
+
+    private Long getNextCursor(List<Message> messages) {
+        return !messages.isEmpty() ? messages.get(messages.size() - 1).getId() : null;
+    }
+
+    private List<Message> limitMessages(List<Message> messages, int size) {
+        return messages.size() > size ? messages.subList(0, size) : messages;
+    }
+
+    private Long getInitialCursor(Long cursor) {
+        return (cursor == null || cursor == 0) ? DEFAULT_CURSOR : cursor;
     }
 }
