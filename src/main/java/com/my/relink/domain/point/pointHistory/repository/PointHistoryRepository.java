@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface PointHistoryRepository extends JpaRepository<PointHistory, Long> {
+    PointHistory findByTradeId(Long tradeId);
 }

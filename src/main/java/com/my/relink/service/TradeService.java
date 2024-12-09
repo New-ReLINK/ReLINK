@@ -45,7 +45,7 @@ public class TradeService {
         pointRepository.save(point);
 
         //포인트 이력 생성
-        PointHistory pointHistory = PointHistory.create(-trade.getOwnerExchangeItem().getDeposit(), PointTransactionType.DEPOSIT);
+        PointHistory pointHistory = PointHistory.create(-trade.getOwnerExchangeItem().getDeposit(), PointTransactionType.DEPOSIT, point, trade);
         pointHistoryRepository.save(pointHistory);
 
         //요청자/소유자 여부에 따라 적절한 요청 상태 필드 업데이트
@@ -61,4 +61,5 @@ public class TradeService {
 
         return new TradeRequestResponseDto(tradeId);
     }
+
 }
