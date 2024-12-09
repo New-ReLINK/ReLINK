@@ -33,11 +33,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
+
 class GlobalExceptionHandlerTest {
 
-    @InjectMocks
-    private GlobalExceptionHandler handler;
+
+    private GlobalExceptionHandler handler = new GlobalExceptionHandler();
 
     @Test
     @DisplayName("예상치 못한 Exception 처리 테스트")
