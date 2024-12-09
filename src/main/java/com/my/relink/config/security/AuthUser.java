@@ -25,6 +25,7 @@ public class AuthUser {
     public User toUser(){
         return User.builder()
                 .email(email)
+                .id(id)
                 .build();
     }
 
