@@ -1,7 +1,7 @@
 package com.my.relink.config.security;
 
 import com.my.relink.domain.user.User;
-import com.my.relink.domain.user.UserRepository;
+import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.ErrorCode;
 import com.my.relink.ex.SecurityFilterChainException;
 import lombok.RequiredArgsConstructor;
