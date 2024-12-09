@@ -7,6 +7,7 @@ import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.domain.user.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.SQLRestriction;
@@ -55,4 +56,44 @@ public class ExchangeItem extends BaseEntity {
     @Column(nullable = false)
     private Boolean isDeleted = false;
 
+    @Builder
+    public ExchangeItem(String name,
+                        String description,
+                        Category category,
+                        ItemQuality itemQuality,
+                        Integer deposit,
+                        String size,
+                        String brand,
+                        String desiredItem,
+                        User user,
+                        TradeStatus tradeStatus) {
+        this.name = name;
+        this.description = description;
+        this.category = category;
+        this.itemQuality = itemQuality;
+        this.deposit = deposit;
+        this.size = size;
+        this.brand = brand;
+        this.desiredItem = desiredItem;
+        this.user = user;
+        this.tradeStatus = tradeStatus;
+    }
+
+
+    // 테스트 코드 결과창에서 데이터가 어떻게 들어가는지 확인하기 위해 작성
+    @Override
+    public String toString() {
+        return "ExchangeItem{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", category=" + (category != null ? category.getName() : "null") +
+                ", user=" + (user != null ? user.getName() : "null") +
+                ", deposit=" + deposit +
+                ", itemQuality=" + itemQuality +
+                ", size='" + size + '\'' +
+                ", brand='" + brand + '\'' +
+                ", desiredItem='" + desiredItem + '\'' +
+                '}';
+    }
 }
