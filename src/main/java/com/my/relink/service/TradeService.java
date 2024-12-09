@@ -27,7 +27,7 @@ public class TradeService {
     private final PointHistoryRepository pointHistoryRepository;
 
     @Transactional
-    public Long requestTrade(Long tradeId, Long userId) {//추후 로그인 유저로 바뀔 예정
+    public TradeRequestResponseDto requestTrade(Long tradeId, Long userId) {//추후 로그인 유저로 바뀔 예정
 
         User currentUser = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
@@ -61,7 +61,7 @@ public class TradeService {
             trade.updateTradeStatus(TradeStatus.IN_EXCHANGE);
         }
 
-        return tradeId;
+        return new TradeRequestResponseDto(tradeId);
     }
 
 }
