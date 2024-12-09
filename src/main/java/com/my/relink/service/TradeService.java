@@ -1,14 +1,14 @@
 package com.my.relink.service;
 
 import com.my.relink.domain.point.Point;
-import com.my.relink.domain.point.pointHistory.PointHistory;
-import com.my.relink.domain.point.pointHistory.PointTransactionType;
-import com.my.relink.domain.point.pointHistory.repository.PointHistoryRepository;
 import com.my.relink.domain.point.repository.PointRepository;
+import com.my.relink.domain.point.pointHistory.PointHistory;
+import com.my.relink.domain.point.pointHistory.repository.PointHistoryRepository;
+import com.my.relink.domain.point.pointHistory.PointTransactionType;
 import com.my.relink.domain.trade.Trade;
-import com.my.relink.domain.trade.TradeStatus;
-import com.my.relink.domain.trade.dto.TradeRequestResponseDto;
 import com.my.relink.domain.trade.repository.TradeRepository;
+import com.my.relink.domain.trade.TradeStatus;
+import com.my.relink.controller.trade.dto.response.TradeRequestRespDto;
 import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.BusinessException;
@@ -27,7 +27,7 @@ public class TradeService {
     private final PointHistoryRepository pointHistoryRepository;
 
     @Transactional
-    public TradeRequestResponseDto requestTrade(Long tradeId, Long userId) {//추후 로그인 유저로 바뀔 예정
+    public TradeRequestRespDto requestTrade(Long tradeId, Long userId) {//추후 로그인 유저로 바뀔 예정
 
         User currentUser = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
@@ -47,7 +47,7 @@ public class TradeService {
         pointRepository.save(point);
 
         //포인트 이력 생성
-        PointHistory pointHistory = PointHistory.create(-trade.getOwnerExchangeItem().getDeposit(), PointTransactionType.DEPOSIT, point, trade);
+        PointHistory pointHistory = PointHistory.create(trade.getOwnerExchangeItem().getDeposit(), PointTransactionType.DEPOSIT, point, trade);
         pointHistoryRepository.save(pointHistory);
 
         //요청자/소유자 여부에 따라 적절한 요청 상태 필드 업데이트
@@ -62,16 +62,15 @@ public class TradeService {
             tradeRepository.save(trade);
         }
 
-        return new TradeRequestResponseDto(tradeId);
+        return new TradeRequestRespDto(tradeId);
     }
 
     @Transactional
     public void cancelTradeRequest(Long tradeId, Long userId) {
-        // 로그인 유저 확인
+
         User currentUser = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        // Trade 엔티티 확인
         Trade trade = tradeRepository.findById(tradeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
 
@@ -79,10 +78,11 @@ public class TradeService {
         PointHistory pointHistory = pointHistoryRepository.findByTradeIdOrderByCreatedAtDesc(tradeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.POINT_HISTORY_NOT_FOUND));
 
-        // 차감된 금액 복원
         Point point = pointRepository.findByUserId(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.POINT_NOT_FOUND));
-        point.add(pointHistory.getAmount() * -1); // 차감된 금액을 복원
+        Integer amount = pointHistory.getAmount();
+        // 차감된 금액을 복원
+        point.restore(amount);
         pointRepository.save(point);
 
         // 요청 상태 업데이트
