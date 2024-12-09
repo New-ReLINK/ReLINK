@@ -25,6 +25,7 @@ public class TradeService {
     private final UserRepository userRepository;
     private final PointRepository pointRepository;
     private final PointHistoryRepository pointHistoryRepository;
+    private final PointHistoryService pointHistoryService;
 
     @Transactional
     public TradeRequestRespDto requestTrade(Long tradeId, Long userId) {//추후 로그인 유저로 바뀔 예정
@@ -74,16 +75,8 @@ public class TradeService {
         Trade trade = tradeRepository.findById(tradeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
 
-        // 해당 Trade에 연결된 PointHistory 확인
-        PointHistory pointHistory = pointHistoryRepository.findByTradeIdOrderByCreatedAtDesc(tradeId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.POINT_HISTORY_NOT_FOUND));
-
-        Point point = pointRepository.findByUserId(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.POINT_NOT_FOUND));
-        Integer amount = pointHistory.getAmount();
-        // 차감된 금액을 복원
-        point.restore(amount);
-        pointRepository.save(point);
+        //복원 메서드 위임
+        pointHistoryService.restorePoints(tradeId, userId);
 
         // 요청 상태 업데이트
         if (trade.getRequester().getId().equals(currentUser.getId())) {
@@ -91,15 +84,6 @@ public class TradeService {
         } else {
             trade.updateHasOwnerRequested(false);
         }
-
-        // 새로운 포인트 이력 생성 (복원 내역)
-        PointHistory restorePointHistory = PointHistory.create(
-                pointHistory.getAmount() * -1, // 복원 금액은 기존의 음수 금액을 양수로 변경
-                PointTransactionType.RETURN,
-                point,
-                trade
-        );
-        pointHistoryRepository.save(restorePointHistory);
 
         // 거래 상태 확인 및 업데이트 (양쪽 중 하나가 false라면 초기 상태로 되돌리기)
         if (!trade.getHasRequesterRequested() || !trade.getHasOwnerRequested()) {
