@@ -12,6 +12,8 @@ public enum ErrorCode {
     TRADE_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "거래를 찾을 수 없습니다"),
     POINT_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "포인트를 찾을 수 없습니다"),
     POINT_SHORTAGE(HttpStatus.FORBIDDEN.value(), "포인트가 부족합니다"),
+    POINT_HISTORY_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "포인트 내역을 찾을 수 없습니다"),
+
 
     ;
 
