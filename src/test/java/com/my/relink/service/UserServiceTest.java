@@ -1,5 +1,7 @@
 package com.my.relink.service;
 
+import com.my.relink.controller.user.dto.req.UserValidNicknameRepDto;
+import com.my.relink.controller.user.dto.resp.UserValidNicknameRespDto;
 import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.image.Image;
 import com.my.relink.domain.image.ImageRepository;
@@ -23,8 +25,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -153,5 +154,43 @@ class UserServiceTest {
 
         verify(userRepository).findByEmail(email);
         verify(imageRepository).findByEntityIdAndEntityType(user.getId(), EntityType.USER);
+    }
+
+    @Test
+    @DisplayName("닉네임이 중복일 때 Duplicated는 true를 반환한다.")
+    void validNicknameDuplicatedIsTrueSuccessTest(){
+        // given
+        UserValidNicknameRepDto repDto = UserValidNicknameRepDto.builder()
+                .nickname("test")
+                .build();
+
+        User user = User.builder()
+                .nickname("test")
+                .build();
+
+        when(userRepository.findByNickname(repDto.getNickname())).thenReturn(Optional.of(user));
+        // when
+        UserValidNicknameRespDto respDto = userService.validNickname(repDto);
+
+        // then
+        assertThat(respDto.isDuplicated()).isTrue();
+        verify(userRepository, times(1)).findByNickname(any());
+    }
+
+    @Test
+    @DisplayName("닉네임이 중복일 때 Duplicated는 false를 반환한다.")
+    void validNicknameDuplicatedIsFalseSuccessTest(){
+        // given
+        UserValidNicknameRepDto repDto = UserValidNicknameRepDto.builder()
+                .nickname("test")
+                .build();
+
+        when(userRepository.findByNickname(repDto.getNickname())).thenReturn(Optional.empty());
+        // when
+        UserValidNicknameRespDto respDto = userService.validNickname(repDto);
+
+        // then
+        assertThat(respDto.isDuplicated()).isFalse();
+        verify(userRepository, times(1)).findByNickname(any());
     }
 }
