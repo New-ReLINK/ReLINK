@@ -8,6 +8,7 @@ import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import com.my.relink.util.DummyObject;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -31,55 +32,68 @@ class TradeServiceTest extends DummyObject {
     @InjectMocks
     private TradeService tradeService;
 
-    @Test
-    @DisplayName("거래 상세 조회 성공")
-    void retrieveTradeDetail_success(){
-        User user = mockRequesterUser();
-        User partner = mockOwnerUser();
+    @Nested
+    @DisplayName("거래 상세 조회 테스트")
+    class RetrieveTradeDetail {
 
-        Trade trade = mockTrade(partner, user);
-        String imageUrl = "image";
-        int trustScore = 80;
+        @Nested
+        @DisplayName("성공 케이스")
+        class SuccessCase {
+            @Test
+            @DisplayName("거래 상세 정보를 정상적으로 조회한다")
+            void retrieveTradeDetail_success() {
+                User user = mockRequesterUser();
+                User partner = mockOwnerUser();
 
-        when(tradeRepository.findByIdWithItemsAndUser(trade.getId())).thenReturn(Optional.of(trade));
-        when(imageService.getExchangeItemUrl(trade.getRequesterExchangeItem())).thenReturn(imageUrl);
-        when(userTrustScoreService.getTrustScore(partner)).thenReturn(trustScore);
+                Trade trade = mockTrade(partner, user);
+                String imageUrl = "image";
+                int trustScore = 80;
 
-        TradeInquiryDetailRespDto result = tradeService.getTradeInquiryDetail(trade.getId(), user.getId());
+                when(tradeRepository.findByIdWithItemsAndUser(trade.getId())).thenReturn(Optional.of(trade));
+                when(imageService.getExchangeItemUrl(trade.getRequesterExchangeItem())).thenReturn(imageUrl);
+                when(userTrustScoreService.getTrustScore(partner)).thenReturn(trustScore);
 
-        assertAll(
-                () -> assertNotNull(result),
-                () -> verify(imageService).getExchangeItemUrl(trade.getRequesterExchangeItem()),
-                () -> verify(userTrustScoreService).getTrustScore(partner),
-                () -> assertEquals(imageUrl, result.getExchangeItemInfoDto().getRequestedItem().getImgUrl()),
-                () -> assertEquals(trustScore, result.getTradePartnerInfoDto().getTrustScore())
-        );
-    }
+                TradeInquiryDetailRespDto result = tradeService.getTradeInquiryDetail(trade.getId(), user.getId());
 
-    @Test
-    @DisplayName("거레 상세 조회 실패: 존재하지 않는 거래 id로 조회 시 예외 발생")
-    void retrieveTradeDetail_WhenTradeNotFound_ThrowsException(){
-        Long tradeId = 1L;
-        User user = mockRequesterUser();
+                assertAll(
+                        () -> assertNotNull(result),
+                        () -> verify(imageService).getExchangeItemUrl(trade.getRequesterExchangeItem()),
+                        () -> verify(userTrustScoreService).getTrustScore(partner),
+                        () -> assertEquals(imageUrl, result.getExchangeItemInfoDto().getRequestedItem().getImgUrl()),
+                        () -> assertEquals(trustScore, result.getTradePartnerInfoDto().getTrustScore())
+                );
+            }
+        }
 
-        when(tradeRepository.findByIdWithItemsAndUser(tradeId))
-                .thenReturn(Optional.empty());
+        @Nested
+        @DisplayName("실패 케이스")
+        class FailureCase {
+            @Test
+            @DisplayName("존재하지 않는 거래 id로 조회 시 예외가 발생한다")
+            void retrieveTradeDetail_WhenTradeNotFound_ThrowsException() {
+                Long tradeId = 1L;
+                User user = mockRequesterUser();
 
-        BusinessException exception = assertThrows(BusinessException.class,
-                () -> tradeService.getTradeInquiryDetail(tradeId, user.getId()));
-        assertEquals(exception.getErrorCode(), ErrorCode.TRADE_NOT_FOUND);
-    }
+                when(tradeRepository.findByIdWithItemsAndUser(tradeId))
+                        .thenReturn(Optional.empty());
 
-    @Test
-    @DisplayName("거래 상세 조회 실패: 권한이 없는 사용자가 조회 시 예외 발생")
-    void retrieveTradeDetail_WhenAccessDenied_ThrowsException(){
-        User user = mockRequesterUser();
-        Trade trade = mockTrade(mockOwnerUser(), mockOwnerUser());
+                BusinessException exception = assertThrows(BusinessException.class,
+                        () -> tradeService.getTradeInquiryDetail(tradeId, user.getId()));
+                assertEquals(exception.getErrorCode(), ErrorCode.TRADE_NOT_FOUND);
+            }
 
-        when(tradeRepository.findByIdWithItemsAndUser(trade.getId())).thenReturn(Optional.of(trade));
+            @Test
+            @DisplayName("권한이 없는 사용자가 조회 시 예외가 발생한다")
+            void retrieveTradeDetail_WhenAccessDenied_ThrowsException() {
+                User user = mockRequesterUser();
+                Trade trade = mockTrade(mockOwnerUser(), mockOwnerUser());
 
-        BusinessException exception = assertThrows(BusinessException.class,
-                () -> tradeService.getTradeInquiryDetail(trade.getId(), user.getId()));
-        assertEquals(exception.getErrorCode(), ErrorCode.TRADE_ACCESS_DENIED);
+                when(tradeRepository.findByIdWithItemsAndUser(trade.getId())).thenReturn(Optional.of(trade));
+
+                BusinessException exception = assertThrows(BusinessException.class,
+                        () -> tradeService.getTradeInquiryDetail(trade.getId(), user.getId()));
+                assertEquals(exception.getErrorCode(), ErrorCode.TRADE_ACCESS_DENIED);
+            }
+        }
     }
 }
