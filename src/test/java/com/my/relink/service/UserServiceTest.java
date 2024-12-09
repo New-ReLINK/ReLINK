@@ -1,5 +1,7 @@
 package com.my.relink.service;
 
+import com.my.relink.controller.user.dto.req.UserValidEmailReqDto;
+import com.my.relink.controller.user.dto.resp.UserValidEmailRespDto;
 import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.image.Image;
 import com.my.relink.domain.image.ImageRepository;
@@ -12,6 +14,7 @@ import com.my.relink.controller.user.dto.resp.UserInfoRespDto;
 import com.my.relink.ex.BusinessException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -23,8 +26,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -153,5 +155,43 @@ class UserServiceTest {
 
         verify(userRepository).findByEmail(email);
         verify(imageRepository).findByEntityIdAndEntityType(user.getId(), EntityType.USER);
+    }
+
+    @Test
+    @DisplayName("이메일 중복 검사 조회시 중복된다면 Duplicated 를 true 로 내보낸다.")
+    void validEmailDuplicatedIsTrueSuccessTest() {
+        // given
+        UserValidEmailReqDto reqDto = UserValidEmailReqDto.builder()
+                .email("test@example.com")
+                .build();
+
+        User user = User.builder()
+                .email("test@example.com")
+                .build();
+
+        when(userRepository.findByEmail(reqDto.getEmail())).thenReturn(Optional.of(user));
+        // when
+        UserValidEmailRespDto respDto = userService.validEmail(reqDto);
+
+        // then
+        assertThat(respDto.isDuplicated()).isTrue();
+        verify(userRepository, times(1)).findByEmail(any());
+    }
+
+    @Test
+    @DisplayName("이메일 중복 검사 조회시 중복된다면 Duplicated 를 true 로 내보낸다.")
+    void validEmailDuplicatedIsFalseSuccessTest() {
+        // given
+        UserValidEmailReqDto reqDto = UserValidEmailReqDto.builder()
+                .email("test@example.com")
+                .build();
+
+        when(userRepository.findByEmail(reqDto.getEmail())).thenReturn(Optional.empty());
+        // when
+        UserValidEmailRespDto respDto = userService.validEmail(reqDto);
+
+        // then
+        assertThat(respDto.isDuplicated()).isFalse();
+        verify(userRepository, times(1)).findByEmail(any());
     }
 }
