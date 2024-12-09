@@ -10,7 +10,7 @@ import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.domain.trade.dto.TradeRequestResponseDto;
 import com.my.relink.domain.trade.repository.TradeRepository;
 import com.my.relink.domain.user.User;
-import com.my.relink.domain.user.repository.UserRepository;
+import com.my.relink.domain.user.UserRepository;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import lombok.RequiredArgsConstructor;
