@@ -1,14 +1,20 @@
-package com.my.relink.domain.item.exchange.dto;
+package com.my.relink.controller.exchangeItem.dto;
 
+import com.my.relink.domain.category.Category;
 import com.my.relink.domain.item.donation.ItemQuality;
+import com.my.relink.domain.item.exchange.ExchangeItem;
+import com.my.relink.domain.trade.TradeStatus;
+import com.my.relink.domain.user.User;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import org.hibernate.validator.constraints.Length;
 
 @Getter
 @Builder
+@AllArgsConstructor
 public class CreateExchangeItemReqDto {
     @NotBlank(message = "상품명을 입력해주세요.")
     @Length(max = 30, message = "상품명은 30자 이내로 입력해주세요.")
@@ -28,7 +34,18 @@ public class CreateExchangeItemReqDto {
     @NotNull(message = "교환시 원하는 보증금액을 입력해주세요.")
     private Integer deposit;
 
-    // 임시로 사용자 정보 dto로 요청 - 추후 토큰에서 email을 받아 id를 찾기
-    @NotNull(message = "사용자 ID를 입력해주세요.")
-    private Long userId;
+    public ExchangeItem toEntity(Category category, User user) {
+        return ExchangeItem.builder()
+                .name(this.name)
+                .description(this.description)
+                .category(category)
+                .user(user)
+                .itemQuality(this.itemQuality)
+                .size(this.size)
+                .brand(this.brand)
+                .desiredItem(this.desiredItem)
+                .deposit(this.deposit)
+                .tradeStatus(TradeStatus.AVAILABLE)
+                .build();
+    }
 }
