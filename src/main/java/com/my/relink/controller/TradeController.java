@@ -18,8 +18,8 @@ public class TradeController {
     public TradeController(TradeService tradeService) {this.tradeService = tradeService;}
 
     @PostMapping("/trades/{tradeId}/request")
-    public ResponseEntity<ApiResult<TradeRequestResponseDto>> requestTrade(@PathVariable(name = "tradeId") Long tradeId, @RequestBody TradeRequestDto tradeRequestDto) {//추후 로그인 유저로 바뀔 얘정
-        TradeRequestResponseDto responseDto = tradeService.requestTrade(tradeId, tradeRequestDto.getUserId());
-        return new ResponseEntity<>(ApiResult.success(responseDto), HttpStatus.CREATED);
+    public ResponseEntity<ApiResult<Long>> requestTrade(@PathVariable(name = "tradeId") Long tradeId, @RequestBody TradeRequestDto tradeRequestDto) {//추후 로그인 유저로 바뀔 얘정
+        tradeService.requestTrade(tradeId, tradeRequestDto.getUserId());
+        return new ResponseEntity<>(ApiResult.success(tradeId), HttpStatus.CREATED);
     }
 }
