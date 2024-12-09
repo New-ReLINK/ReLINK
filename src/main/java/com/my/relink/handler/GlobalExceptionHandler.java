@@ -28,7 +28,8 @@ public class GlobalExceptionHandler {
         log.error("예기치 못한 내부 오류 발생: {}", e.getMessage(), e);
         return new ResponseEntity<>(
                 ApiResult.error(ErrorCode.UNEXPECTED_SERVER_ERROR),
-                HttpStatus.INTERNAL_SERVER_ERROR);
+                HttpStatus.valueOf(ErrorCode.UNEXPECTED_SERVER_ERROR.getStatus())
+        );
     }
 
     /**
@@ -67,7 +68,7 @@ public class GlobalExceptionHandler {
                 errorMap.put(extractFieldName(error.getPropertyPath()), error.getMessage()));
         return new ResponseEntity<>(
                 ApiResult.error(errorMap, ErrorCode.VALIDATION_FAILED),
-                HttpStatus.BAD_REQUEST
+                HttpStatus.valueOf(ErrorCode.VALIDATION_FAILED.getStatus())
         );
     }
 
