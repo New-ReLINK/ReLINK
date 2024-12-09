@@ -7,27 +7,22 @@ import lombok.Getter;
 
 
 @Getter
+@AllArgsConstructor
 @JsonPropertyOrder({"success", "data", "error"})
 public class ApiResult<T> {
     private final T data;
     private final boolean success;
     private final ApiError error;
 
-    private ApiResult(T data, boolean success, ApiError error) {
-        this.data = data;
-        this.success = success;
-        this.error = error;
-    }
-
-    public static <T>ApiResult<T> success(T data){
+    public static <T> ApiResult<T> success(T data) {
         return new ApiResult<>(data, true, null);
     }
 
-    public static <T>ApiResult<T> error(ErrorCode errorCode){
+    public static <T> ApiResult<T> error(ErrorCode errorCode) {
         return new ApiResult<>(null, false, new ApiError(errorCode.getMessage(), errorCode.getStatus()));
     }
 
-    public static <T>ApiResult<T> error(T errorData, ErrorCode errorCode){
+    public static <T> ApiResult<T> error(T errorData, ErrorCode errorCode) {
         return new ApiResult<>(errorData, false, new ApiError(errorCode.getMessage(), errorCode.getStatus()));
     }
 }
