@@ -1,5 +1,6 @@
 package com.my.relink.service;
 
+import com.my.relink.controller.user.dto.req.UserDeleteReqDto;
 import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.image.Image;
 import com.my.relink.domain.image.ImageRepository;
@@ -13,6 +14,7 @@ import com.my.relink.ex.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -35,5 +37,17 @@ public class UserService {
         Image image = imageRepository.findByEntityIdAndEntityType(user.getId(), EntityType.USER).orElse(null);
 
         return new UserInfoRespDto(user, image);
+    }
+
+    @Transactional
+    public void deleteUser(UserDeleteReqDto dto) {
+        User user = userRepository.findByEmail(dto.getEmail())
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        if (!passwordEncoder.matches(dto.getPassword(), user.getPassword())) {
+            throw new BusinessException(ErrorCode.MISS_MATCHER_PASSWORD);
+        }
+
+        user.changeIsDeleted();
     }
 }
