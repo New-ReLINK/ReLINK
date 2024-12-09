@@ -22,13 +22,6 @@ public class AuthUser {
         this.authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
     }
 
-    public User toUser(){
-        return User.builder()
-                .email(email)
-                .id(id)
-                .build();
-    }
-
     public static AuthUser from(User user) {
         return new AuthUser(user.getId(), user.getEmail(), user.getRole());
     }
