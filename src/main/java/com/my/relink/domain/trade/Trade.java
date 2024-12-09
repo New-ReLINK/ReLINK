@@ -68,4 +68,21 @@ public class Trade extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     private TradeCancelReason cancelReason;
+
+    public void updateTradeStatus(TradeStatus tradeStatus) {
+        this.tradeStatus = tradeStatus;
+    }
+
+    public void updateHasOwnerRequested(Boolean requestedStatus) {
+        this.hasOwnerRequested = requestedStatus;
+    }
+
+    public void updateHasRequesterReceived(Boolean requestedStatus) {
+        this.hasRequesterReceived = requestedStatus;
+    }
+
+    public void updateHasRequesterRequested(Boolean requestedStatus) {
+        this.hasRequesterRequested = requestedStatus;
+    }
+
 }
