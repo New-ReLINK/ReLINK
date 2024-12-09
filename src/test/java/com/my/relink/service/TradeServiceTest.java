@@ -2,7 +2,7 @@ package com.my.relink.service;
 
 import com.my.relink.controller.trade.dto.response.TradeInquiryDetailRespDto;
 import com.my.relink.domain.trade.Trade;
-import com.my.relink.domain.trade.TradeRepository;
+import com.my.relink.domain.trade.repository.TradeRepository;
 import com.my.relink.domain.user.User;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
@@ -81,5 +81,13 @@ class TradeServiceTest extends DummyObject {
         BusinessException exception = assertThrows(BusinessException.class,
                 () -> tradeService.getTradeInquiryDetail(trade.getId(), user));
         assertEquals(exception.getErrorCode(), ErrorCode.TRADE_ACCESS_DENIED);
+    }
+
+
+    @Test
+    @DisplayName("채팅방 이전 대화 내역 조회: 정상 케이스")
+    void getChatRoomMessage_success(){
+
+
     }
 }

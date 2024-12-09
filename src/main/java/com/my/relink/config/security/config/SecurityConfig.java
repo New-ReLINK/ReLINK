@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.my.relink.config.security.JwtAuthorizationFilter;
 import com.my.relink.config.security.LoginAuthenticationFilter;
 import com.my.relink.config.security.jwt.JwtProvider;
-import com.my.relink.domain.user.UserRepository;
+import com.my.relink.domain.user.repository.UserRepository;
 import jakarta.servlet.DispatcherType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

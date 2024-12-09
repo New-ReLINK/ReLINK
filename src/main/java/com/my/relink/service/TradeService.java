@@ -5,7 +5,7 @@ import com.my.relink.controller.trade.dto.response.TradeInquiryDetailRespDto;
 import com.my.relink.domain.message.Message;
 import com.my.relink.domain.message.MessageRepository;
 import com.my.relink.domain.trade.Trade;
-import com.my.relink.domain.trade.TradeRepository;
+import com.my.relink.domain.trade.repository.TradeRepository;
 import com.my.relink.domain.user.User;
 import com.my.relink.domain.point.Point;
 import com.my.relink.domain.point.pointHistory.PointHistory;
@@ -13,13 +13,12 @@ import com.my.relink.domain.point.pointHistory.PointTransactionType;
 import com.my.relink.domain.point.pointHistory.repository.PointHistoryRepository;
 import com.my.relink.domain.point.repository.PointRepository;
 import com.my.relink.domain.trade.TradeStatus;
-import com.my.relink.domain.trade.dto.TradeRequestResponseDto;
+import com.my.relink.controller.trade.dto.response.TradeRequestRespDto;
 import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -88,7 +87,7 @@ public class TradeService {
     }
 
     @Transactional
-    public TradeRequestResponseDto requestTrade(Long tradeId, Long userId) {//추후 로그인 유저로 바뀔 예정
+    public TradeRequestRespDto requestTrade(Long tradeId, Long userId) {//추후 로그인 유저로 바뀔 예정
 
         User currentUser = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
@@ -122,7 +121,7 @@ public class TradeService {
             trade.updateTradeStatus(TradeStatus.IN_EXCHANGE);
         }
 
-        return new TradeRequestResponseDto(tradeId);
+        return new TradeRequestRespDto(tradeId);
     }
 }
 

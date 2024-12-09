@@ -20,6 +20,7 @@ public class MessageRespDto {
     private Long nextCursor;
 
     @Getter
+    @NoArgsConstructor
     public static class MessageDto {
         public MessageDto(Message message) {
             this.content = message.getContent();
