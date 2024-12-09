@@ -4,7 +4,9 @@ import com.my.relink.domain.point.pointHistory.PointHistory;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface PointHistoryRepository extends JpaRepository<PointHistory, Long> {
-    PointHistory findByTradeId(Long tradeId);
+    List<PointHistory> findByTradeIdOrderByCreatedAtDesc(Long tradeId);
 }
