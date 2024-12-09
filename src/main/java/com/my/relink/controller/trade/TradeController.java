@@ -43,4 +43,5 @@ public class TradeController {
             @RequestParam(value = "cursor", required = false) Long cursor) {
         return ResponseEntity.ok(ApiResult.success(tradeService.getChatRoomMessage(tradeId, size, cursor)));
     }
+
 }
