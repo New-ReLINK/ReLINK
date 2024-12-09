@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.my.relink.config.security.JwtAuthorizationFilter;
 import com.my.relink.config.security.LoginAuthenticationFilter;
 import com.my.relink.config.security.jwt.JwtProvider;
+import com.my.relink.domain.user.UserRepository;
 import jakarta.servlet.DispatcherType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +35,7 @@ public class SecurityConfig {
     private final JwtProvider jwtProvider;
     private final ObjectMapper objectMapper;
     private final AuthenticationConfiguration authenticationConfiguration;
+    private final UserRepository userRepository;
 
     @Value("${spring.profiles.active}")
     private String profileType;
@@ -63,7 +65,9 @@ public class SecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .addFilterBefore(new JwtAuthorizationFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class)
                 .addFilterAt(
-                        new LoginAuthenticationFilter(authenticationManager(authenticationConfiguration), objectMapper, jwtProvider),
+                        new LoginAuthenticationFilter(
+                                authenticationManager(authenticationConfiguration), objectMapper, jwtProvider, userRepository
+                        ),
                         UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
