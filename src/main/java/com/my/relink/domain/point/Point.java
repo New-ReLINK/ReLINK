@@ -34,4 +34,7 @@ public class Point extends BaseEntity {
     }
 
 
+    public void add(Integer amountToAdd) {
+        this.amount += amountToAdd;
+    }
 }
