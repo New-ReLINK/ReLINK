@@ -66,19 +66,43 @@ public class JwtProvider {
         }
     }
 
-    public AuthUser getAuthUserForToken(String token) {
-        Jws<Claims> claims = Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token);
+//    public AuthUser getAuthUserForToken(String token) {
+//        Jws<Claims> claims = Jwts.parserBuilder()
+//                .setSigningKey(key)
+//                .build()
+//                .parseClaimsJws(token);
+//
+//        String email = claims.getBody().getSubject();
+//        Long id = (Long) claims.getBody().get("Id");
+//        String role = (String) claims.getBody().get("Role");
+//
+//        log.info("Token Claim Email : {}", email);
+//        log.info("Token Claim Role : {}", role);
+//
+//        return new AuthUser(id, email, Role.valueOf(role));
+//    }
+public AuthUser getAuthUserForToken(String token) {
+    Jws<Claims> claims = Jwts.parserBuilder()
+            .setSigningKey(key)
+            .build()
+            .parseClaimsJws(token);
 
-        String email = claims.getBody().getSubject();
-        Long id = (Long) claims.getBody().get("Id");
-        String role = (String) claims.getBody().get("Role");
-
-        log.info("Token Claim Email : {}", email);
-        log.info("Token Claim Role : {}", role);
-
-        return new AuthUser(id, email, Role.valueOf(role));
+    String email = claims.getBody().getSubject();
+    Object idObject = claims.getBody().get("Id");
+    Long id = null;
+    if (idObject instanceof Integer) {
+        id = ((Integer) idObject).longValue(); // Integer -> Long 변환
+    } else if (idObject instanceof Long) {
+        id = (Long) idObject; // Long인 경우 그대로 사용
+    } else {
+        throw new IllegalArgumentException("Invalid type for 'Id' in claims");
     }
+
+    String role = (String) claims.getBody().get("Role");
+
+    log.info("Token Claim Email : {}", email);
+    log.info("Token Claim Role : {}", role);
+
+    return new AuthUser(id, email, Role.valueOf(role));
+}
 }
