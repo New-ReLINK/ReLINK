@@ -1,14 +1,12 @@
 package com.my.relink.service;
 
 import com.my.relink.controller.trade.dto.response.TradeInquiryDetailRespDto;
-import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.trade.Trade;
 import com.my.relink.domain.trade.TradeRepository;
 import com.my.relink.domain.user.User;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import com.my.relink.util.DummyObject;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -47,7 +45,7 @@ class TradeServiceTest extends DummyObject {
         when(imageService.getExchangeItemUrl(trade.getRequesterExchangeItem())).thenReturn(imageUrl);
         when(userService.getTrustScore(partner)).thenReturn(trustScore);
 
-        TradeInquiryDetailRespDto result = tradeService.retrieveTradeDetail(trade.getId(), user);
+        TradeInquiryDetailRespDto result = tradeService.getTradeInquiryDetail(trade.getId(), user);
 
         assertAll(
                 () -> assertNotNull(result),
@@ -68,7 +66,7 @@ class TradeServiceTest extends DummyObject {
                 .thenReturn(Optional.empty());
 
         BusinessException exception = assertThrows(BusinessException.class,
-                () -> tradeService.retrieveTradeDetail(tradeId, user));
+                () -> tradeService.getTradeInquiryDetail(tradeId, user));
         assertEquals(exception.getErrorCode(), ErrorCode.TRADE_NOT_FOUND);
     }
 
@@ -81,7 +79,7 @@ class TradeServiceTest extends DummyObject {
         when(tradeRepository.findByIdWithItemsAndUser(trade.getId())).thenReturn(Optional.of(trade));
 
         BusinessException exception = assertThrows(BusinessException.class,
-                () -> tradeService.retrieveTradeDetail(trade.getId(), user));
+                () -> tradeService.getTradeInquiryDetail(trade.getId(), user));
         assertEquals(exception.getErrorCode(), ErrorCode.TRADE_ACCESS_DENIED);
     }
 }

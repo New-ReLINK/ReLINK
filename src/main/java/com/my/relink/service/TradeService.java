@@ -1,7 +1,6 @@
 package com.my.relink.service;
 
 import com.my.relink.controller.trade.dto.response.TradeInquiryDetailRespDto;
-import com.my.relink.domain.item.exchange.ExchangeItemRepository;
 import com.my.relink.domain.trade.Trade;
 import com.my.relink.domain.trade.TradeRepository;
 import com.my.relink.domain.user.User;
@@ -27,7 +26,7 @@ public class TradeService {
      * @param user
      * @return
      */
-    public TradeInquiryDetailRespDto retrieveTradeDetail (Long tradeId, User user) {
+    public TradeInquiryDetailRespDto getTradeInquiryDetail(Long tradeId, User user) {
         Trade trade = tradeRepository.findByIdWithItemsAndUser(tradeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
 
