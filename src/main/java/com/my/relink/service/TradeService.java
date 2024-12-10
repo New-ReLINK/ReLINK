@@ -1,11 +1,14 @@
 package com.my.relink.service;
 
 import com.my.relink.config.security.AuthUser;
+import com.my.relink.controller.trade.dto.request.AddressReqDto;
+import com.my.relink.controller.trade.dto.response.AddressRespDto;
 import com.my.relink.controller.trade.dto.response.TradeInquiryDetailRespDto;
 import com.my.relink.controller.trade.dto.response.TradeRequestRespDto;
 import com.my.relink.domain.trade.Trade;
 import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.domain.trade.repository.TradeRepository;
+import com.my.relink.domain.user.Address;
 import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.BusinessException;
@@ -96,6 +99,31 @@ public class TradeService {
         if (!trade.getHasRequesterRequested() || !trade.getHasOwnerRequested()) {
             trade.updateTradeStatus(TradeStatus.AVAILABLE);
             tradeRepository.save(trade);
+        }
+    }
+
+    @Transactional
+    public AddressRespDto createAddress(Long tradeId, AddressReqDto reqDto, AuthUser authUser) {
+        User currentUser = userRepository.findById(authUser.getId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        Trade trade = tradeRepository.findById(tradeId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
+
+        if(trade.getHasOwnerRequested()&&trade.getHasRequesterRequested()){
+            // 소유자 주소와 요청자 주소 업데이트
+            if(trade.getRequester().getId().equals(currentUser.getId())){
+                Address requesterAddress = reqDto.toRequesterAddressEntity();  // 요청자 주소 생성
+                trade.saveRequesterAddress(requesterAddress);
+            } else{
+                Address ownerAddress = reqDto.toOwnerAddressEntity();  // 소유자 주소 생성
+                trade.saveOwnerAddress(ownerAddress);
+            }
+
+            tradeRepository.save(trade);
+            return new AddressRespDto(tradeId);
+        } else {
+            throw new BusinessException(ErrorCode.TRADE_ACCESS_DENIED);
         }
     }
 }
