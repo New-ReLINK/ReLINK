@@ -14,6 +14,7 @@ import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.service.ExchangeItemService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -47,6 +48,7 @@ class ExchangeItemServiceTest {
     }
 
     @Test
+    @DisplayName("내 교환상품 생성하기 성공")
     void testCreateExchangeItem_Success() {
         // Given
         Long userId = 1L;
@@ -81,6 +83,7 @@ class ExchangeItemServiceTest {
     }
 
     @Test
+    @DisplayName("내 교환상품 생성하기 실패 - 보증금 0 미만 입력된 경우")
     void testCreateExchangeItem_Fail_DepositLessZero() {
         // Given
         Long userId = 1L; // 토큰에서 추출된 사용자 ID
@@ -108,6 +111,7 @@ class ExchangeItemServiceTest {
     }
 
     @Test
+    @DisplayName("내 교환상품 생성하기 실패 - 포인트가 보증금보다 작은 경우")
     void testCreateExchangeItem_Fail_PointLessThenDeposit() {
         // Given
         Long userId = 1L;
@@ -132,5 +136,11 @@ class ExchangeItemServiceTest {
         assertThatThrownBy(() -> exchangeItemService.createExchangeItem(reqDto, userId))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("포인트가 부족합니다.");
+    }
+
+    @Test
+    @DisplayName("내 교환상품 목록 불러오기 정상 성공")
+    void testGetExchangeItemByUserId_Success() {
+
     }
 }

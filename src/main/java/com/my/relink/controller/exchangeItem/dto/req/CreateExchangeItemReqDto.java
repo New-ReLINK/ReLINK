@@ -1,5 +1,6 @@
 package com.my.relink.controller.exchangeItem.dto.req;
 
+import com.my.relink.common.validation.EnumValidator;
 import com.my.relink.domain.category.Category;
 import com.my.relink.domain.item.donation.ItemQuality;
 import com.my.relink.domain.item.exchange.ExchangeItem;
@@ -24,6 +25,7 @@ public class CreateExchangeItemReqDto {
     @NotNull(message = "카테고리를 선택해주세요.")
     private Long categoryId;
     @NotNull(message = "상품의 상태를 선택해주세요")
+    @EnumValidator(enumClass = ItemQuality.class, message = "유효하지 않은 상품 상태입니다.")
     private ItemQuality itemQuality;
     @Length(max = 20, message = "사이즈는 20자 이내로 입력해주세요.")
     private String size;

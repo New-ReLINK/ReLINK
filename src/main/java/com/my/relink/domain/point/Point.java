@@ -7,7 +7,6 @@ import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -27,8 +26,8 @@ public class Point extends BaseEntity {
     @JoinColumn(name = "user_id")
     private User user;
 
-    public void deduct(Integer amountToDeduct){
-        if(amount-amountToDeduct<0){
+    public void deduct(Integer amountToDeduct) {
+        if (amount - amountToDeduct < 0) {
             throw new BusinessException(ErrorCode.POINT_SHORTAGE);
         }
         this.amount -= amountToDeduct;
@@ -37,6 +36,7 @@ public class Point extends BaseEntity {
     public void restore(Integer amountToAdd) {
         this.amount += amountToAdd;
     }
+
     // 테스트용 생성자
     public Point(Integer amount, User user) {
         this.amount = amount;
