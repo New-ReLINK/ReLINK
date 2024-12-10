@@ -1,2 +1,10 @@
-package com.my.relink.chat.controller;public class ChatController {
+package com.my.relink.chat.controller;
+
+import org.springframework.stereotype.Controller;
+
+@Controller
+public class ChatController {
+
+
+
 }
