@@ -13,8 +13,6 @@ import org.hibernate.annotations.SQLRestriction;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @SQLRestriction("is_deleted = false")
-@AllArgsConstructor
-@Builder
 @ToString
 public class ExchangeItem extends BaseEntity {
 
@@ -57,25 +55,31 @@ public class ExchangeItem extends BaseEntity {
     private Boolean isDeleted = false;
 
     @Builder
-    public ExchangeItem(String name,
-                        String description,
-                        Category category,
-                        ItemQuality itemQuality,
-                        Integer deposit,
-                        String size,
-                        String brand,
-                        String desiredItem,
-                        User user,
-                        TradeStatus tradeStatus) {
+    public ExchangeItem(
+            Long id,
+            String name,
+            String description,
+            Category category,
+            ItemQuality itemQuality,
+            User user,
+            Integer deposit,
+            String size,
+            String brand,
+            String desiredItem,
+            TradeStatus tradeStatus,
+            Boolean isDeleted
+    ) {
+        this.id = id;
         this.name = name;
         this.description = description;
         this.category = category;
         this.itemQuality = itemQuality;
+        this.user = user;
         this.deposit = deposit;
         this.size = size;
         this.brand = brand;
         this.desiredItem = desiredItem;
-        this.user = user;
         this.tradeStatus = tradeStatus;
+        this.isDeleted = isDeleted;
     }
 }
