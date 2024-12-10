@@ -1,10 +1,13 @@
 package com.my.relink.domain.image;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-
 import java.util.Optional;
 
 public interface ImageRepository extends JpaRepository<Image, Long> {
 
+
+    Optional<Image> findTopByEntityIdAndEntityTypeOrderByCreatedAtAsc(Long entityId, EntityType entityType);
+
     Optional<Image> findByEntityIdAndEntityType(Long entityId, EntityType entityType);
+
 }
