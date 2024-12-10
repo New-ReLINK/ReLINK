@@ -25,6 +25,6 @@ public class MessageController {
             @PathVariable("tradeId") Long tradeId,
             @RequestParam(value = "size", required = false, defaultValue = "10") @Min(1) @Max(100) int size,
             @RequestParam(value = "cursor", required = false) Long cursor) {
-        return ResponseEntity.ok(ApiResult.success(messageService.getChatRoomMessage(tradeId, size, cursor)));
+        return ResponseEntity.ok(ApiResult.success(messageService.getChatRoomMessages(tradeId, size, cursor)));
     }
 }

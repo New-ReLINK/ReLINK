@@ -12,21 +12,6 @@ import java.util.List;
 
 public class DummyObject {
 
-    protected List<Message> mockMessageList(Trade trade, User sender){
-        List<Message> messageList = new ArrayList<>();
-        for(int i = 1; i <= 10; i++){
-            messageList.add(
-                    Message.builder()
-                    .content("hi..")
-                    .trade(trade)
-                    .id((long) i)
-                    .user(sender)
-                    .build()
-            );
-        }
-        return messageList;
-    }
-
     protected User mockOwnerUser(){
         return User.builder()
                 .nickname("maeda")
