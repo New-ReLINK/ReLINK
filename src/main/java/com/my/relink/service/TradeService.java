@@ -1,23 +1,17 @@
 package com.my.relink.service;
 
+import com.my.relink.config.security.AuthUser;
 import com.my.relink.controller.trade.dto.response.TradeInquiryDetailRespDto;
-import com.my.relink.domain.trade.Trade;
-import com.my.relink.domain.trade.repository.TradeRepository;
-import com.my.relink.domain.user.User;
-import com.my.relink.domain.point.Point;
-import com.my.relink.domain.point.repository.PointRepository;
-import com.my.relink.domain.point.pointHistory.PointHistory;
-import com.my.relink.domain.point.pointHistory.repository.PointHistoryRepository;
-import com.my.relink.domain.point.pointHistory.PointTransactionType;
-import com.my.relink.domain.trade.Trade;
-import com.my.relink.domain.trade.repository.TradeRepository;
-import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.controller.trade.dto.response.TradeRequestRespDto;
-import com.my.relink.domain.user.User;
+import com.my.relink.domain.point.Point;
+import com.my.relink.domain.point.pointHistory.PointHistory;
+import com.my.relink.domain.point.pointHistory.PointTransactionType;
 import com.my.relink.domain.point.pointHistory.repository.PointHistoryRepository;
 import com.my.relink.domain.point.repository.PointRepository;
+import com.my.relink.domain.trade.Trade;
 import com.my.relink.domain.trade.TradeStatus;
-import com.my.relink.domain.trade.dto.TradeRequestResponseDto;
+import com.my.relink.domain.trade.repository.TradeRepository;
+import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
@@ -122,8 +116,6 @@ public class TradeService {
             trade.updateTradeStatus(TradeStatus.AVAILABLE);
             tradeRepository.save(trade);
         }
-    }
-        return new TradeRequestResponseDto(tradeId);
     }
 }
 
