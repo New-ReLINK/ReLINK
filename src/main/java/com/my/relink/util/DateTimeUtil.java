@@ -1,10 +1,18 @@
 package com.my.relink.util;
 
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
+@Component
+@RequiredArgsConstructor
 public class DateTimeUtil {
+
+    private final Clock clock;
 
     private static final DateTimeFormatter TODAY_MESSAGE_FORMAT =
             DateTimeFormatter.ofPattern("a h:m").withLocale(Locale.KOREA);
@@ -14,7 +22,8 @@ public class DateTimeUtil {
         DateTimeFormatter.ofPattern("yyyy년 M월 d일 a h:m").withLocale(Locale.KOREA);
     
 
-    public static String getMessageFormattedTime(LocalDateTime messageTime, LocalDateTime now){
+    public String getMessageFormattedTime(LocalDateTime messageTime){
+        LocalDateTime now = LocalDateTime.now(clock);
         if(messageTime.toLocalDate().equals(now.toLocalDate())){
             return messageTime.format(TODAY_MESSAGE_FORMAT);
         } else if (messageTime.getYear() == now.getYear()){

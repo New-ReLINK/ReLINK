@@ -3,6 +3,7 @@ package com.my.relink.service;
 import com.my.relink.controller.message.dto.response.MessageRespDto;
 import com.my.relink.domain.message.Message;
 import com.my.relink.domain.message.MessageRepository;
+import com.my.relink.util.DateTimeUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ public class MessageService {
 
     private final MessageRepository messageRepository;
     private final TradeService tradeService;
+    private final DateTimeUtil dateTimeUtil;
     private static final Long DEFAULT_CURSOR = Long.MAX_VALUE;
     private static final int DEFAULT_PAGE = 0;
 
@@ -41,7 +43,7 @@ public class MessageService {
         Long nextCursor = getNextCursor(messageList, size);
         List<Message> pageMessageList = limitMessages(messageList, size);
 
-        return new MessageRespDto(pageMessageList, nextCursor);
+        return new MessageRespDto(pageMessageList, nextCursor, dateTimeUtil);
     }
 
     private Long getNextCursor(List<Message> messageList, int size) {
