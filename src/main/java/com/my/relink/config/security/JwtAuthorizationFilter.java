@@ -39,6 +39,6 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
     private boolean isWsEndPoint(HttpServletRequest request){
-        return request.getRequestURI().contains("/chats");
+        return request.getRequestURI().contains("/chat");
     }
 }
