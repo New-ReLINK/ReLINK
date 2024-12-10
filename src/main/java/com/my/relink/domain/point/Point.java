@@ -7,6 +7,7 @@ import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -32,6 +33,9 @@ public class Point extends BaseEntity {
         }
         this.amount -= amountToDeduct;
     }
-
-
+    // 테스트용 생성자
+    public Point(Integer amount, User user) {
+        this.amount = amount;
+        this.user = user;
+    }
 }
