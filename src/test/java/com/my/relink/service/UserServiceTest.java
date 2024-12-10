@@ -1,18 +1,18 @@
 package com.my.relink.service;
 
-
-import com.my.relink.domain.review.ReviewRepository;
-import com.my.relink.domain.user.User;
-import com.my.relink.util.DummyObject;
+import com.my.relink.controller.user.dto.req.AddressCreateReqDto;
+import com.my.relink.controller.user.dto.req.UserCreateReqDto;
+import com.my.relink.controller.user.dto.resp.UserAddressRespDto;
+import com.my.relink.controller.user.dto.resp.UserCreateRespDto;
+import com.my.relink.controller.user.dto.resp.UserInfoRespDto;
 import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.image.Image;
 import com.my.relink.domain.image.ImageRepository;
+import com.my.relink.domain.user.Address;
+import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.repository.UserRepository;
-import com.my.relink.controller.user.dto.req.AddressCreateReqDto;
-import com.my.relink.controller.user.dto.req.UserCreateReqDto;
-import com.my.relink.controller.user.dto.resp.UserCreateRespDto;
-import com.my.relink.controller.user.dto.resp.UserInfoRespDto;
 import com.my.relink.ex.BusinessException;
+import com.my.relink.util.DummyObject;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,6 +25,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -155,5 +156,40 @@ class UserServiceTest extends DummyObject {
 
         verify(userRepository).findByEmail(email);
         verify(imageRepository).findByEntityIdAndEntityType(user.getId(), EntityType.USER);
+    }
+
+    @Test
+    @DisplayName("사용자 주소를 조회할 때 사용자를 찾을 수 없을 때 USER_NOT_FOUND Exception 이 발생한다.")
+    void findAddressIsUserNotFoundFailTest() {
+        // given
+        Long userId = 1L;
+
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+        // when & then
+        assertThrows(BusinessException.class, () -> userService.findAddress(userId));
+        verify(userRepository, times(1)).findById(any());
+    }
+
+    @Test
+    @DisplayName("사용자 주소를 조회할 때 사용자를 찾았을 때 주소를 반환한다.")
+    void findAddressSuccessTest() {
+        // given
+        Long userId = 1L;
+
+        User user = User.builder()
+                .address(new Address(12345, "test", "test_details"))
+                .build();
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        // when
+        UserAddressRespDto address = userService.findAddress(userId);
+
+        // then
+        assertThat(address).isNotNull();
+        assertThat(address.getZipcode()).isEqualTo(user.getAddress().getZipcode());
+        assertThat(address.getBaseAddress()).isEqualTo(user.getAddress().getBaseAddress());
+        assertThat(address.getDetailAddress()).isEqualTo(user.getAddress().getDetailAddress());
+        verify(userRepository, times(1)).findById(any());
     }
 }
