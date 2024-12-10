@@ -12,6 +12,7 @@ import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.stereotype.Component;
 
@@ -37,15 +38,19 @@ public class StompHandler implements ChannelInterceptor {
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 
-        if(StompCommand.CONNECT.equals(accessor.getCommand())){
-            //토큰 검증
-            String tokenWithPrefix = accessor.getFirstNativeHeader(WebSocketHeader.AUTH_HEADER);
-            String token = tokenWithPrefix.replace(JwtProvider.TOKEN_PREFIX, "");
-            AuthUser authUser = jwtProvider.getAuthUserForToken(token);
+        try {
+            if (StompCommand.CONNECT.equals(accessor.getCommand())) {
+                //토큰 검증
+                String tokenWithPrefix = accessor.getFirstNativeHeader(WebSocketHeader.AUTH_HEADER);
+                String token = tokenWithPrefix.replace(JwtProvider.TOKEN_PREFIX, "");
+                AuthUser authUser = jwtProvider.getAuthUserForToken(token);
 
-            //TradeStatus 검증: EXCHANGED, CANCELED가 아닐 때만 접근 허용한다
-            validateChatRoomAccess(accessor);
-            accessor.setUser(new ChatPrincipal(authUser));
+                //TradeStatus 검증: EXCHANGED, CANCELED가 아닐 때만 접근 허용한다
+                validateChatRoomAccess(accessor);
+                accessor.setUser(new ChatPrincipal(authUser));
+            }
+        }catch (BusinessException e){
+            createErrorMessage(e.getMessage());
         }
         return message;
     }
@@ -61,5 +66,16 @@ public class StompHandler implements ChannelInterceptor {
                 || TradeStatus.statusOf(tradeStatus) == TradeStatus.EXCHANGED){
             throw new BusinessException(ErrorCode.CHATROOM_ACCESS_DENIED);
         }
+    }
+
+    private Message<byte[]> createErrorMessage(String errorMessage) {
+        StompHeaderAccessor errorAccessor = StompHeaderAccessor.create(StompCommand.ERROR);
+        errorAccessor.setMessage(errorMessage);
+        errorAccessor.setLeaveMutable(true);
+
+        return MessageBuilder.createMessage(
+                new byte[0],
+                errorAccessor.getMessageHeaders()
+        );
     }
 }
