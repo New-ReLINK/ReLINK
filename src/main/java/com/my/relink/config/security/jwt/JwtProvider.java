@@ -73,12 +73,13 @@ public class JwtProvider {
                 .parseClaimsJws(token);
 
         String email = claims.getBody().getSubject();
-        Long id = (Long) claims.getBody().get("Id");
+        Object id = claims.getBody().get("Id");
         String role = (String) claims.getBody().get("Role");
 
         log.info("Token Claim Email : {}", email);
         log.info("Token Claim Role : {}", role);
 
-        return new AuthUser(id, email, Role.valueOf(role));
+        return new AuthUser( ((Number) id).longValue(), email, Role.valueOf(role));
     }
+
 }

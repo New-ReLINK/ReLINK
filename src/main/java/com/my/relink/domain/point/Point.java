@@ -33,6 +33,10 @@ public class Point extends BaseEntity {
         }
         this.amount -= amountToDeduct;
     }
+
+    public void restore(Integer amountToAdd) {
+        this.amount += amountToAdd;
+    }
     // 테스트용 생성자
     public Point(Integer amount, User user) {
         this.amount = amount;
