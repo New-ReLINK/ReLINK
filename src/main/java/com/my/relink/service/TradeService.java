@@ -3,6 +3,7 @@ package com.my.relink.service;
 import com.my.relink.config.security.AuthUser;
 import com.my.relink.controller.trade.dto.request.AddressReqDto;
 import com.my.relink.controller.trade.dto.response.AddressRespDto;
+import com.my.relink.controller.trade.dto.response.TradeCompleteRespDto;
 import com.my.relink.controller.trade.dto.response.TradeInquiryDetailRespDto;
 import com.my.relink.controller.trade.dto.response.TradeRequestRespDto;
 import com.my.relink.domain.trade.Trade;
@@ -127,6 +128,28 @@ public class TradeService {
         } else {
             throw new BusinessException(ErrorCode.TRADE_ACCESS_DENIED);
         }
+    }
+
+    public TradeCompleteRespDto completeTrade(Long tradeId, AuthUser authUser) {
+        User currentUser = userRepository.findById(authUser.getId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        Trade trade = tradeRepository.findById(tradeId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
+
+        //요청자/소유자 여부에 따라 수령상태 변경
+        if(trade.getRequester().getId().equals(currentUser.getId())){
+            trade.updateHasRequesterReceived(true);
+        } else{
+            trade.updateHasOwnerReceived(true);
+        }
+
+        //양쪽 모두 수령 확인 시 거래 상태 변경
+        if(trade.getHasOwnerReceived()&&trade.getHasRequesterReceived()){
+            trade.updateTradeStatus(TradeStatus.EXCHANGED);
+        }
+
+        //보증금 반환
     }
 }
 

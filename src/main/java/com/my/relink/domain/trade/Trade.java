@@ -97,6 +97,10 @@ public class Trade extends BaseEntity {
         this.hasOwnerRequested = requestedStatus;
     }
 
+    public void updateHasOwnerReceived(Boolean requestedStatus) {
+        this.hasOwnerReceived = requestedStatus;
+    }
+
     public void updateHasRequesterReceived(Boolean requestedStatus) {
         this.hasRequesterReceived = requestedStatus;
     }
