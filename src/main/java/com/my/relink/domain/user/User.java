@@ -7,7 +7,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.SQLRestriction;
-import org.hibernate.annotations.Where;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -53,5 +52,23 @@ public class User extends BaseEntity {
         this.isDeleted = isDeleted;
         this.role = role;
         this.address = address;
+    }
+
+    public void changeInfo(String name, String nickname) {
+        this.name = name;
+        this.nickname = nickname;
+    }
+
+    public void changeIsDeleted() {
+        this.isDeleted = true;
+    }
+
+    public User(String name, String nickname, String email, String password, String contact, Role role) {
+        this.name = name;
+        this.nickname = nickname;
+        this.email = email;
+        this.password = password;
+        this.contact = contact;
+        this.role = role;
     }
 }
