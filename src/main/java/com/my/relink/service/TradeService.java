@@ -56,7 +56,7 @@ public class TradeService {
                 orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
 
         //차감 메서드 위임
-        pointTransactionService.deductPoints(tradeId, authUser);
+        pointTransactionService.deductPoints(tradeId, currentUser);
 
         //요청자/소유자 여부에 따라 적절한 요청 상태 필드 업데이트
         if(trade.getRequester().getId().equals(currentUser.getId())){
@@ -83,7 +83,7 @@ public class TradeService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
 
         //복원 메서드 위임
-        pointTransactionService.restorePoints(tradeId, authUser);
+        pointTransactionService.restorePoints(tradeId, currentUser);
 
         // 요청 상태 업데이트
         if (trade.getRequester().getId().equals(currentUser.getId())) {
