@@ -54,7 +54,7 @@ public class TradeService {
     }
 
     @Transactional
-    public TradeRequestRespDto requestTrade(Long tradeId, AuthUser authUser) {//추후 로그인 유저로 바뀔 예정
+    public TradeRequestRespDto requestTrade(Long tradeId, AuthUser authUser) {
 
         User currentUser = userRepository.findById(authUser.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));

@@ -13,13 +13,12 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/chat")
 public class TradeController {
 
     private final TradeService tradeService;
 
 
-    @GetMapping("/{tradeId}")
+    @GetMapping("/chat/{tradeId}")
     public ResponseEntity<ApiResult<TradeInquiryDetailRespDto>> getTradeInquiryChatRoom(
             @PathVariable("tradeId") Long tradeId,
             @AuthenticationPrincipal AuthUser authUser){
