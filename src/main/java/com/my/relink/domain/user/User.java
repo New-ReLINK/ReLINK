@@ -53,6 +53,11 @@ public class User extends BaseEntity {
         this.role = role;
         this.address = address;
     }
+
+    public void changeIsDeleted() {
+        this.isDeleted = true;
+    }
+
     public User(String name, String nickname, String email, String password, String contact, Role role) {
         this.name = name;
         this.nickname = nickname;
