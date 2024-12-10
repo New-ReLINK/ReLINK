@@ -1,6 +1,7 @@
 package com.my.relink.controller.message.dto.response;
 
 import com.my.relink.domain.message.Message;
+import com.my.relink.util.DateTimeUtil;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -26,12 +27,12 @@ public class MessageRespDto {
             this.content = message.getContent();
             this.nickname = message.getUser().getNickname();
             this.userId = message.getUser().getId();
-            this.sentAt = message.getCreatedAt();
+            this.sentAt = DateTimeUtil.getMessageFormattedTime(message.getCreatedAt(), LocalDateTime.now());
         }
 
         private String content;
         private String nickname;
         private Long userId;
-        private LocalDateTime sentAt;
+        private String sentAt;
     }
 }
