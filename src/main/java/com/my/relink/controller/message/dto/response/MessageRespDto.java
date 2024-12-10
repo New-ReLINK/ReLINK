@@ -12,8 +12,14 @@ import java.util.List;
 @NoArgsConstructor
 public class MessageRespDto {
 
-    public MessageRespDto(List<Message> messageList, Long nextCursor) {
-        this.messageList = messageList.stream().map(MessageDto::new).toList();
+    public MessageRespDto(List<Message> messageList, Long nextCursor){
+        this(messageList, nextCursor, LocalDateTime.now());
+    }
+
+    public MessageRespDto(List<Message> messageList, Long nextCursor, LocalDateTime now) {
+        this.messageList = messageList.stream()
+                .map(message -> new MessageDto(message, now))
+                .toList();
         this.nextCursor = nextCursor;
     }
 
@@ -23,11 +29,16 @@ public class MessageRespDto {
     @Getter
     @NoArgsConstructor
     public static class MessageDto {
+
         public MessageDto(Message message) {
+            this(message, LocalDateTime.now());
+        }
+
+        public MessageDto(Message message, LocalDateTime now) {
             this.content = message.getContent();
             this.nickname = message.getUser().getNickname();
             this.userId = message.getUser().getId();
-            this.sentAt = DateTimeUtil.getMessageFormattedTime(message.getCreatedAt(), LocalDateTime.now());
+            this.sentAt = DateTimeUtil.getMessageFormattedTime(message.getCreatedAt(), now);
         }
 
         private String content;
