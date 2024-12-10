@@ -79,7 +79,7 @@ public class JwtProvider {
         log.info("Token Claim Email : {}", email);
         log.info("Token Claim Role : {}", role);
 
-        return new AuthUser( ((Number) id).longValue(), email, Role.valueOf(role));
+        return new AuthUser(((Number) id).longValue(), email, Role.valueOf(role));
     }
 
 }
