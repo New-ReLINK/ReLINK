@@ -70,6 +70,7 @@ public class UserService {
         user.changeInfo(dto.getName(), dto.getNickname());
     }
 
+    @Transactional
     public void deleteUser(UserDeleteReqDto dto) {
         User user = userRepository.findByEmail(dto.getEmail())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
