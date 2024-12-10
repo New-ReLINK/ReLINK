@@ -1,8 +1,8 @@
 package com.my.relink.controller.item.donation;
 
 import com.my.relink.config.security.AuthUser;
-import com.my.relink.controller.item.donation.dto.req.DonationItemReqDto;
-import com.my.relink.controller.item.donation.dto.resp.DonationItemRespDto;
+import com.my.relink.controller.item.donation.dto.DonationItemReqDto;
+import com.my.relink.controller.item.donation.dto.DonationItemRespDto;
 import com.my.relink.service.DonationItemService;
 import com.my.relink.util.api.ApiResult;
 import jakarta.validation.Valid;
@@ -11,8 +11,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
