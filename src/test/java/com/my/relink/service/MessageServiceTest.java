@@ -7,6 +7,7 @@ import com.my.relink.domain.trade.Trade;
 import com.my.relink.domain.user.User;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
+import com.my.relink.util.DateTimeUtil;
 import com.my.relink.util.DummyObject;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -40,6 +41,9 @@ class MessageServiceTest extends DummyObject {
 
     @Mock
     private TradeService tradeService;
+
+    @Mock
+    private DateTimeUtil dateTimeUtil;
 
     @Nested
     @DisplayName("채팅 메시지 내역 조회 테스트")
