@@ -26,7 +26,7 @@ public class StompHandler implements ChannelInterceptor {
      * 초기 웹소켓 연결 시점에 검증 진행
      *
      * 이미 '/chat/{tradeId}' 시점에서 해당 trade에 접근 가능한지 검사하기 때문에
-     * 여기서는 토큰 검증만 진행
+     * 여기서는 토큰과 채팅 세션 연결 검증만 수행한다
      * @param message
      * @param channel
      * @return
