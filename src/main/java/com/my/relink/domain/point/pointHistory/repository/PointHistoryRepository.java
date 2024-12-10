@@ -8,5 +8,5 @@ import java.util.Optional;
 
 @Repository
 public interface PointHistoryRepository extends JpaRepository<PointHistory, Long> {
-    Optional<PointHistory> findByTradeIdOrderByCreatedAtDesc(Long tradeId);
+    Optional<PointHistory> findFirstByTradeIdOrderByCreatedAtDesc(Long tradeId);
 }

@@ -25,7 +25,7 @@ public class PointTransactionService {
     @Transactional
     public void restorePoints(Long tradeId, AuthUser authUser){
         // 해당 Trade에 연결된 PointHistory 확인
-        PointHistory pointHistory = pointHistoryRepository.findByTradeIdOrderByCreatedAtDesc(tradeId)
+        PointHistory pointHistory = pointHistoryRepository.findFirstByTradeIdOrderByCreatedAtDesc(tradeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.POINT_HISTORY_NOT_FOUND));
 
         Point point = pointRepository.findByUserId(authUser.getId())
