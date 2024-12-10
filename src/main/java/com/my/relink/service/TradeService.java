@@ -1,6 +1,9 @@
 package com.my.relink.service;
 
-import com.my.relink.config.security.AuthUser;
+import com.my.relink.controller.trade.dto.response.TradeInquiryDetailRespDto;
+import com.my.relink.domain.trade.Trade;
+import com.my.relink.domain.trade.repository.TradeRepository;
+import com.my.relink.domain.user.User;
 import com.my.relink.domain.point.Point;
 import com.my.relink.domain.point.repository.PointRepository;
 import com.my.relink.domain.point.pointHistory.PointHistory;
@@ -11,6 +14,10 @@ import com.my.relink.domain.trade.repository.TradeRepository;
 import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.controller.trade.dto.response.TradeRequestRespDto;
 import com.my.relink.domain.user.User;
+import com.my.relink.domain.point.pointHistory.repository.PointHistoryRepository;
+import com.my.relink.domain.point.repository.PointRepository;
+import com.my.relink.domain.trade.TradeStatus;
+import com.my.relink.domain.trade.dto.TradeRequestResponseDto;
 import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
@@ -20,13 +27,37 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class TradeService {
 
     private final TradeRepository tradeRepository;
+    private final UserTrustScoreService userTrustScoreService;
+    private final ImageService imageService;
     private final UserRepository userRepository;
     private final PointRepository pointRepository;
     private final PointHistoryRepository pointHistoryRepository;
     private final PointHistoryService pointHistoryService;
+
+
+    /**
+     * [문의하기] -> 해당 채팅방의 거래 정보, 상품 정보, 상대 유저 정보 내리기
+     *
+     * @param tradeId
+     * @param userId
+     * @return
+     */
+    public TradeInquiryDetailRespDto getTradeInquiryDetail(Long tradeId, Long userId) {
+        Trade trade = tradeRepository.findByIdWithItemsAndUser(tradeId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
+
+        trade.validateAccess(userId);
+
+        String requestedItemImageUrl = imageService.getExchangeItemUrl(trade.getRequesterExchangeItem());
+        User partner = trade.getPartner(userId);
+        int trustScoreOfPartner = userTrustScoreService.getTrustScore(partner);
+
+        return new TradeInquiryDetailRespDto(trade, partner, trustScoreOfPartner, requestedItemImageUrl);
+    }
 
     @Transactional
     public TradeRequestRespDto requestTrade(Long tradeId, AuthUser authUser) {//추후 로그인 유저로 바뀔 예정
@@ -92,4 +123,7 @@ public class TradeService {
             tradeRepository.save(trade);
         }
     }
+        return new TradeRequestResponseDto(tradeId);
+    }
 }
+

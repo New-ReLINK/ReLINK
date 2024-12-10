@@ -6,15 +6,15 @@ import com.my.relink.domain.item.donation.ItemQuality;
 import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.domain.user.User;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @SQLRestriction("is_deleted = false")
+@AllArgsConstructor
+@Builder
 public class ExchangeItem extends BaseEntity {
 
     @Id
