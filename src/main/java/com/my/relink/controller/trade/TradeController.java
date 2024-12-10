@@ -31,7 +31,7 @@ public class TradeController {
     public ResponseEntity<ApiResult<TradeInquiryDetailRespDto>> getTradeInquiryChatRoom(
             @PathVariable("tradeId") Long tradeId,
             @AuthenticationPrincipal AuthUser authUser){
-        return ResponseEntity.ok(ApiResult.success(tradeService.getTradeInquiryDetail(tradeId, authUser.toUser())));
+        return ResponseEntity.ok(ApiResult.success(tradeService.getTradeInquiryDetail(tradeId, authUser.getId())));
     }
 
 

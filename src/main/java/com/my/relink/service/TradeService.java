@@ -24,7 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class TradeService {
 
     private final TradeRepository tradeRepository;
-    private final UserService userService;
+    private final UserTrustScoreService userTrustScoreService;
     private final ImageService imageService;
     private final UserRepository userRepository;
     private final PointRepository pointRepository;
@@ -35,18 +35,18 @@ public class TradeService {
      * [문의하기] -> 해당 채팅방의 거래 정보, 상품 정보, 상대 유저 정보 내리기
      *
      * @param tradeId
-     * @param user
+     * @param userId
      * @return
      */
-    public TradeInquiryDetailRespDto getTradeInquiryDetail(Long tradeId, User user) {
+    public TradeInquiryDetailRespDto getTradeInquiryDetail(Long tradeId, Long userId) {
         Trade trade = tradeRepository.findByIdWithItemsAndUser(tradeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
 
-        trade.validateAccess(user);
+        trade.validateAccess(userId);
 
         String requestedItemImageUrl = imageService.getExchangeItemUrl(trade.getRequesterExchangeItem());
-        User partner = trade.getPartner(user);
-        int trustScoreOfPartner = userService.getTrustScore(partner);
+        User partner = trade.getPartner(userId);
+        int trustScoreOfPartner = userTrustScoreService.getTrustScore(partner);
 
         return new TradeInquiryDetailRespDto(trade, partner, trustScoreOfPartner, requestedItemImageUrl);
     }

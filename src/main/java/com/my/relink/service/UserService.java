@@ -22,18 +22,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final ImageRepository imageRepository;
-    private final ReviewRepository reviewRepository;
 
-
-    /**
-     * 유저 신뢰도 구하기
-     * @param user
-     * @return 별점 평균 백분율 전환 값 (정수). 리뷰가 존재하지 않을 경우 0 반환
-     */
-    public int getTrustScore(User user) {
-        Double starAvg = reviewRepository.getTotalStarAvg(user);
-        return starAvg == null ? 0 : (int) (starAvg * 20);
-    }
 
     public UserCreateRespDto register(UserCreateReqDto dto) {
         dto.changePassword(passwordEncoder.encode(dto.getPassword()));
