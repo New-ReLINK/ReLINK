@@ -29,7 +29,7 @@ public class MessageService {
      * @param cursor
      * @return
      */
-    public MessageRespDto getChatRoomMessage(Long tradeId, int size, Long cursor) {
+    public MessageRespDto getChatRoomMessages(Long tradeId, int size, Long cursor) {
         tradeService.findByIdOrFail(tradeId);
         cursor = getInitialCursor(cursor);
 
@@ -38,14 +38,14 @@ public class MessageService {
                 cursor,
                 PageRequest.of(DEFAULT_PAGE, size + 1)
         );
+        Long nextCursor = getNextCursor(messageList, size);
         List<Message> pageMessageList = limitMessages(messageList, size);
-        Long nextCursor = getNextCursor(pageMessageList);
 
         return new MessageRespDto(pageMessageList, nextCursor);
     }
 
-    private Long getNextCursor(List<Message> messages) {
-        return !messages.isEmpty() ? messages.get(messages.size() - 1).getId() : null;
+    private Long getNextCursor(List<Message> messageList, int size) {
+        return messageList.size() > size? messageList.get(size - 1).getId() : null;
     }
 
     private List<Message> limitMessages(List<Message> messages, int size) {
