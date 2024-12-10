@@ -54,6 +54,11 @@ public class User extends BaseEntity {
         this.address = address;
     }
 
+    public void changeInfo(String name, String nickname) {
+        this.name = name;
+        this.nickname = nickname;
+    }
+
     public void changeIsDeleted() {
         this.isDeleted = true;
     }

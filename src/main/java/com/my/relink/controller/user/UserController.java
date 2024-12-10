@@ -2,6 +2,7 @@ package com.my.relink.controller.user;
 
 import com.my.relink.config.security.AuthUser;
 import com.my.relink.controller.user.dto.req.UserCreateReqDto;
+import com.my.relink.controller.user.dto.req.UserInfoEditReqDto;
 import com.my.relink.controller.user.dto.req.UserValidEmailReqDto;
 import com.my.relink.controller.user.dto.req.UserValidNicknameRepDto;
 import com.my.relink.controller.user.dto.resp.UserCreateRespDto;
@@ -28,13 +29,22 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResult.success(userService.register(dto)));
     }
 
-    @GetMapping("/user/info")
+    @GetMapping("/users/info")
     public ResponseEntity<ApiResult<UserInfoRespDto>> userInfo(
             @AuthenticationPrincipal AuthUser authUser
     ) {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ApiResult.success(userService.findUserInfo(authUser.getEmail())));
+    }
+
+    @PutMapping("/users/info")
+    public ResponseEntity<ApiResult<Void>> editUser(
+            @AuthenticationPrincipal AuthUser authUser,
+            @Valid @RequestBody UserInfoEditReqDto dto
+    ) {
+        userService.userInfoEdit(authUser.getId(), dto);
+        return ResponseEntity.status(HttpStatus.OK).body(ApiResult.success(null));
     }
 
     @DeleteMapping("/users")

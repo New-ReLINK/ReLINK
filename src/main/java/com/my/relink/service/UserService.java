@@ -1,5 +1,6 @@
 package com.my.relink.service;
 
+import com.my.relink.controller.user.dto.req.UserInfoEditReqDto;
 import com.my.relink.controller.user.dto.req.UserDeleteReqDto;
 import com.my.relink.controller.user.dto.req.UserCreateReqDto;
 import com.my.relink.controller.user.dto.req.UserValidEmailReqDto;
@@ -45,6 +46,13 @@ public class UserService {
     }
 
     @Transactional
+    public void userInfoEdit(Long userId, UserInfoEditReqDto dto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        user.changeInfo(dto.getName(), dto.getNickname());
+    }
+
     public void deleteUser(UserDeleteReqDto dto) {
         User user = userRepository.findByEmail(dto.getEmail())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));

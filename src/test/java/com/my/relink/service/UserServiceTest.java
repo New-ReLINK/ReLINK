@@ -1,5 +1,6 @@
 package com.my.relink.service;
 
+import com.my.relink.controller.user.dto.req.UserInfoEditReqDto;
 import com.my.relink.controller.user.dto.req.UserDeleteReqDto;
 import com.my.relink.controller.user.dto.req.UserValidNicknameRepDto;
 import com.my.relink.controller.user.dto.resp.UserValidNicknameRespDto;
@@ -162,6 +163,50 @@ class UserServiceTest extends DummyObject {
     }
 
     @Test
+    @DisplayName("유저 정보 수정 시 유저를 찾을 수 없을 때 USER_NOT_FOUND Exception 이 발생한다.")
+    void userNotFoundEditFailTest() {
+        // given
+        Long userId = 1L;
+
+        UserInfoEditReqDto reqDto = UserInfoEditReqDto.builder()
+                .name("editName")
+                .nickname("editNickname")
+                .build();
+
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+        // when & then
+        assertThrows(BusinessException.class, () -> userService.userInfoEdit(userId, reqDto));
+        verify(userRepository, times(1)).findById(any());
+    }
+
+    @Test
+    @DisplayName("유저 정보 수정 시 해당 유저를 찾았을 때 정보를 수정한다.")
+    void editUserSuccessTest() {
+        // given
+        Long userId = 1L;
+
+        UserInfoEditReqDto reqDto = UserInfoEditReqDto.builder()
+                .name("editName")
+                .nickname("editNickname")
+                .build();
+
+        User user = User.builder()
+                .email("test@example.com")
+                .name("test")
+                .nickname("testNickname")
+                .build();
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+
+        // when
+        userService.userInfoEdit(userId, reqDto);
+
+        // then
+        verify(userRepository, times(1)).findById(any());
+    }
+
+    @Test
     @DisplayName("회원 탈퇴 시 유저정보를 찾을 수 없는 경우 USER_NOT_FOUND Exception 이 발생한다.")
     void notFoundUserFailTest() {
         // given
@@ -187,7 +232,8 @@ class UserServiceTest extends DummyObject {
 
         User user = User.builder()
                 .email("test@example.com")
-                .password("password1111")
+                .name("test")
+                .nickname("testNickname")
                 .build();
 
         when(userRepository.findByEmail(reqDto.getEmail())).thenReturn(Optional.of(user));
@@ -222,6 +268,7 @@ class UserServiceTest extends DummyObject {
         verify(passwordEncoder, times(1)).matches(any(), any());
     }
 
+    @Test
     @DisplayName("닉네임이 중복일 때 Duplicated는 true를 반환한다.")
     void validNicknameDuplicatedIsTrueSuccessTest() {
         // given
