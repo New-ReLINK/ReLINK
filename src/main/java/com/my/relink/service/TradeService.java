@@ -117,7 +117,7 @@ public class TradeService {
                 trade.saveRequesterAddress(requesterAddress);
             } else{
                 Address ownerAddress = reqDto.toOwnerAddressEntity();  // 소유자 주소 생성
-                trade.saveRequesterAddress(ownerAddress);
+                trade.saveOwnerAddress(ownerAddress);
             }
 
             tradeRepository.save(trade);
