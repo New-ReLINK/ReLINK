@@ -3,11 +3,6 @@ package com.my.relink.service;
 import com.my.relink.config.security.AuthUser;
 import com.my.relink.controller.trade.dto.response.TradeInquiryDetailRespDto;
 import com.my.relink.controller.trade.dto.response.TradeRequestRespDto;
-import com.my.relink.domain.point.Point;
-import com.my.relink.domain.point.pointHistory.PointHistory;
-import com.my.relink.domain.point.pointHistory.PointTransactionType;
-import com.my.relink.domain.point.pointHistory.repository.PointHistoryRepository;
-import com.my.relink.domain.point.repository.PointRepository;
 import com.my.relink.domain.trade.Trade;
 import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.domain.trade.repository.TradeRepository;
@@ -28,9 +23,7 @@ public class TradeService {
     private final UserTrustScoreService userTrustScoreService;
     private final ImageService imageService;
     private final UserRepository userRepository;
-    private final PointRepository pointRepository;
-    private final PointHistoryRepository pointHistoryRepository;
-    private final PointHistoryService pointHistoryService;
+    private final PointTransactionService pointTransactionService;
 
 
     /**
@@ -62,20 +55,8 @@ public class TradeService {
         Trade trade = tradeRepository.findById(tradeId).
                 orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
 
-        //해당 로그인 유저의 포인트를 조회
-        Point point = pointRepository.findByUserId(authUser.getId())
-                .orElseThrow(()-> new BusinessException(ErrorCode.POINT_NOT_FOUND));
-        if(point.getAmount()<trade.getOwnerExchangeItem().getDeposit()){
-            throw new BusinessException(ErrorCode.POINT_SHORTAGE);
-        }
-
-        //포인트 차감
-        point.deduct(trade.getOwnerExchangeItem().getDeposit());
-        pointRepository.save(point);
-
-        //포인트 이력 생성
-        PointHistory pointHistory = PointHistory.create(trade.getOwnerExchangeItem().getDeposit(), PointTransactionType.DEPOSIT, point, trade);
-        pointHistoryRepository.save(pointHistory);
+        //차감 메서드 위임
+        pointTransactionService.deductPoints(tradeId, authUser);
 
         //요청자/소유자 여부에 따라 적절한 요청 상태 필드 업데이트
         if(trade.getRequester().getId().equals(currentUser.getId())){
@@ -102,7 +83,7 @@ public class TradeService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
 
         //복원 메서드 위임
-        pointHistoryService.restorePoints(tradeId, authUser);
+        pointTransactionService.restorePoints(tradeId, authUser);
 
         // 요청 상태 업데이트
         if (trade.getRequester().getId().equals(currentUser.getId())) {
