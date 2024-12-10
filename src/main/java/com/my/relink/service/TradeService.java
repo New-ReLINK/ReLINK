@@ -110,20 +110,23 @@ public class TradeService {
         Trade trade = tradeRepository.findById(tradeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
 
-        // 소유자 주소와 요청자 주소 업데이트
-        if(trade.getRequester().getId().equals(currentUser.getId())){
-            Address requesterAddress = reqDto.toRequesterAddressEntity();  // 요청자 주소 생성
-            trade.saveRequesterAddress(requesterAddress);
-            //trade.saveOwnerAddress(reqDto.toOwnerAddressEntity());
-        } else{
-            Address requesterAddress = reqDto.toRequesterAddressEntity();  // 요청자 주소 생성
-            trade.saveRequesterAddress(requesterAddress);
-            //trade.saveRequesterAddress(reqDto.toRequesterAddressEntity());
+        if(trade.getHasOwnerRequested()&&trade.getHasRequesterRequested()){
+            // 소유자 주소와 요청자 주소 업데이트
+            if(trade.getRequester().getId().equals(currentUser.getId())){
+                Address requesterAddress = reqDto.toRequesterAddressEntity();  // 요청자 주소 생성
+                trade.saveRequesterAddress(requesterAddress);
+                //trade.saveOwnerAddress(reqDto.toOwnerAddressEntity());
+            } else{
+                Address requesterAddress = reqDto.toRequesterAddressEntity();  // 요청자 주소 생성
+                trade.saveRequesterAddress(requesterAddress);
+                //trade.saveRequesterAddress(reqDto.toRequesterAddressEntity());
+            }
+
+            tradeRepository.save(trade);
+            return new AddressRespDto(tradeId);
+        } else {
+            throw new BusinessException(ErrorCode.TRADE_ACCESS_DENIED);
         }
-
-        tradeRepository.save(trade);
-        return new AddressRespDto(tradeId);
     }
-
 }
 
