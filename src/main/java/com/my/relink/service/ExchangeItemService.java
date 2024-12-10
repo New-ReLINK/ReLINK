@@ -19,12 +19,12 @@ import org.springframework.stereotype.Service;
 public class ExchangeItemService {
 
     private final ExchangeItemRepository exchangeItemRepository;
-    private final CategoryRepository categoryReopsitory;
+    private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
     private final PointRepository pointRepository;
 
     public long createExchangeItem(CreateExchangeItemReqDto reqDto, Long userId) {
-        Category category = categoryReopsitory.findById(reqDto.getCategoryId())
+        Category category = categoryRepository.findById(reqDto.getCategoryId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));

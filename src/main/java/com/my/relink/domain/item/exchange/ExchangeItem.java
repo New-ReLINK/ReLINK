@@ -13,6 +13,8 @@ import org.hibernate.annotations.SQLRestriction;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @SQLRestriction("is_deleted = false")
+@AllArgsConstructor
+@Builder
 @ToString
 public class ExchangeItem extends BaseEntity {
 

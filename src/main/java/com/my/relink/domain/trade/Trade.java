@@ -4,14 +4,16 @@ import com.my.relink.domain.BaseEntity;
 import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.user.Address;
 import com.my.relink.domain.user.User;
+import com.my.relink.ex.BusinessException;
+import com.my.relink.ex.ErrorCode;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
+@AllArgsConstructor
+@Builder
 public class Trade extends BaseEntity {
 
     @Id @GeneratedValue
@@ -69,6 +71,24 @@ public class Trade extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private TradeCancelReason cancelReason;
 
+    public User getOwner(){
+        return this.getOwnerExchangeItem().getUser();
+    }
+
+    public boolean isParticipant(Long userId){
+        return getOwner().getId().equals(userId) || getRequester().getId().equals(userId);
+    }
+
+    public void validateAccess(Long userId){
+        if(!isParticipant(userId)){
+            throw new BusinessException(ErrorCode.TRADE_ACCESS_DENIED);
+        }
+    }
+
+    public User getPartner(Long userId){
+        return getRequester().getId().equals(userId)? getOwner() : getRequester();
+    }
+
     public void updateTradeStatus(TradeStatus tradeStatus) {
         this.tradeStatus = tradeStatus;
     }
@@ -85,4 +105,11 @@ public class Trade extends BaseEntity {
         this.hasRequesterRequested = requestedStatus;
     }
 
+    public void saveOwnerAddress(Address newAddress) {
+        this.ownerAddress = newAddress;
+    }
+
+    public void saveRequesterAddress(Address newAddress) {
+        this.requesterAddress = newAddress;
+    }
 }
