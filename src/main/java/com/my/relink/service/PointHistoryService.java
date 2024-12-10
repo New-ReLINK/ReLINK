@@ -10,6 +10,7 @@ import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -18,6 +19,7 @@ public class PointHistoryService {
     private final PointHistoryRepository pointHistoryRepository;
     private final PointRepository pointRepository;
 
+    @Transactional
     public void restorePoints(Long tradeId, AuthUser authUser){
         // 해당 Trade에 연결된 PointHistory 확인
         PointHistory pointHistory = pointHistoryRepository.findByTradeIdOrderByCreatedAtDesc(tradeId)
