@@ -7,8 +7,10 @@ import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.MessageDeliveryException;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
@@ -18,6 +20,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class StompHandler implements ChannelInterceptor {
 
     private final JwtProvider jwtProvider;
@@ -37,7 +40,6 @@ public class StompHandler implements ChannelInterceptor {
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
-
         try {
             if (StompCommand.CONNECT.equals(accessor.getCommand())) {
                 //토큰 검증
@@ -49,10 +51,11 @@ public class StompHandler implements ChannelInterceptor {
                 validateChatRoomAccess(accessor);
                 accessor.setUser(new ChatPrincipal(authUser));
             }
+            return message;
         }catch (BusinessException e){
-            createErrorMessage(e.getMessage());
+            log.error("웹소켓 연결 검증 중 오류 발생: {}", e.getMessage(), e);
+            throw new MessageDeliveryException(e.getMessage());
         }
-        return message;
     }
 
     private void validateChatRoomAccess(StompHeaderAccessor accessor){
@@ -64,6 +67,7 @@ public class StompHandler implements ChannelInterceptor {
 
         if(TradeStatus.statusOf(tradeStatus) == TradeStatus.CANCELED
                 || TradeStatus.statusOf(tradeStatus) == TradeStatus.EXCHANGED){
+            log.debug("더 이상 채팅 세션을 제공하지 않는 거래 채팅방에 접근 시도 - tradeStatus : {}", tradeStatus);
             throw new BusinessException(ErrorCode.CHATROOM_ACCESS_DENIED);
         }
     }
