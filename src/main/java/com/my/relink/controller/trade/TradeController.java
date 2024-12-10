@@ -3,6 +3,7 @@ package com.my.relink.controller.trade;
 import com.my.relink.config.security.AuthUser;
 import com.my.relink.controller.trade.dto.request.AddressReqDto;
 import com.my.relink.controller.trade.dto.response.AddressRespDto;
+import com.my.relink.controller.trade.dto.response.TradeCompleteRespDto;
 import com.my.relink.controller.trade.dto.response.TradeInquiryDetailRespDto;
 import com.my.relink.controller.trade.dto.response.TradeRequestRespDto;
 import com.my.relink.service.TradeService;
@@ -44,6 +45,12 @@ public class TradeController {
     public ResponseEntity<ApiResult<AddressRespDto>> createAddress(@PathVariable(name = "tradeId") Long tradeId, @RequestBody AddressReqDto reqDto, @AuthenticationPrincipal AuthUser authUser){
         AddressRespDto responseDto = tradeService.createAddress(tradeId, reqDto, authUser);
         return new ResponseEntity<>(ApiResult.success(responseDto), HttpStatus.CREATED);
+    }
+
+    @PostMapping("/trades/{tradeId}/completion/received")
+    public ResponseEntity<ApiResult<TradeCompleteRespDto>> completeTrade(@PathVariable(name = "tradeId") Long tradeId, @AuthenticationPrincipal AuthUser authUser){
+        TradeCompleteRespDto responseDto = tradeService.completeTrade(tradeId, authUser);
+        return new ResponseEntity<>(ApiResult.success(responseDto), HttpStatus.OK);
     }
 
 }
