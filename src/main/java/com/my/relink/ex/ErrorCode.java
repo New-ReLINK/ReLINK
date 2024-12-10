@@ -17,6 +17,9 @@ public enum ErrorCode {
     POINT_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "포인트를 찾을 수 없습니다"),
     POINT_SHORTAGE(HttpStatus.FORBIDDEN.value(), "포인트가 부족합니다"),
 
+    CATEGORY_NOT_FOUND(HttpStatus.FORBIDDEN.value(), "카테고리를 찾을 수 없습니다."),
+    INVALID_ITEM_QUALITY(HttpStatus.FORBIDDEN.value(), "상품의 상태를 잘 못 입력하셨습니다."),
+
     ;
 
     private final int status;
