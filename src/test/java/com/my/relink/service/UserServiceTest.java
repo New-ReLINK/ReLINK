@@ -1,20 +1,20 @@
 package com.my.relink.service;
 
+import com.my.relink.controller.user.dto.req.AddressCreateReqDto;
+import com.my.relink.controller.user.dto.req.UserCreateReqDto;
 import com.my.relink.controller.user.dto.req.UserValidEmailReqDto;
+import com.my.relink.controller.user.dto.resp.UserCreateRespDto;
+import com.my.relink.controller.user.dto.resp.UserInfoRespDto;
 import com.my.relink.controller.user.dto.resp.UserValidEmailRespDto;
 import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.image.Image;
 import com.my.relink.domain.image.ImageRepository;
 import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.repository.UserRepository;
-import com.my.relink.controller.user.dto.req.AddressCreateReqDto;
-import com.my.relink.controller.user.dto.req.UserCreateReqDto;
-import com.my.relink.controller.user.dto.resp.UserCreateRespDto;
-import com.my.relink.controller.user.dto.resp.UserInfoRespDto;
 import com.my.relink.ex.BusinessException;
+import com.my.relink.util.DummyObject;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -29,7 +29,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class UserServiceTest {
+class UserServiceTest extends DummyObject {
+
+    @InjectMocks
+    UserService userService;
 
     @Mock
     private UserRepository userRepository;
@@ -40,8 +43,6 @@ class UserServiceTest {
     @Mock
     private ImageRepository imageRepository;
 
-    @InjectMocks
-    private UserService userService;
 
     @Test
     @DisplayName("정상적인 회원가입 성공")
