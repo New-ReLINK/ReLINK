@@ -10,7 +10,7 @@ import com.my.relink.domain.point.pointHistory.PointTransactionType;
 import com.my.relink.domain.point.pointHistory.repository.PointHistoryRepository;
 import com.my.relink.domain.point.repository.PointRepository;
 import com.my.relink.domain.trade.TradeStatus;
-import com.my.relink.domain.trade.dto.TradeRequestResponseDto;
+import com.my.relink.controller.trade.dto.response.TradeRequestRespDto;
 import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
@@ -51,8 +51,14 @@ public class TradeService {
         return new TradeInquiryDetailRespDto(trade, partner, trustScoreOfPartner, requestedItemImageUrl);
     }
 
+
+    public Trade findByIdOrFail(Long tradeId) {
+        return tradeRepository.findById(tradeId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
+    }
+
     @Transactional
-    public TradeRequestResponseDto requestTrade(Long tradeId, Long userId) {//추후 로그인 유저로 바뀔 예정
+    public TradeRequestRespDto requestTrade(Long tradeId, Long userId) {//추후 로그인 유저로 바뀔 예정
 
         User currentUser = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
@@ -86,7 +92,7 @@ public class TradeService {
             trade.updateTradeStatus(TradeStatus.IN_EXCHANGE);
         }
 
-        return new TradeRequestResponseDto(tradeId);
+        return new TradeRequestRespDto(tradeId);
     }
 }
 

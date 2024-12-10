@@ -2,8 +2,8 @@ package com.my.relink.controller.trade;
 
 import com.my.relink.config.security.AuthUser;
 import com.my.relink.controller.trade.dto.response.TradeInquiryDetailRespDto;
-import com.my.relink.domain.trade.dto.TradeRequestDto;
-import com.my.relink.domain.trade.dto.TradeRequestResponseDto;
+import com.my.relink.controller.trade.dto.request.TradeReqDto;
+import com.my.relink.controller.trade.dto.response.TradeRequestRespDto;
 import com.my.relink.service.TradeService;
 import com.my.relink.util.api.ApiResult;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +20,13 @@ public class TradeController {
     private final TradeService tradeService;
 
 
+    @PostMapping("/trades/{tradeId}/request")
+    public ResponseEntity<ApiResult<TradeRequestRespDto>> requestTrade(@PathVariable(name = "tradeId") Long tradeId, @RequestBody TradeReqDto tradeReqDto) {//추후 로그인 유저로 바뀔 얘정
+        TradeRequestRespDto responseDto = tradeService.requestTrade(tradeId, tradeReqDto.getUserId());
+        return new ResponseEntity<>(ApiResult.success(responseDto), HttpStatus.OK);
+    }
+
+
     @GetMapping("/{tradeId}")
     public ResponseEntity<ApiResult<TradeInquiryDetailRespDto>> getTradeInquiryChatRoom(
             @PathVariable("tradeId") Long tradeId,
@@ -28,9 +35,6 @@ public class TradeController {
     }
 
 
-    @PostMapping("/trades/{tradeId}/request")
-    public ResponseEntity<ApiResult<TradeRequestResponseDto>> requestTrade(@PathVariable(name = "tradeId") Long tradeId, @RequestBody TradeRequestDto tradeRequestDto) {//추후 로그인 유저로 바뀔 얘정
-        TradeRequestResponseDto responseDto = tradeService.requestTrade(tradeId, tradeRequestDto.getUserId());
-        return new ResponseEntity<>(ApiResult.success(responseDto), HttpStatus.OK);
-    }
+
+
 }

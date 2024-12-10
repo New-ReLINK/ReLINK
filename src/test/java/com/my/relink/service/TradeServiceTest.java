@@ -96,4 +96,12 @@ class TradeServiceTest extends DummyObject {
             }
         }
     }
+
+
+    @Test
+    @DisplayName("채팅방 이전 대화 내역 조회: 정상 케이스")
+    void getChatRoomMessage_success(){
+
+
+    }
 }

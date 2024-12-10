@@ -1,11 +1,10 @@
-package com.my.relink.domain.trade.dto;
+package com.my.relink.controller.trade.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 @Getter
 @AllArgsConstructor
-public class TradeRequestResponseDto {
+public class TradeRequestRespDto {
     private final Long id;
 }
