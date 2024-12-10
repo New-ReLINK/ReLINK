@@ -5,8 +5,8 @@ import com.my.relink.domain.category.Category;
 import com.my.relink.domain.item.donation.DonationItem;
 import com.my.relink.domain.item.donation.ItemQuality;
 import com.my.relink.domain.user.User;
-import com.my.relink.controller.item.donation.dto.DonationItemReqDto;
-import com.my.relink.controller.item.donation.dto.DonationItemRespDto;
+import com.my.relink.controller.item.donation.dto.req.DonationItemReqDto;
+import com.my.relink.controller.item.donation.dto.resp.DonationItemRespDto;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import com.my.relink.controller.item.donation.repository.CategoryRepository;
@@ -30,14 +30,7 @@ public class DonationItemService {
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
 
-        DonationItem donationItem = new DonationItem(
-                request.getName(),
-                request.getDescription(),
-                request.getDesiredDestination(),
-                user,
-                category,
-                ItemQuality.valueOf(request.getItemQuality()) // Enum 변환
-        );
+        DonationItem donationItem = request.toEntity(user, category);
 
         DonationItem savedItem = donationItemRepository.save(donationItem);
 
