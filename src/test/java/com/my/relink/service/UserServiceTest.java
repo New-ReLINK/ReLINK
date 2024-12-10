@@ -1,10 +1,13 @@
 package com.my.relink.service;
 
+
 import com.my.relink.controller.user.dto.req.*;
 import com.my.relink.controller.user.dto.resp.*;
 import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.image.Image;
 import com.my.relink.domain.image.ImageRepository;
+import com.my.relink.domain.point.Point;
+import com.my.relink.domain.point.repository.PointRepository;
 import com.my.relink.domain.user.Address;
 import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.repository.UserRepository;
@@ -39,6 +42,9 @@ class UserServiceTest extends DummyObject {
 
     @Mock
     private ImageRepository imageRepository;
+
+    @Mock
+    private PointRepository pointRepository;
 
 
     @Test
@@ -157,7 +163,7 @@ class UserServiceTest extends DummyObject {
 
     @Test
     @DisplayName("사용자 주소를 조회할 때 사용자를 찾을 수 없을 때 USER_NOT_FOUND Exception 이 발생한다.")
-            void findAddressIsUserNotFoundFailTest() {
+    void findAddressIsUserNotFoundFailTest() {
         // given
         Long userId = 1L;
 
@@ -165,10 +171,55 @@ class UserServiceTest extends DummyObject {
 
         // when & then
         assertThrows(BusinessException.class, () -> userService.findAddress(userId));
-        verify(userRepository, times(1)).findById(any());
     }
 
     @Test
+    @DisplayName("사용자 포인트 조회시 포인트가 조회되지 않을 시 POINT_NOT_FOUND Exception 이 발생한다.")
+    void findPointIsNotFoundPointFailTest() {
+        // given
+        Long userId = 1L;
+        User user = User.builder()
+                .id(1L)
+                .email("test@example.com")
+                .build();
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(pointRepository.findByUserId(userId)).thenReturn(Optional.empty());
+
+        // when & then
+        assertThrows(BusinessException.class, () -> userService.findUserPoint(userId));
+        verify(userRepository, times(1)).findById(any());
+        verify(pointRepository, times(1)).findByUserId(any());
+    }
+
+    @Test
+    @DisplayName("사용자 포인트 조회 시 정상적으로 수행된다.")
+    void findPointSuccessTest() {
+        // given
+        Long userId = 1L;
+        User user = User.builder()
+                .id(1L)
+                .email("test@example.com")
+                .build();
+
+        Point point = Point.builder()
+                .amount(100)
+                .user(user)
+                .build();
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(pointRepository.findByUserId(userId)).thenReturn(Optional.of(point));
+
+        // when
+        UserPointRespDto userPoint = userService.findUserPoint(userId);
+
+        // then
+        assertThat(userPoint).isNotNull();
+        assertThat(userPoint.getAmount()).isEqualTo(point.getAmount());
+        verify(userRepository, times(1)).findById(any());
+        verify(pointRepository, times(1)).findByUserId(any());
+    }
+
     @DisplayName("유저 정보 수정 시 해당 유저를 찾았을 때 정보를 수정한다.")
     void editUserSuccessTest() {
         // given
@@ -369,5 +420,17 @@ class UserServiceTest extends DummyObject {
 
         // when & then
         assertThrows(BusinessException.class, () -> userService.userInfoEdit(userId, reqDto));
+    }
+
+    @Test
+    @DisplayName("사용자 포인트 조회시 사용자가 없을 경우 USER_NOT_FOUND Exception 이 발생한다.")
+    void findPointIsNotFoundUserFailTest() {
+        // given
+        Long userId = 1L;
+
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+        // when & then
+        assertThrows(BusinessException.class, () -> userService.findUserPoint(userId));
+        verify(userRepository, times(1)).findById(any());
     }
 }

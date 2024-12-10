@@ -8,6 +8,7 @@ import com.my.relink.controller.user.dto.req.UserValidEmailReqDto;
 import com.my.relink.controller.user.dto.req.UserValidNicknameRepDto;
 import com.my.relink.controller.user.dto.resp.UserCreateRespDto;
 import com.my.relink.controller.user.dto.resp.UserInfoRespDto;
+import com.my.relink.controller.user.dto.resp.UserPointRespDto;
 import com.my.relink.controller.user.dto.resp.UserValidEmailRespDto;
 import com.my.relink.controller.user.dto.resp.UserValidNicknameRespDto;
 import com.my.relink.service.UserService;
@@ -37,6 +38,13 @@ public class UserController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ApiResult.success(userService.findUserInfo(authUser.getEmail())));
+    }
+
+    @GetMapping("/users/point")
+    public ResponseEntity<ApiResult<UserPointRespDto>> getPoint(
+            @AuthenticationPrincipal AuthUser authUser
+    ) {
+        return ResponseEntity.status(HttpStatus.OK).body(ApiResult.success(userService.findUserPoint(authUser.getId())));
     }
 
     @GetMapping("/users/address")
