@@ -1,5 +1,6 @@
 package com.my.relink.controller.item.donation.dto.req;
 
+import com.my.relink.controller.item.donation.validation.ValidItemQuality;
 import com.my.relink.domain.category.Category;
 import com.my.relink.domain.item.donation.DonationItem;
 import com.my.relink.domain.item.donation.ItemQuality;
@@ -22,7 +23,9 @@ public class DonationItemReqDto {
     private Long categoryId; // 카테고리 ID
 
     @NotNull(message = "상품의 상태를 선택해 주세요.")
+    @ValidItemQuality
     private String itemQuality; // 상품 상태 (Enum: NEW, USED, DEFECTIVE)
+
     private String description; // 상세 설명 (nullable)
 
     @Size(max = 128, message = "희망 기부처는 최대 128자까지 입니다.")
