@@ -1,4 +1,4 @@
-package com.my.relink.controller.exchangeItem.dto;
+package com.my.relink.controller.exchangeItem.dto.req;
 
 import com.my.relink.domain.category.Category;
 import com.my.relink.domain.item.donation.ItemQuality;
