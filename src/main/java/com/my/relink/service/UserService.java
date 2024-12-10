@@ -2,13 +2,14 @@ package com.my.relink.service;
 
 import com.my.relink.controller.user.dto.req.UserCreateReqDto;
 import com.my.relink.controller.user.dto.req.UserValidEmailReqDto;
+import com.my.relink.controller.user.dto.req.UserValidNicknameRepDto;
 import com.my.relink.controller.user.dto.resp.UserCreateRespDto;
 import com.my.relink.controller.user.dto.resp.UserInfoRespDto;
 import com.my.relink.controller.user.dto.resp.UserValidEmailRespDto;
+import com.my.relink.controller.user.dto.resp.UserValidNicknameRespDto;
 import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.image.Image;
 import com.my.relink.domain.image.ImageRepository;
-import com.my.relink.domain.review.ReviewRepository;
 import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.BusinessException;
@@ -39,6 +40,10 @@ public class UserService {
         Image image = imageRepository.findByEntityIdAndEntityType(user.getId(), EntityType.USER).orElse(null);
 
         return new UserInfoRespDto(user, image);
+    }
+
+    public UserValidNicknameRespDto validNickname(UserValidNicknameRepDto dto) {
+        return new UserValidNicknameRespDto(userRepository.findByNickname(dto.getNickname()).isPresent());
     }
 
     public UserValidEmailRespDto validEmail(UserValidEmailReqDto dto) {

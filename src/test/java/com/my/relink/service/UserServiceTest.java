@@ -1,5 +1,7 @@
 package com.my.relink.service;
 
+import com.my.relink.controller.user.dto.req.UserValidNicknameRepDto;
+import com.my.relink.controller.user.dto.resp.UserValidNicknameRespDto;
 import com.my.relink.controller.user.dto.req.AddressCreateReqDto;
 import com.my.relink.controller.user.dto.req.UserCreateReqDto;
 import com.my.relink.controller.user.dto.req.UserValidEmailReqDto;
@@ -159,6 +161,44 @@ class UserServiceTest extends DummyObject {
     }
 
     @Test
+    @DisplayName("닉네임이 중복일 때 Duplicated는 true를 반환한다.")
+    void validNicknameDuplicatedIsTrueSuccessTest(){
+        // given
+        UserValidNicknameRepDto repDto = UserValidNicknameRepDto.builder()
+                .nickname("test")
+                .build();
+
+        User user = User.builder()
+                .nickname("test")
+                .build();
+
+        when(userRepository.findByNickname(repDto.getNickname())).thenReturn(Optional.of(user));
+        // when
+        UserValidNicknameRespDto respDto = userService.validNickname(repDto);
+
+        // then
+        assertThat(respDto.isDuplicated()).isTrue();
+        verify(userRepository, times(1)).findByNickname(any());
+    }
+
+    @Test
+    @DisplayName("닉네임이 중복일 때 Duplicated는 false를 반환한다.")
+    void validNicknameDuplicatedIsFalseSuccessTest() {
+        // given
+        UserValidNicknameRepDto repDto = UserValidNicknameRepDto.builder()
+                .nickname("test")
+                .build();
+
+        when(userRepository.findByNickname(repDto.getNickname())).thenReturn(Optional.empty());
+        // when
+        UserValidNicknameRespDto respDto = userService.validNickname(repDto);
+
+        // then
+        assertThat(respDto.isDuplicated()).isFalse();
+        verify(userRepository, times(1)).findByNickname(any());
+    }
+
+    @Test
     @DisplayName("이메일 중복 검사 조회시 중복된다면 Duplicated 를 true 로 내보낸다.")
     void validEmailDuplicatedIsTrueSuccessTest() {
         // given
@@ -180,7 +220,7 @@ class UserServiceTest extends DummyObject {
     }
 
     @Test
-    @DisplayName("이메일 중복 검사 조회시 중복된다면 Duplicated 를 true 로 내보낸다.")
+    @DisplayName("이메일 중복 검사 조회시 중복된다면 Duplicated 를 false 로 내보낸다.")
     void validEmailDuplicatedIsFalseSuccessTest() {
         // given
         UserValidEmailReqDto reqDto = UserValidEmailReqDto.builder()
