@@ -6,15 +6,16 @@ import com.my.relink.domain.item.donation.ItemQuality;
 import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.domain.user.User;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @SQLRestriction("is_deleted = false")
+@AllArgsConstructor
+@Builder
+@ToString
 public class ExchangeItem extends BaseEntity {
 
     @Id
@@ -55,4 +56,26 @@ public class ExchangeItem extends BaseEntity {
     @Column(nullable = false)
     private Boolean isDeleted = false;
 
+    @Builder
+    public ExchangeItem(String name,
+                        String description,
+                        Category category,
+                        ItemQuality itemQuality,
+                        Integer deposit,
+                        String size,
+                        String brand,
+                        String desiredItem,
+                        User user,
+                        TradeStatus tradeStatus) {
+        this.name = name;
+        this.description = description;
+        this.category = category;
+        this.itemQuality = itemQuality;
+        this.deposit = deposit;
+        this.size = size;
+        this.brand = brand;
+        this.desiredItem = desiredItem;
+        this.user = user;
+        this.tradeStatus = tradeStatus;
+    }
 }
