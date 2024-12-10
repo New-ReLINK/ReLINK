@@ -1,15 +1,22 @@
 package com.my.relink.service;
 
+import com.my.relink.controller.user.dto.req.UserInfoEditReqDto;
+import com.my.relink.controller.user.dto.req.UserDeleteReqDto;
+import com.my.relink.controller.user.dto.req.UserValidNicknameRepDto;
+import com.my.relink.controller.user.dto.resp.UserValidNicknameRespDto;
+import com.my.relink.controller.user.dto.req.AddressCreateReqDto;
+import com.my.relink.controller.user.dto.req.UserCreateReqDto;
+import com.my.relink.controller.user.dto.req.UserValidEmailReqDto;
+import com.my.relink.controller.user.dto.resp.UserCreateRespDto;
+import com.my.relink.controller.user.dto.resp.UserInfoRespDto;
+import com.my.relink.controller.user.dto.resp.UserValidEmailRespDto;
 import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.image.Image;
 import com.my.relink.domain.image.ImageRepository;
 import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.repository.UserRepository;
-import com.my.relink.controller.user.dto.req.AddressCreateReqDto;
-import com.my.relink.controller.user.dto.req.UserCreateReqDto;
-import com.my.relink.controller.user.dto.resp.UserCreateRespDto;
-import com.my.relink.controller.user.dto.resp.UserInfoRespDto;
 import com.my.relink.ex.BusinessException;
+import com.my.relink.util.DummyObject;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,11 +30,13 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class UserServiceTest {
+class UserServiceTest extends DummyObject {
+
+    @InjectMocks
+    UserService userService;
 
     @Mock
     private UserRepository userRepository;
@@ -38,8 +47,6 @@ class UserServiceTest {
     @Mock
     private ImageRepository imageRepository;
 
-    @InjectMocks
-    private UserService userService;
 
     @Test
     @DisplayName("정상적인 회원가입 성공")
@@ -153,5 +160,187 @@ class UserServiceTest {
 
         verify(userRepository).findByEmail(email);
         verify(imageRepository).findByEntityIdAndEntityType(user.getId(), EntityType.USER);
+    }
+
+    @Test
+    @DisplayName("유저 정보 수정 시 유저를 찾을 수 없을 때 USER_NOT_FOUND Exception 이 발생한다.")
+    void userNotFoundEditFailTest() {
+        // given
+        Long userId = 1L;
+
+        UserInfoEditReqDto reqDto = UserInfoEditReqDto.builder()
+                .name("editName")
+                .nickname("editNickname")
+                .build();
+
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+        // when & then
+        assertThrows(BusinessException.class, () -> userService.userInfoEdit(userId, reqDto));
+        verify(userRepository, times(1)).findById(any());
+    }
+
+    @Test
+    @DisplayName("유저 정보 수정 시 해당 유저를 찾았을 때 정보를 수정한다.")
+    void editUserSuccessTest() {
+        // given
+        Long userId = 1L;
+
+        UserInfoEditReqDto reqDto = UserInfoEditReqDto.builder()
+                .name("editName")
+                .nickname("editNickname")
+                .build();
+
+        User user = User.builder()
+                .email("test@example.com")
+                .name("test")
+                .nickname("testNickname")
+                .build();
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+
+        // when
+        userService.userInfoEdit(userId, reqDto);
+
+        // then
+        verify(userRepository, times(1)).findById(any());
+    }
+
+    @Test
+    @DisplayName("회원 탈퇴 시 유저정보를 찾을 수 없는 경우 USER_NOT_FOUND Exception 이 발생한다.")
+    void notFoundUserFailTest() {
+        // given
+        UserDeleteReqDto reqDto = UserDeleteReqDto.builder()
+                .email("test@example.com")
+                .password("password1234")
+                .build();
+
+        when(userRepository.findByEmail(reqDto.getEmail())).thenReturn(Optional.empty());
+        // when & then
+        assertThrows(BusinessException.class, () -> userService.deleteUser(reqDto));
+        verify(userRepository, times(1)).findByEmail(any());
+    }
+
+    @Test
+    @DisplayName("회원 탈퇴 시 비밀번호가 맞지 않는 경우 MISS_MATCH_PASSWORD Exception 이 발생한다.")
+    void missMatchPasswordFailTest() {
+        // given
+        UserDeleteReqDto reqDto = UserDeleteReqDto.builder()
+                .email("test@example.com")
+                .password("password1234")
+                .build();
+
+        User user = User.builder()
+                .email("test@example.com")
+                .name("test")
+                .nickname("testNickname")
+                .build();
+
+        when(userRepository.findByEmail(reqDto.getEmail())).thenReturn(Optional.of(user));
+
+        // when & then
+        assertThrows(BusinessException.class, () -> userService.deleteUser(reqDto));
+        verify(userRepository, times(1)).findByEmail(any());
+    }
+
+    @Test
+    @DisplayName("회원 탈퇴 시 비밀번호와 이메일이 일치하는 경우 isDeleted 가 True 가 된다.")
+    void signOutSuccessTest() {
+        // given
+        UserDeleteReqDto reqDto = UserDeleteReqDto.builder()
+                .email("test@example.com")
+                .password("password1234")
+                .build();
+
+        User user = User.builder()
+                .email("test@example.com")
+                .password("password1234")
+                .build();
+
+        when(userRepository.findByEmail(reqDto.getEmail())).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches(any(), any())).thenReturn(true);
+
+        // when
+        userService.deleteUser(reqDto);
+
+        // then
+        verify(userRepository, times(1)).findByEmail(any());
+        verify(passwordEncoder, times(1)).matches(any(), any());
+    }
+
+    @Test
+    @DisplayName("닉네임이 중복일 때 Duplicated는 true를 반환한다.")
+    void validNicknameDuplicatedIsTrueSuccessTest() {
+        // given
+        UserValidNicknameRepDto repDto = UserValidNicknameRepDto.builder()
+                .nickname("test")
+                .build();
+
+        User user = User.builder()
+                .nickname("test")
+                .build();
+
+        when(userRepository.findByNickname(repDto.getNickname())).thenReturn(Optional.of(user));
+        // when
+        UserValidNicknameRespDto respDto = userService.validNickname(repDto);
+
+        // then
+        assertThat(respDto.isDuplicated()).isTrue();
+        verify(userRepository, times(1)).findByNickname(any());
+    }
+
+    @Test
+    @DisplayName("닉네임이 중복일 때 Duplicated는 false를 반환한다.")
+    void validNicknameDuplicatedIsFalseSuccessTest() {
+        // given
+        UserValidNicknameRepDto repDto = UserValidNicknameRepDto.builder()
+                .nickname("test")
+                .build();
+
+        when(userRepository.findByNickname(repDto.getNickname())).thenReturn(Optional.empty());
+        // when
+        UserValidNicknameRespDto respDto = userService.validNickname(repDto);
+
+        // then
+        assertThat(respDto.isDuplicated()).isFalse();
+        verify(userRepository, times(1)).findByNickname(any());
+    }
+
+    @Test
+    @DisplayName("이메일 중복 검사 조회시 중복된다면 Duplicated 를 true 로 내보낸다.")
+    void validEmailDuplicatedIsTrueSuccessTest() {
+        // given
+        UserValidEmailReqDto reqDto = UserValidEmailReqDto.builder()
+                .email("test@example.com")
+                .build();
+
+        User user = User.builder()
+                .email("test@example.com")
+                .build();
+
+        when(userRepository.findByEmail(reqDto.getEmail())).thenReturn(Optional.of(user));
+        // when
+        UserValidEmailRespDto respDto = userService.validEmail(reqDto);
+
+        // then
+        assertThat(respDto.isDuplicated()).isTrue();
+        verify(userRepository, times(1)).findByEmail(any());
+    }
+
+    @Test
+    @DisplayName("이메일 중복 검사 조회시 중복된다면 Duplicated 를 false 로 내보낸다.")
+    void validEmailDuplicatedIsFalseSuccessTest() {
+        // given
+        UserValidEmailReqDto reqDto = UserValidEmailReqDto.builder()
+                .email("test@example.com")
+                .build();
+
+        when(userRepository.findByEmail(reqDto.getEmail())).thenReturn(Optional.empty());
+        // when
+        UserValidEmailRespDto respDto = userService.validEmail(reqDto);
+
+        // then
+        assertThat(respDto.isDuplicated()).isFalse();
+        verify(userRepository, times(1)).findByEmail(any());
     }
 }
