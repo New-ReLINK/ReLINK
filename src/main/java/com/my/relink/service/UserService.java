@@ -1,5 +1,6 @@
 package com.my.relink.service;
 
+import com.my.relink.controller.user.dto.resp.UserAddressRespDto;
 import com.my.relink.controller.user.dto.req.UserInfoEditReqDto;
 import com.my.relink.controller.user.dto.req.UserDeleteReqDto;
 import com.my.relink.controller.user.dto.req.UserCreateReqDto;
@@ -43,6 +44,13 @@ public class UserService {
         Image image = imageRepository.findByEntityIdAndEntityType(user.getId(), EntityType.USER).orElse(null);
 
         return new UserInfoRespDto(user, image);
+    }
+
+    public UserAddressRespDto findAddress(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        return new UserAddressRespDto(user.getAddress());
     }
 
     @Transactional

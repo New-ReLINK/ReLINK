@@ -2,6 +2,7 @@ package com.my.relink.controller.user;
 
 import com.my.relink.config.security.AuthUser;
 import com.my.relink.controller.user.dto.req.UserCreateReqDto;
+import com.my.relink.controller.user.dto.resp.UserAddressRespDto;
 import com.my.relink.controller.user.dto.req.UserInfoEditReqDto;
 import com.my.relink.controller.user.dto.req.UserValidEmailReqDto;
 import com.my.relink.controller.user.dto.req.UserValidNicknameRepDto;
@@ -36,6 +37,15 @@ public class UserController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ApiResult.success(userService.findUserInfo(authUser.getEmail())));
+    }
+
+    @GetMapping("/users/address")
+    public ResponseEntity<ApiResult<UserAddressRespDto>> getAddress(
+            @AuthenticationPrincipal AuthUser authUser
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResult.success(userService.findAddress(authUser.getId())));
     }
 
     @PutMapping("/users/info")
