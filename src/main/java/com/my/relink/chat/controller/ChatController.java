@@ -1,5 +1,6 @@
 package com.my.relink.chat.controller;
 
+import com.my.relink.chat.config.ChatPrincipal;
 import com.my.relink.chat.controller.dto.ChatMessageReqDto;
 import com.my.relink.chat.controller.dto.ChatMessageRespDto;
 import com.my.relink.chat.service.ChatService;
@@ -11,6 +12,8 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Controller;
 
+import java.security.Principal;
+
 @Controller
 @RequiredArgsConstructor
 public class ChatController {
@@ -21,9 +24,13 @@ public class ChatController {
     @MessageMapping("/chats/{tradeId}/message")
     public void handleMessage(@DestinationVariable("tradeId") Long tradeId,
                               @Payload ChatMessageReqDto chatMessageReqDto,
-                              @Header("simpSessionId") String sessionId) {
-        ChatMessageRespDto chatMessageRespDto = chatService.saveAndSendMessage(tradeId, chatMessageReqDto);
-        messagingTemplate.convertAndSend("/topic/chat/" + tradeId, response);
+                              @Header("simpSessionId") String sessionId,
+                              Principal principal) {
+        ChatMessageRespDto response = chatService.saveAndSendMessage(
+                        tradeId,
+                        chatMessageReqDto,
+                        ((ChatPrincipal)principal).getUserId());
+        messagingTemplate.convertAndSend("/topic/chats/" + tradeId, response);
     }
 
 }

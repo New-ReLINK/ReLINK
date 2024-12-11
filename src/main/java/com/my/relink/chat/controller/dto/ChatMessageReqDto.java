@@ -1,14 +1,24 @@
 package com.my.relink.chat.controller.dto;
 
+import com.my.relink.domain.message.Message;
+import com.my.relink.domain.trade.Trade;
+import com.my.relink.domain.user.User;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-//클라이언트로부터 받을 채팅 메시지 DTO
+
 @NoArgsConstructor
 @Getter
 public class ChatMessageReqDto {
     private String content;
     private Long tradeId;
-    private String sender;
     private String sentAt;
+
+    public Message toEntity(Trade trade, User sender){
+        return Message.builder()
+                .content(content)
+                .user(sender)
+                .trade(trade)
+                .build();
+    }
 }
