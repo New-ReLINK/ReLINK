@@ -2,9 +2,11 @@ package com.my.relink.ExchangeItem;
 
 import com.my.relink.controller.exchangeItem.dto.req.CreateExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemRespDto;
+import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemsByUserRespDto;
 import com.my.relink.domain.category.Category;
 import com.my.relink.domain.category.repository.CategoryRepository;
 import com.my.relink.domain.image.EntityType;
+import com.my.relink.domain.image.Image;
 import com.my.relink.domain.image.ImageRepository;
 import com.my.relink.domain.item.donation.ItemQuality;
 import com.my.relink.domain.item.exchange.ExchangeItem;
@@ -33,7 +35,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -180,33 +181,40 @@ class ExchangeItemServiceTest {
                 .requesterExchangeItem(item3)
                 .build();
         trade1.setModifiedAtForTest(LocalDateTime.now()); // Manually set modifiedAt
-        when(tradeRepository.findByOwnerExchangeItemIdOrRequesterExchangeItemId(2L, 2L)).thenReturn(Optional.of(trade1));
-        when(exchangeItemRepository.findById(3L)).thenReturn(Optional.of(item3));
+        when(tradeRepository.findByExchangeItemIds(List.of(1L, 2L))).thenReturn(List.of(trade1));
 
-        when(imageRepository.findFirstImageUrlByEntityTypeAndEntityIdOrderByCreatedAtAsc(EntityType.EXCHANGE_ITEM, 1L))
-                .thenReturn(Optional.of("http://example.com/image1.jpg"));
-        when(imageRepository.findFirstImageUrlByEntityTypeAndEntityIdOrderByCreatedAtAsc(EntityType.EXCHANGE_ITEM, 2L))
-                .thenReturn(Optional.of("http://example.com/image2.jpg"));
+        Image image1 = Image.builder().id(1L).entityId(1L).entityType(EntityType.EXCHANGE_ITEM).imageUrl("http://example.com/image1.jpg").build();
+        Image image2 = Image.builder().id(2L).entityId(2L).entityType(EntityType.EXCHANGE_ITEM).imageUrl("http://example.com/image2.jpg").build();
+        when(imageRepository.findFirstImagesByEntityTypeAndEntityIds(EntityType.EXCHANGE_ITEM, List.of(1L, 2L)))
+                .thenReturn(List.of(image1, image2));
 
-        Map<String, Object> result = exchangeItemService.getExchangeItemsByUserId(userId1, 1, 10);
-        System.out.println("Result: " + result);
+        GetExchangeItemsByUserRespDto result = exchangeItemService.getExchangeItemsByUserId(userId1, 1, 10);
 
         assertThat(result).isNotNull();
-        List<GetExchangeItemRespDto> content = (List<GetExchangeItemRespDto>) result.get("content");
+        assertThat(result.getContent()).isInstanceOf(List.class);
+        assertThat(result.getPageInfo()).isNotNull();
+
+        List<GetExchangeItemRespDto> content = result.getContent();
         assertThat(content).hasSize(2);
 
         GetExchangeItemRespDto item1Dto = content.get(0);
-        System.out.println("Item1: " + item1Dto);
         assertThat(item1Dto.getExchangeItemId()).isEqualTo(1L);
+        assertThat(item1Dto.getExchangeItemName()).isEqualTo("Item1");
         assertThat(item1Dto.getImageUrl()).isEqualTo("http://example.com/image1.jpg");
         assertThat(item1Dto.getTradeStatus()).isEqualTo(TradeStatus.AVAILABLE);
+        assertThat(item1Dto.getDesiredItem()).isEqualTo("desiredItem1");
+        assertThat(item1Dto.getSize()).isNull();
+        assertThat(item1Dto.getTradePartnerNickname()).isNull();
+        assertThat(item1Dto.getCompletedDate()).isNull();
 
         GetExchangeItemRespDto item2Dto = content.get(1);
-        System.out.println("Item2: " + item2Dto);
         assertThat(item2Dto.getExchangeItemId()).isEqualTo(2L);
+        assertThat(item2Dto.getExchangeItemName()).isEqualTo("Item2");
         assertThat(item2Dto.getImageUrl()).isEqualTo("http://example.com/image2.jpg");
         assertThat(item2Dto.getTradeStatus()).isEqualTo(TradeStatus.EXCHANGED);
+        assertThat(item2Dto.getDesiredItem()).isNull();
         assertThat(item2Dto.getTradePartnerNickname()).isEqualTo("User2");
+        assertThat(item2Dto.getCompletedDate()).isNotNull();
     }
 
     @Test
@@ -220,17 +228,17 @@ class ExchangeItemServiceTest {
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(exchangeItemRepository.findByUserId(userId, pageable)).thenReturn(emptyPage);
 
-        Map<String, Object> result = exchangeItemService.getExchangeItemsByUserId(userId, 1, 10);
+        GetExchangeItemsByUserRespDto result = exchangeItemService.getExchangeItemsByUserId(userId, 1, 10);
         assertThat(result).isNotNull();
         System.out.println("Result: " + result);
 
-        List<GetExchangeItemRespDto> content = (List<GetExchangeItemRespDto>) result.get("content");
+        List<GetExchangeItemRespDto> content = result.getContent();
         assertThat(content).isEmpty();
 
-        Map<String, Object> pageInfo = (Map<String, Object>) result.get("pageInfo");
-        assertThat(pageInfo.get("totalElements")).isEqualTo(0);
-        assertThat(pageInfo.get("totalPages")).isEqualTo(0);
-        assertThat(pageInfo.get("hasPrevious")).isEqualTo(false);
-        assertThat(pageInfo.get("hasNext")).isEqualTo(false);
+        GetExchangeItemsByUserRespDto.PageInfo pageInfo = result.getPageInfo();
+        assertThat(pageInfo.getTotalElements()).isEqualTo(0);
+        assertThat(pageInfo.getTotalPages()).isEqualTo(0);
+        assertThat(pageInfo.isHasPrevious()).isEqualTo(false);
+        assertThat(pageInfo.isHasNext()).isEqualTo(false);
     }
 }

@@ -2,6 +2,7 @@ package com.my.relink.controller.exchangeItem;
 
 import com.my.relink.config.security.AuthUser;
 import com.my.relink.controller.exchangeItem.dto.req.CreateExchangeItemReqDto;
+import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemsByUserRespDto;
 import com.my.relink.service.ExchangeItemService;
 import com.my.relink.util.api.ApiResult;
 import jakarta.validation.Valid;
@@ -27,10 +28,10 @@ public class ExchangeItemController {
     }
 
     @GetMapping("/users/items/exchanges")
-    public ResponseEntity<ApiResult<Map<String, Object>>> getExchangeItemsByUserId(@AuthenticationPrincipal AuthUser authUSer,
+    public ResponseEntity<ApiResult<GetExchangeItemsByUserRespDto>> getExchangeItemsByUserId(@AuthenticationPrincipal AuthUser authUSer,
                                                                                    @RequestParam(required = false, defaultValue = "0") int page,
                                                                                    @RequestParam(required = false, defaultValue = "10") int size) {
-        Map<String, Object> exchangeItems = exchangeItemService.getExchangeItemsByUserId(authUSer.getId(), page, size);
+        GetExchangeItemsByUserRespDto exchangeItems = exchangeItemService.getExchangeItemsByUserId(authUSer.getId(), page, size);
         return new ResponseEntity<>(ApiResult.success(exchangeItems), HttpStatus.OK);
     }
 

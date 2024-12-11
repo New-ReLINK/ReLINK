@@ -2,9 +2,11 @@ package com.my.relink.service;
 
 import com.my.relink.controller.exchangeItem.dto.req.CreateExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemRespDto;
+import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemsByUserRespDto;
 import com.my.relink.domain.category.Category;
 import com.my.relink.domain.category.repository.CategoryRepository;
 import com.my.relink.domain.image.EntityType;
+import com.my.relink.domain.image.Image;
 import com.my.relink.domain.image.ImageRepository;
 import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.item.exchange.repository.ExchangeItemRepository;
@@ -24,9 +26,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -61,28 +63,37 @@ public class ExchangeItemService {
         }
     }
 
-    public Map<String, Object> getExchangeItemsByUserId(Long userId, int page, int size) {
+    public GetExchangeItemsByUserRespDto getExchangeItemsByUserId(Long userId, int page, int size) {
         User user = getValidUser(userId);
         Pageable pageable = PageRequest.of(page - 1, size);
         Page<ExchangeItem> items = exchangeItemRepository.findByUserId(user.getId(), pageable);
-        // 교환 등록 물품이 없는 경우 빈 page 반환
         if (items.isEmpty()) {
-            return Map.of(
-                    "content", List.of(),
-                    "pageInfo", Map.of(
-                            "totalElements", 0,
-                            "totalPages", 0,
-                            "hasPrevious", false,
-                            "hasNext", false
-                    )
-            );
+            return GetExchangeItemsByUserRespDto.builder()
+                    .content(List.of())
+                    .pageInfo(GetExchangeItemsByUserRespDto.PageInfo.builder()
+                            .totalElements(0)
+                            .totalPages(0)
+                            .hasPrevious(false)
+                            .hasNext(false)
+                            .build())
+                    .build();
         }
-        List<GetExchangeItemRespDto> content = items.stream().map(item -> {
-            Trade trade = tradeRepository.findByOwnerExchangeItemIdOrRequesterExchangeItemId(item.getId(), item.getId())
-                    .orElse(null);
-            String imageUrl = imageRepository.findFirstImageUrlByEntityTypeAndEntityIdOrderByCreatedAtAsc(EntityType.EXCHANGE_ITEM, item.getId())
-                    .orElse(null);
-            String partnerNickname = trade != null ? getPartnerNickname(trade, item) : null;
+        List<Long> itemIds = items.getContent().stream().map(ExchangeItem::getId).toList();
+        List<Trade> trades = tradeRepository.findByExchangeItemIds(itemIds);
+        Map<Long, Trade> tradeMap = trades.stream()
+                .collect(Collectors.toMap(
+                        trade -> trade.getOwnerExchangeItem().getId().equals(userId)
+                                ? trade.getRequesterExchangeItem().getId()
+                                : trade.getOwnerExchangeItem().getId(),
+                        trade -> trade
+                ));
+        List<Image> images = imageRepository.findFirstImagesByEntityTypeAndEntityIds(EntityType.EXCHANGE_ITEM, itemIds);
+        Map<Long, String> imageMap = images.stream()
+                .collect(Collectors.toMap(Image::getEntityId, Image::getImageUrl));
+        List<GetExchangeItemRespDto> content = items.getContent().stream().map(item -> {
+            Trade trade = tradeMap.get(item.getId());
+            String imageUrl = imageMap.get(item.getId());
+            String partnerNickname = getPartnerNickname(trade, item);
             LocalDate completedDate = (trade != null && item.getTradeStatus() == TradeStatus.EXCHANGED)
                     ? trade.getModifiedAt().toLocalDate()
                     : null;
@@ -93,30 +104,29 @@ public class ExchangeItemService {
                     .tradeStatus(item.getTradeStatus())
                     .desiredItem(item.getTradeStatus() == TradeStatus.AVAILABLE ? item.getDesiredItem() : null)
                     .size(item.getTradeStatus() == TradeStatus.AVAILABLE || item.getTradeStatus() == TradeStatus.IN_EXCHANGE ? item.getSize() : null)
-                    .tradePartnerNickname(item.getTradeStatus() == TradeStatus.IN_EXCHANGE || item.getTradeStatus() == TradeStatus.EXCHANGED ? partnerNickname : null)
+                    .tradePartnerNickname(partnerNickname)
                     .tradeId(item.getTradeStatus() == TradeStatus.IN_EXCHANGE || item.getTradeStatus() == TradeStatus.EXCHANGED ? trade.getId() : null)
                     .completedDate(item.getTradeStatus() == TradeStatus.EXCHANGED ? completedDate : null)
                     .build();
         }).toList();
-        Map<String, Object> result = new HashMap<>();
-        result.put("content", content);
-        result.put("pageInfo", Map.of(
-                "totalElements", items.getTotalElements(),
-                "totalPages", items.getTotalPages(),
-                "hasPrevious", items.hasPrevious(),
-                "hasNext", items.hasNext()
-        ));
-        return result;
+        return GetExchangeItemsByUserRespDto.builder()
+                .content(content)
+                .pageInfo(GetExchangeItemsByUserRespDto.PageInfo.builder()
+                        .totalElements(items.getTotalElements())
+                        .totalPages(items.getTotalPages())
+                        .hasPrevious(items.hasPrevious())
+                        .hasNext(items.hasNext())
+                        .build())
+                .build();
     }
 
     // 교환상대 닉네임 가져오기
     // trade 에서 해당 등록된 아이템들의 등록자id와 해당 유저의 id를 비교하여 상대방이 등록한 아이템을 통해 상대방의 닉네임을 추출
     private String getPartnerNickname(Trade trade, ExchangeItem currentItem) {
-        Long partnerItemId = trade.getOwnerExchangeItem().getId().equals(currentItem.getId())
-                ? trade.getRequesterExchangeItem().getId()
-                : trade.getOwnerExchangeItem().getId();
-        ExchangeItem partnerItem = exchangeItemRepository.findById(partnerItemId).orElse(null);
-        return partnerItem != null ? partnerItem.getUser().getNickname() : null;
+        ExchangeItem partnerItem = trade.getOwnerExchangeItem().getId().equals(currentItem.getId())
+                ? trade.getRequesterExchangeItem()
+                : trade.getOwnerExchangeItem();
+        return partnerItem.getUser().getNickname();
     }
 
     // user 가져오기
