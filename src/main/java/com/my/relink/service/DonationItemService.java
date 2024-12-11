@@ -49,24 +49,6 @@ public class DonationItemService {
         long totalCompletedDonations = donationItemRepository.countCompletedDonations();
         long completedDonationsThisMonth = donationItemRepository.countCompletedDonationsThisMonth();
 
-        return DonationItemListRespDto.builder()
-                .totalCompletedDonations(totalCompletedDonations)
-                .completedDonationsThisMonth(completedDonationsThisMonth)
-                .items(donationItems.getContent().stream().map(this::mapToDto).toList())
-                .pagingInfo(PagingInfo.builder()
-                        .totalDataCount(donationItems.getTotalElements())
-                        .totalPages(donationItems.getTotalPages())
-                        .hasPrev(donationItems.hasPrevious())
-                        .hasNext(donationItems.hasNext())
-                        .build())
-                .build();
-    }
-
-    private DonationItemRespDto mapToDto(DonationItem item) {
-        return DonationItemRespDto.builder()
-                .id(item.getId())
-                .name(item.getName())
-                .completedDate(item.getModifiedAt().toLocalDate())
-                .build();
+        return DonationItemListRespDto.of(donationItems, totalCompletedDonations, completedDonationsThisMonth);
     }
 }
