@@ -52,6 +52,52 @@ public class DummyObject {
                 .tradeStatus(TradeStatus.AVAILABLE)
                 .hasOwnerRequested(false)
                 .hasRequesterRequested(false)
+                .hasOwnerReceived(false)
+                .hasRequesterReceived(false)
                 .build();
     }
+
+    protected Trade mockTrade(User owner, User requester, boolean hasOwnerRequested, boolean hasRequesterRequested){
+        return Trade.builder()
+                .requester(requester)
+                .ownerExchangeItem(
+                        ExchangeItem.builder()
+                                .name("owner item")
+                                .user(owner)
+                                .isDeleted(false)
+                                .deposit(10000)
+                                .id(10L)
+                                .build()
+                )
+                .requesterExchangeItem(
+                        ExchangeItem.builder()
+                                .name("requester item")
+                                .user(requester)
+                                .isDeleted(false)
+                                .deposit(10000)
+                                .id(13L)
+                                .build()
+                )
+                .tradeStatus(TradeStatus.AVAILABLE)
+                .hasOwnerRequested(hasOwnerRequested)
+                .hasRequesterRequested(hasRequesterRequested)
+                .hasOwnerReceived(false)
+                .hasRequesterReceived(false)
+                .build();
+    }
+
+//    // 요청 상태가 'true'인 교환 거래 객체를 생성
+//    protected Trade mockTradeWithOwnerRequested(User owner, User requester) {
+//        return mockTrade(owner, requester, true, false);
+//    }
+//
+//    // 요청 상태가 'true'인 요청자 및 소유자 교환 거래 객체 생성
+//    protected Trade mockTradeWithRequesterRequested(User owner, User requester) {
+//        return mockTrade(owner, requester, false, true);
+//    }
+//
+//    // 두 사용자가 모두 요청한 상태인 교환 거래 객체 생성
+//    protected Trade mockTradeBothRequested(User owner, User requester) {
+//        return mockTrade(owner, requester, true, true);
+//    }
 }
