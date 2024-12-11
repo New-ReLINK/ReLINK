@@ -1,6 +1,7 @@
 package com.my.relink.controller.item.donation;
 
 import com.my.relink.config.security.AuthUser;
+import com.my.relink.controller.item.donation.dto.DonationItemListRespDto;
 import com.my.relink.controller.item.donation.dto.DonationItemReqDto;
 import com.my.relink.controller.item.donation.dto.DonationItemRespDto;
 import com.my.relink.service.DonationItemService;
@@ -23,5 +24,15 @@ public class DonationController {
         return new ResponseEntity<>(ApiResult.success(response), HttpStatus.CREATED);
     }
 
+    @GetMapping("/item/donation")
+    public ResponseEntity<ApiResult<DonationItemListRespDto>> getDonationItems(
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        DonationItemListRespDto response = donationItemService.getDonationItems(category, search, page, size);
+        return ResponseEntity.ok(ApiResult.success(response));
+    }
 
 }
