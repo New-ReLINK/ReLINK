@@ -1,6 +1,9 @@
 package com.my.relink.domain.review.repository;
 
 import com.my.relink.domain.review.repository.dto.ReviewDetailRepositoryDto;
+import com.my.relink.domain.review.repository.dto.ReviewListRepositoryDto;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,4 +14,7 @@ public interface CustomReviewRepository {
 
     @Transactional(readOnly = true)
     Optional<ReviewDetailRepositoryDto> getReviewDetails(Long userId, Long reviewId);
+
+    @Transactional(readOnly = true)
+    Page<ReviewListRepositoryDto> findAllReviews(Long userId, Pageable pageable);
 }
