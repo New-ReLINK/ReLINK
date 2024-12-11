@@ -19,6 +19,7 @@ import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import com.my.relink.util.DummyObject;
+import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -261,5 +262,17 @@ class TradeServiceTest extends DummyObject {
         assertEquals("OWN123456", trade.getOwnerTrackingNumber());
         assertEquals(TradeStatus.IN_DELIVERY, trade.getTradeStatus());
         verify(tradeRepository, times(1)).save(trade);
+    }
+
+    @Test
+    @DisplayName("교환 진행 페이지 : 운송장 입력받기 실패 케이스")
+    void testGetTrackingNumber_InvalidTrackingNumber() {
+        // Given
+        Long tradeId = 1L;
+        TrackingNumberReqDto reqDto = new TrackingNumberReqDto(""); // 빈 운송장 번호
+
+        // When & Then
+        assertThrows(BusinessException.class, () ->
+                tradeService.getTrackingNumber(tradeId, reqDto, new AuthUser(12L,"test@email.com", Role.USER)));
     }
 }
