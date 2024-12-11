@@ -6,8 +6,6 @@ import com.my.relink.controller.trade.dto.response.AddressRespDto;
 import com.my.relink.controller.trade.dto.response.TradeCompleteRespDto;
 import com.my.relink.controller.trade.dto.response.TradeInquiryDetailRespDto;
 import com.my.relink.controller.trade.dto.response.TradeRequestRespDto;
-import com.my.relink.domain.point.Point;
-import com.my.relink.domain.point.pointHistory.PointHistory;
 import com.my.relink.domain.point.pointHistory.repository.PointHistoryRepository;
 import com.my.relink.domain.point.repository.PointRepository;
 import com.my.relink.domain.trade.Trade;
@@ -43,12 +41,11 @@ class TradeServiceTest extends DummyObject {
     @Mock
     private UserRepository userRepository;
     @Mock
-    private PointTransactionService pointTransactionService;
-    @Mock
     private PointHistoryRepository pointHistoryRepository;
     @Mock
     private PointRepository pointRepository;
-
+    @Mock
+    private PointTransactionService pointTransactionService;
 
     @InjectMocks
     private TradeService tradeService;
@@ -121,14 +118,14 @@ class TradeServiceTest extends DummyObject {
 
     @Test
     @DisplayName("채팅방 이전 대화 내역 조회: 정상 케이스")
-    void getChatRoomMessage_success(){
+    void getChatRoomMessage_success() {
 
 
     }
 
     @Test
     @DisplayName("교환 신청 : 성공 케이스")
-    void testRequestTrade(){
+    void testRequestTrade() {
         // given
         Long tradeId = 1L;
         AuthUser authUser = new AuthUser(12L, "test@email.com", Role.USER);
@@ -220,26 +217,23 @@ class TradeServiceTest extends DummyObject {
     void testCompleteTrade() {
         // given
         Long tradeId = 1L;
-        AuthUser authUser = new AuthUser(12L, "test@email.com", Role.USER);
-        User currentUser = mockRequesterUser();
-        User ownerUser = mockOwnerUser();
-        Trade trade = mockTrade(ownerUser, currentUser);
-        PointHistory pointHistory = mock(PointHistory.class);
-        Point point = mock(Point.class);
+        User owner = mockOwnerUser();
+        User requester = mockRequesterUser();
+        Trade trade = mockTrade(owner, requester, true, true); // 요청자가 요청 완료된 상태
 
-        when(userRepository.findById(authUser.getId())).thenReturn(Optional.of(currentUser));
+        when(userRepository.findById(requester.getId())).thenReturn(Optional.of(requester));
         when(tradeRepository.findById(tradeId)).thenReturn(Optional.of(trade));
-        when(pointHistoryRepository.findFirstByTradeIdOrderByCreatedAtDesc(tradeId)).thenReturn(Optional.of(pointHistory));
-        when(pointRepository.findByUserId(anyLong())).thenReturn(Optional.of(point));
 
-        // when
-        TradeCompleteRespDto result = tradeService.completeTrade(tradeId, authUser);
+        // Mock PointTransactionService
+        doNothing().when(pointTransactionService).restorePointsForAllTraders(trade, 10000);
 
-        // then
-        assertNotNull(result);
-        assertEquals(tradeId, result.getTradeId());
+        // When
+        TradeCompleteRespDto response = tradeService.completeTrade(tradeId, new AuthUser(requester.getId(), "test@email.com", Role.USER));
 
-        verify(pointRepository, times(2)).save(point);
-        verify(pointHistoryRepository, times(2)).save(any(PointHistory.class));
+        // Then
+        assertEquals(tradeId, response.getTradeId());
+
+        verify(tradeRepository, times(1)).findById(tradeId);
+        verify(pointTransactionService, times(1)).restorePointsForAllTraders(trade, 10000);
     }
 }

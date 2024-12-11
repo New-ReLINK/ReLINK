@@ -86,18 +86,4 @@ public class DummyObject {
                 .build();
     }
 
-//    // 요청 상태가 'true'인 교환 거래 객체를 생성
-//    protected Trade mockTradeWithOwnerRequested(User owner, User requester) {
-//        return mockTrade(owner, requester, true, false);
-//    }
-//
-//    // 요청 상태가 'true'인 요청자 및 소유자 교환 거래 객체 생성
-//    protected Trade mockTradeWithRequesterRequested(User owner, User requester) {
-//        return mockTrade(owner, requester, false, true);
-//    }
-//
-//    // 두 사용자가 모두 요청한 상태인 교환 거래 객체 생성
-//    protected Trade mockTradeBothRequested(User owner, User requester) {
-//        return mockTrade(owner, requester, true, true);
-//    }
 }
