@@ -19,4 +19,8 @@ public class ChatNotification extends Notification {
 
     @Enumerated(EnumType.STRING)
     private ChatStatus chatStatus;
+
+    @Column(length = 30)
+    private String exchangeItemName;
+
 }

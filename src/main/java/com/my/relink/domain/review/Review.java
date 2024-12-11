@@ -5,15 +5,16 @@ import com.my.relink.domain.BaseEntity;
 import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.user.User;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
+@AllArgsConstructor
+@Builder
 public class Review extends BaseEntity {
 
     @Id
@@ -35,5 +36,6 @@ public class Review extends BaseEntity {
     private User writer;
 
     @Enumerated(EnumType.STRING)
-    private TradeReview tradeReview;
+    @ElementCollection
+    private List<TradeReview> tradeReview;
 }

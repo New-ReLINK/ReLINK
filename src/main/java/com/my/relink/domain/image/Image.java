@@ -3,6 +3,7 @@ package com.my.relink.domain.image;
 import com.my.relink.domain.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -25,4 +26,11 @@ public class Image extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private EntityType entityType;
 
+    @Builder
+    public Image(Long id, String imageUrl, Long entityId, EntityType entityType) {
+        this.id = id;
+        this.imageUrl = imageUrl;
+        this.entityId = entityId;
+        this.entityType = entityType;
+    }
 }
