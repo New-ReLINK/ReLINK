@@ -11,10 +11,10 @@ import org.springframework.data.repository.query.Param;
 public interface DonationItemRepository extends JpaRepository<DonationItem, Long> {
 
     @Query("SELECT d FROM DonationItem d " +
-            "WHERE (:category IS NULL OR d.category.name = :category) " +
+            "WHERE d.donationStatus = 'DONATION_COMPLETED' " +
+            "AND (:category IS NULL OR d.category.name = :category) " +
             "AND (:search IS NULL OR d.name LIKE %:search%) " +
             "ORDER BY d.modifiedAt DESC")
-
     Page<DonationItem> findAllByFilters(@Param("category") String category,
                                         @Param("search") String search,
                                         Pageable pageable);
