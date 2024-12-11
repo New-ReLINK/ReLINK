@@ -12,7 +12,8 @@ public enum TradeStatus {
     IN_EXCHANGE("교환 중"),
     EXCHANGED("교환 완료"),
     CANCELED("교환 취소"),
-    IN_DELIVERY("배송 중")
+    IN_DELIVERY("배송 중"),
+    UNAVAILABLE("교환 불가능"),
 
     ;
 

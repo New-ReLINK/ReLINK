@@ -37,5 +37,7 @@ public class Review extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @ElementCollection
+    @CollectionTable(name = "trade_review",
+            joinColumns = @JoinColumn(name = "review_id"))
     private List<TradeReview> tradeReview;
 }
