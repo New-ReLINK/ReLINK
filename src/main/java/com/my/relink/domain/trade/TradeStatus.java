@@ -1,6 +1,10 @@
 package com.my.relink.domain.trade;
 
+import com.my.relink.ex.BusinessException;
+import com.my.relink.ex.ErrorCode;
 import lombok.Getter;
+
+import java.util.Arrays;
 
 @Getter
 public enum TradeStatus {
@@ -17,5 +21,12 @@ public enum TradeStatus {
 
     TradeStatus(String message) {
         this.message = message;
+    }
+
+    public static TradeStatus statusOf(String message){
+        return Arrays.stream(values())
+                .filter(tradeStatus -> tradeStatus.getMessage().equals(message))
+                .findFirst()
+                .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_STATUS_NOT_FOUND));
     }
 }

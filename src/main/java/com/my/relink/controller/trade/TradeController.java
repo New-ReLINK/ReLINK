@@ -32,25 +32,34 @@ public class TradeController {
 
 
     @PostMapping("/trades/{tradeId}/request")
-    public ResponseEntity<ApiResult<TradeRequestRespDto>> requestTrade(@PathVariable(name = "tradeId") Long tradeId, @AuthenticationPrincipal AuthUser authUser) {//추후 로그인 유저로 바뀔 얘정
+    public ResponseEntity<ApiResult<TradeRequestRespDto>> requestTrade(
+            @PathVariable(name = "tradeId") Long tradeId,
+            @AuthenticationPrincipal AuthUser authUser) {//추후 로그인 유저로 바뀔 얘정
         TradeRequestRespDto responseDto = tradeService.requestTrade(tradeId, authUser);
         return new ResponseEntity<>(ApiResult.success(responseDto), HttpStatus.OK);
     }
 
     @PostMapping("/trades/{tradeId}/request-cancel")
-    public ResponseEntity<Void> cancelTradeRequest(@PathVariable(name = "tradeId") Long tradeId, @AuthenticationPrincipal AuthUser authUser) {
+    public ResponseEntity<Void> cancelTradeRequest(
+            @PathVariable(name = "tradeId") Long tradeId,
+            @AuthenticationPrincipal AuthUser authUser) {
         tradeService.cancelTradeRequest(tradeId, authUser);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/trades/{tradeId}/completion/address")
-    public ResponseEntity<ApiResult<AddressRespDto>> createAddress(@PathVariable(name = "tradeId") Long tradeId, @RequestBody AddressReqDto reqDto, @AuthenticationPrincipal AuthUser authUser){
+    public ResponseEntity<ApiResult<AddressRespDto>> createAddress(
+            @PathVariable(name = "tradeId") Long tradeId,
+            @RequestBody AddressReqDto reqDto,
+            @AuthenticationPrincipal AuthUser authUser){
         AddressRespDto responseDto = tradeService.createAddress(tradeId, reqDto, authUser);
         return new ResponseEntity<>(ApiResult.success(responseDto), HttpStatus.CREATED);
     }
 
     @PostMapping("/trades/{tradeId}/completion/received")
-    public ResponseEntity<ApiResult<TradeCompleteRespDto>> completeTrade(@PathVariable(name = "tradeId") Long tradeId, @AuthenticationPrincipal AuthUser authUser){
+    public ResponseEntity<ApiResult<TradeCompleteRespDto>> completeTrade(
+            @PathVariable(name = "tradeId") Long tradeId,
+            @AuthenticationPrincipal AuthUser authUser){
         TradeCompleteRespDto responseDto = tradeService.completeTrade(tradeId, authUser);
         return new ResponseEntity<>(ApiResult.success(responseDto), HttpStatus.OK);
     }

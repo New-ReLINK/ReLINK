@@ -10,6 +10,7 @@ import java.util.Optional;
 @Repository
 public interface PointHistoryRepository extends JpaRepository<PointHistory, Long> {
     Optional<PointHistory> findFirstByTradeIdOrderByCreatedAtDesc(Long tradeId);
-    boolean existsByTradeIdAndPointUserIdAndPointTransactionType(Long tradeId, Long id, PointTransactionType pointTransactionType);
+    boolean existsByTradeIdAndPointUserIdAndPointTransactionType(Long tradeId, Long userId, PointTransactionType pointTransactionType);
+    boolean existsByPointUserIdAndPointTransactionType(Long traderId, PointTransactionType pointTransactionType);
 
 }

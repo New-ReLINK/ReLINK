@@ -35,5 +35,5 @@ out/
 
 ### VS Code ###
 .vscode/
-application-local.yaml
 ReLinkApplication.java
+application-local.yaml
