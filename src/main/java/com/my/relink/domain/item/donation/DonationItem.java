@@ -69,7 +69,7 @@ public class DonationItem extends BaseEntity {
         this.certificateUrl = null;
         this.destination = null;
         this.returnAddress = null;
-        this.donationStatus = null;
+        this.donationStatus = DonationStatus.PENDING_REGISTRATION;
         this.rejectedReason = null;
         this.disposalType = null;
     }
