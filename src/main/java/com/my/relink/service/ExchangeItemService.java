@@ -91,11 +91,11 @@ public class ExchangeItemService {
                     .exchangeItemName(item.getName())
                     .imageUrl(imageUrl)
                     .tradeStatus(item.getTradeStatus())
-                    .desiredItem(item.getDesiredItem())
-                    .size(item.getSize())
-                    .tradePartnerNickname(partnerNickname)
-                    .tradeId(trade != null ? trade.getId() : null)
-                    .completedDate(completedDate)
+                    .desiredItem(item.getTradeStatus() == TradeStatus.AVAILABLE ? item.getDesiredItem() : null)
+                    .size(item.getTradeStatus() == TradeStatus.AVAILABLE || item.getTradeStatus() == TradeStatus.IN_EXCHANGE ? item.getSize() : null)
+                    .tradePartnerNickname(item.getTradeStatus() == TradeStatus.IN_EXCHANGE || item.getTradeStatus() == TradeStatus.EXCHANGED ? partnerNickname : null)
+                    .tradeId(item.getTradeStatus() == TradeStatus.IN_EXCHANGE || item.getTradeStatus() == TradeStatus.EXCHANGED ? trade.getId() : null)
+                    .completedDate(item.getTradeStatus() == TradeStatus.EXCHANGED ? completedDate : null)
                     .build();
         }).toList();
         Map<String, Object> result = new HashMap<>();

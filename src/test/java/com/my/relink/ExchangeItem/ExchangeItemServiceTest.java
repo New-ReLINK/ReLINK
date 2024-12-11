@@ -1,13 +1,19 @@
 package com.my.relink.ExchangeItem;
 
 import com.my.relink.controller.exchangeItem.dto.req.CreateExchangeItemReqDto;
+import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemRespDto;
 import com.my.relink.domain.category.Category;
 import com.my.relink.domain.category.repository.CategoryRepository;
+import com.my.relink.domain.image.EntityType;
+import com.my.relink.domain.image.ImageRepository;
 import com.my.relink.domain.item.donation.ItemQuality;
 import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.item.exchange.repository.ExchangeItemRepository;
 import com.my.relink.domain.point.Point;
 import com.my.relink.domain.point.repository.PointRepository;
+import com.my.relink.domain.trade.Trade;
+import com.my.relink.domain.trade.TradeStatus;
+import com.my.relink.domain.trade.repository.TradeRepository;
 import com.my.relink.domain.user.Role;
 import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.repository.UserRepository;
@@ -18,14 +24,21 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 
@@ -41,6 +54,10 @@ class ExchangeItemServiceTest {
     private UserRepository userRepository;
     @Mock
     private PointRepository pointRepository;
+    @Mock
+    private TradeRepository tradeRepository;
+    @Mock
+    private ImageRepository imageRepository;
 
     @BeforeEach
     void setUp() {
@@ -69,7 +86,7 @@ class ExchangeItemServiceTest {
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(category));
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(pointRepository.findByUserId(userId)).thenReturn(Optional.of(point));
-        when(exchangeItemRepository.save(Mockito.any(ExchangeItem.class)))
+        when(exchangeItemRepository.save(any(ExchangeItem.class)))
                 .thenAnswer(invocation -> {
                     ExchangeItem savedItem = invocation.getArgument(0);
                     ReflectionTestUtils.setField(savedItem, "id", 1L);
@@ -135,12 +152,85 @@ class ExchangeItemServiceTest {
         // Then
         assertThatThrownBy(() -> exchangeItemService.createExchangeItem(reqDto, userId))
                 .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("포인트가 부족합니다.");
+                .hasMessageContaining("포인트가 부족합니다");
     }
 
     @Test
-    @DisplayName("내 교환상품 목록 불러오기 정상 성공")
-    void testGetExchangeItemByUserId_Success() {
+    @DisplayName("내 교환상품 목록 불러오기 성공")
+    void testGetExchangeItemsByUserId_Success() {
+        Long userId1 = 1L;
+        Long userId2 = 2L;
 
+        User user1 = User.builder().id(userId1).nickname("User1").build();
+        User user2 = User.builder().id(userId2).nickname("User2").build();
+        when(userRepository.findById(userId1)).thenReturn(Optional.of(user1));
+
+        ExchangeItem item1 = ExchangeItem.builder().id(1L).name("Item1").user(user1).desiredItem("desiredItem1").tradeStatus(TradeStatus.AVAILABLE).build();
+        ExchangeItem item2 = ExchangeItem.builder().id(2L).name("Item2").user(user1).desiredItem("desiredItem2").tradeStatus(TradeStatus.EXCHANGED).build();
+        ExchangeItem item3 = ExchangeItem.builder().id(3L).name("Item3").user(user2).desiredItem("desiredItem3").tradeStatus(TradeStatus.EXCHANGED).build();
+        List<ExchangeItem> exchangeItems = List.of(item1, item2);
+
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<ExchangeItem> page = new PageImpl<>(exchangeItems, pageable, exchangeItems.size());
+        when(exchangeItemRepository.findByUserId(userId1, pageable)).thenReturn(page);
+
+        Trade trade1 = Trade.builder()
+                .id(1L)
+                .ownerExchangeItem(item2)
+                .requesterExchangeItem(item3)
+                .build();
+        trade1.setModifiedAtForTest(LocalDateTime.now()); // Manually set modifiedAt
+        when(tradeRepository.findByOwnerExchangeItemIdOrRequesterExchangeItemId(2L, 2L)).thenReturn(Optional.of(trade1));
+        when(exchangeItemRepository.findById(3L)).thenReturn(Optional.of(item3));
+
+        when(imageRepository.findFirstImageUrlByEntityTypeAndEntityIdOrderByCreatedAtAsc(EntityType.EXCHANGE_ITEM, 1L))
+                .thenReturn(Optional.of("http://example.com/image1.jpg"));
+        when(imageRepository.findFirstImageUrlByEntityTypeAndEntityIdOrderByCreatedAtAsc(EntityType.EXCHANGE_ITEM, 2L))
+                .thenReturn(Optional.of("http://example.com/image2.jpg"));
+
+        Map<String, Object> result = exchangeItemService.getExchangeItemsByUserId(userId1, 1, 10);
+        System.out.println("Result: " + result);
+
+        assertThat(result).isNotNull();
+        List<GetExchangeItemRespDto> content = (List<GetExchangeItemRespDto>) result.get("content");
+        assertThat(content).hasSize(2);
+
+        GetExchangeItemRespDto item1Dto = content.get(0);
+        System.out.println("Item1: " + item1Dto);
+        assertThat(item1Dto.getExchangeItemId()).isEqualTo(1L);
+        assertThat(item1Dto.getImageUrl()).isEqualTo("http://example.com/image1.jpg");
+        assertThat(item1Dto.getTradeStatus()).isEqualTo(TradeStatus.AVAILABLE);
+
+        GetExchangeItemRespDto item2Dto = content.get(1);
+        System.out.println("Item2: " + item2Dto);
+        assertThat(item2Dto.getExchangeItemId()).isEqualTo(2L);
+        assertThat(item2Dto.getImageUrl()).isEqualTo("http://example.com/image2.jpg");
+        assertThat(item2Dto.getTradeStatus()).isEqualTo(TradeStatus.EXCHANGED);
+        assertThat(item2Dto.getTradePartnerNickname()).isEqualTo("User2");
+    }
+
+    @Test
+    @DisplayName("내 교환상품 목록 불러오기 성공 - 목록이 없을 경우 빈 목록 불러오기")
+    void testGetExchangeItemByUserId_Success_NoItem() {
+        Long userId = 1L;
+        User user = User.builder().id(userId).nickname("User1").build();
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<ExchangeItem> emptyPage = Page.empty(pageable);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(exchangeItemRepository.findByUserId(userId, pageable)).thenReturn(emptyPage);
+
+        Map<String, Object> result = exchangeItemService.getExchangeItemsByUserId(userId, 1, 10);
+        assertThat(result).isNotNull();
+        System.out.println("Result: " + result);
+
+        List<GetExchangeItemRespDto> content = (List<GetExchangeItemRespDto>) result.get("content");
+        assertThat(content).isEmpty();
+
+        Map<String, Object> pageInfo = (Map<String, Object>) result.get("pageInfo");
+        assertThat(pageInfo.get("totalElements")).isEqualTo(0);
+        assertThat(pageInfo.get("totalPages")).isEqualTo(0);
+        assertThat(pageInfo.get("hasPrevious")).isEqualTo(false);
+        assertThat(pageInfo.get("hasNext")).isEqualTo(false);
     }
 }

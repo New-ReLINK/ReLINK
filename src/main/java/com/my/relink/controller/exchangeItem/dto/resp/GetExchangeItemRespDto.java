@@ -3,11 +3,13 @@ package com.my.relink.controller.exchangeItem.dto.resp;
 import com.my.relink.domain.trade.TradeStatus;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.ToString;
 
 import java.time.LocalDate;
 
 @Getter
 @Builder
+@ToString
 public class GetExchangeItemRespDto {
     // 공통
     Long exchangeItemId;
