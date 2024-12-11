@@ -2,6 +2,7 @@ package com.my.relink.service;
 
 import com.my.relink.config.security.AuthUser;
 import com.my.relink.controller.trade.dto.request.AddressReqDto;
+import com.my.relink.controller.trade.dto.request.TrackingNumberReqDto;
 import com.my.relink.controller.trade.dto.response.AddressRespDto;
 import com.my.relink.controller.trade.dto.response.TradeCompleteRespDto;
 import com.my.relink.controller.trade.dto.response.TradeInquiryDetailRespDto;
@@ -9,6 +10,7 @@ import com.my.relink.controller.trade.dto.response.TradeRequestRespDto;
 import com.my.relink.domain.point.pointHistory.repository.PointHistoryRepository;
 import com.my.relink.domain.point.repository.PointRepository;
 import com.my.relink.domain.trade.Trade;
+import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.domain.trade.repository.TradeRepository;
 import com.my.relink.domain.user.Address;
 import com.my.relink.domain.user.Role;
@@ -235,5 +237,29 @@ class TradeServiceTest extends DummyObject {
 
         verify(tradeRepository, times(1)).findById(tradeId);
         verify(pointTransactionService, times(1)).restorePointsForAllTraders(trade, 10000);
+    }
+
+    @Test
+    @DisplayName("교환 진행 페이지 : 운송장 입력받기 성공케이스")
+    void testGetTrackingNumber_BothTrackingNumbersSet_TradeStatusUpdated() {
+        // Given
+        Long tradeId = 1L;
+        User requester = mockRequesterUser();
+        User owner = mockOwnerUser();
+        Trade trade = mockTrade(owner, requester);
+        trade.updateOwnerTrackingNumber("OWN123456"); // 소유자의 운송장 번호 설정
+        TrackingNumberReqDto reqDto = new TrackingNumberReqDto("REQ123456");
+
+        when(userRepository.findById(requester.getId())).thenReturn(Optional.of(requester));
+        when(tradeRepository.findById(tradeId)).thenReturn(Optional.of(trade));
+
+        // When
+        tradeService.getTrackingNumber(tradeId, reqDto, new AuthUser(requester.getId(), "test@email.com", Role.USER));
+
+        // Then
+        assertEquals("REQ123456", trade.getRequesterTrackingNumber());
+        assertEquals("OWN123456", trade.getOwnerTrackingNumber());
+        assertEquals(TradeStatus.IN_DELIVERY, trade.getTradeStatus());
+        verify(tradeRepository, times(1)).save(trade);
     }
 }
