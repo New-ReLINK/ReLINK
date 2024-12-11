@@ -124,15 +124,15 @@ public class CustomReviewRepositoryImpl implements CustomReviewRepository {
     }
 
     private Map<Long, List<TradeReview>> getTradeReviews(List<Long> reviewIdList) {
-        return reviewIdList.isEmpty() ?
-                new HashMap<>() :
-                em.createQuery("select new map(r.id as reviewId, tr as tradeReview) from Review r join r.tradeReview tr where r.id in :reviewIds order by r.createdAt desc ", Map.class)
-                        .setParameter("reviewIds", reviewIdList)
-                        .getResultList()
-                        .stream()
-                        .collect(Collectors.groupingBy(
-                                m -> (Long) m.get("reviewId"),
-                                Collectors.mapping(m -> (TradeReview) m.get("tradeReview"), Collectors.toList())
-                        ));
+        List<Review> tradeReview = jpaQueryFactory.selectFrom(review)
+                .where(review.id.in(reviewIdList))
+                .orderBy(review.createdAt.desc())
+                .fetch();
+
+        return tradeReview.stream()
+                .collect(Collectors.toMap(
+                        Review::getId,
+                        Review::getTradeReview
+                ));
     }
 }
