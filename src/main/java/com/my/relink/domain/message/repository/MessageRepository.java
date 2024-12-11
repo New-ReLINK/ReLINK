@@ -1,5 +1,6 @@
-package com.my.relink.domain.message;
+package com.my.relink.domain.message.repository;
 
+import com.my.relink.domain.message.Message;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
