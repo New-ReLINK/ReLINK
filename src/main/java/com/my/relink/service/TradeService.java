@@ -164,34 +164,44 @@ public class TradeService {
         Integer amount = trade.getOwnerExchangeItem().getDeposit();
 
         //amount와 type확인 후 두 유저에게 반환
-        Point requesterPoint = pointRepository.findByUserId(trade.getRequester().getId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.POINT_NOT_FOUND));
-        Point ownerPoint = pointRepository.findByUserId(trade.getOwner().getId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.POINT_NOT_FOUND));
-
-        requesterPoint.restore(amount);
-        pointRepository.save(requesterPoint);
-
-        ownerPoint.restore(amount);
-        pointRepository.save(ownerPoint);
-
-        //환급 이력 생성
-        PointHistory requesterRestoreHistory = PointHistory.create(
-                amount,
-                PointTransactionType.RETURN,
-                requesterPoint,
-                trade
+        boolean isRequesterRestored = pointHistoryRepository.existsByTradeIdAndPointUserIdAndPointTransactionType(
+                tradeId, trade.getOwner().getId(), PointTransactionType.RETURN
         );
-        pointHistoryRepository.save(requesterRestoreHistory);
-
-        PointHistory ownerRestoreHistory = PointHistory.create(
-                amount,
-                PointTransactionType.RETURN,
-                ownerPoint,
-                trade
+        boolean isOwnerRestored = pointHistoryRepository.existsByTradeIdAndPointUserIdAndPointTransactionType(
+                tradeId, trade.getOwner().getId(), PointTransactionType.RETURN
         );
-        pointHistoryRepository.save(ownerRestoreHistory);
 
+        if(!isRequesterRestored){
+            Point requesterPoint = pointRepository.findByUserId(trade.getRequester().getId())
+                    .orElseThrow(() -> new BusinessException(ErrorCode.POINT_NOT_FOUND));
+
+            requesterPoint.restore(amount);
+            pointRepository.save(requesterPoint);
+
+            PointHistory requesterRestoreHistory = PointHistory.create(
+                    amount,
+                    PointTransactionType.RETURN,
+                    requesterPoint,
+                    trade
+            );
+            pointHistoryRepository.save(requesterRestoreHistory);
+        }
+
+        if(!isOwnerRestored){
+            Point ownerPoint = pointRepository.findByUserId(trade.getOwner().getId())
+                    .orElseThrow(() -> new BusinessException(ErrorCode.POINT_NOT_FOUND));
+
+            ownerPoint.restore(amount);
+            pointRepository.save(ownerPoint);
+
+            PointHistory ownerRestoreHistory = PointHistory.create(
+                    amount,
+                    PointTransactionType.RETURN,
+                    ownerPoint,
+                    trade
+            );
+            pointHistoryRepository.save(ownerRestoreHistory);
+        }
         return new TradeCompleteRespDto(tradeId);
     }
 }
