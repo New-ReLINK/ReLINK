@@ -105,4 +105,11 @@ public class Trade extends BaseEntity {
         this.hasRequesterRequested = requestedStatus;
     }
 
+    public void saveOwnerAddress(Address newAddress) {
+        this.ownerAddress = newAddress;
+    }
+
+    public void saveRequesterAddress(Address newAddress) {
+        this.requesterAddress = newAddress;
+    }
 }

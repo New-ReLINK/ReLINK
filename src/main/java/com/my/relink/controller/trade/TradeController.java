@@ -1,6 +1,8 @@
 package com.my.relink.controller.trade;
 
 import com.my.relink.config.security.AuthUser;
+import com.my.relink.controller.trade.dto.request.AddressReqDto;
+import com.my.relink.controller.trade.dto.response.AddressRespDto;
 import com.my.relink.controller.trade.dto.response.TradeInquiryDetailRespDto;
 import com.my.relink.controller.trade.dto.request.TradeReqDto;
 import com.my.relink.controller.trade.dto.response.TradeRequestRespDto;
@@ -14,20 +16,13 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/chat")
 public class TradeController {
 
     private final TradeService tradeService;
 
 
-    @PostMapping("/trades/{tradeId}/request")
-    public ResponseEntity<ApiResult<TradeRequestRespDto>> requestTrade(@PathVariable(name = "tradeId") Long tradeId, @RequestBody TradeReqDto tradeReqDto) {//추후 로그인 유저로 바뀔 얘정
-        TradeRequestRespDto responseDto = tradeService.requestTrade(tradeId, tradeReqDto.getUserId());
-        return new ResponseEntity<>(ApiResult.success(responseDto), HttpStatus.OK);
-    }
 
-
-    @GetMapping("/{tradeId}")
+    @GetMapping("/chat/{tradeId}")
     public ResponseEntity<ApiResult<TradeInquiryDetailRespDto>> getTradeInquiryChatRoom(
             @PathVariable("tradeId") Long tradeId,
             @AuthenticationPrincipal AuthUser authUser){
@@ -35,6 +30,22 @@ public class TradeController {
     }
 
 
+    @PostMapping("/trades/{tradeId}/request")
+    public ResponseEntity<ApiResult<TradeRequestRespDto>> requestTrade(@PathVariable(name = "tradeId") Long tradeId, @AuthenticationPrincipal AuthUser authUser) {//추후 로그인 유저로 바뀔 얘정
+        TradeRequestRespDto responseDto = tradeService.requestTrade(tradeId, authUser);
+        return new ResponseEntity<>(ApiResult.success(responseDto), HttpStatus.OK);
+    }
 
+    @PostMapping("/trades/{tradeId}/request-cancel")
+    public ResponseEntity<Void> cancelTradeRequest(@PathVariable(name = "tradeId") Long tradeId, @AuthenticationPrincipal AuthUser authUser) {
+        tradeService.cancelTradeRequest(tradeId, authUser);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/trades/{tradeId}/completion/address")
+    public ResponseEntity<ApiResult<AddressRespDto>> createAddress(@PathVariable(name = "tradeId") Long tradeId, @RequestBody AddressReqDto reqDto, @AuthenticationPrincipal AuthUser authUser){
+        AddressRespDto responseDto = tradeService.createAddress(tradeId, reqDto, authUser);
+        return new ResponseEntity<>(ApiResult.success(responseDto), HttpStatus.CREATED);
+    }
 
 }
