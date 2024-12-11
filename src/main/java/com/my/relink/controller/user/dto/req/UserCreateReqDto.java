@@ -63,7 +63,7 @@ public class UserCreateReqDto {
                 .email(dto.getEmail())
                 .password(dto.getPassword())
                 .contact(dto.getContact())
-                .address(dto.getAddress() != null ? dto.address.toEntity(dto.getAddress()) : null)
+                .address(dto.getAddress() != null ? dto.getAddress().toEntity(dto.getAddress()) : null)
                 .role(Role.USER)
                 .build();
     }
