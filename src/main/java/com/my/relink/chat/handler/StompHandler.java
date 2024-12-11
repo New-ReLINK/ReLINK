@@ -134,13 +134,13 @@ public class StompHandler implements ChannelInterceptor {
 
     /**
      * 거래 상태 검증
-     * EXCHANGED나 CANCELED 상태의 거래는 채팅 접근 불가능
+     * EXCHANGED나 CANCELED, UNAVAILABLE 상태의 거래는 채팅 접근 불가능
      *
      * @param tradeStatus 검증할 거래 상태
-     * @throws BusinessException 거래가 이미 종료된 상태(EXCHANGED/CANCELED)인 경우
+     * @throws BusinessException 거래가 이미 종료된 상태(EXCHANGED/CANCELED/UNAVAILABLE)인 경우
      */
     private void validateTradeStatus(TradeStatus tradeStatus) {
-        if (List.of(TradeStatus.CANCELED, TradeStatus.EXCHANGED).contains(tradeStatus)) {
+        if (List.of(TradeStatus.CANCELED, TradeStatus.EXCHANGED, TradeStatus.UNAVAILABLE).contains(tradeStatus)) {
             log.debug("더 이상 채팅 세션을 제공하지 않는 거래 채팅방에 접근 시도 - tradeStatus : {}", tradeStatus);
             throw new BusinessException(ErrorCode.CHATROOM_ACCESS_DENIED);
         }
