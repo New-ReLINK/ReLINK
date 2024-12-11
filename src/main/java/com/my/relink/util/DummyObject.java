@@ -1,10 +1,14 @@
 package com.my.relink.util;
 
 import com.my.relink.domain.item.exchange.ExchangeItem;
+import com.my.relink.domain.message.Message;
 import com.my.relink.domain.trade.Trade;
 import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.domain.user.Role;
 import com.my.relink.domain.user.User;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class DummyObject {
 
