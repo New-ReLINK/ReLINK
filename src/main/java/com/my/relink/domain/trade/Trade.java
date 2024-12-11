@@ -12,11 +12,10 @@ import lombok.*;
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
-@AllArgsConstructor
-@Builder
 public class Trade extends BaseEntity {
 
-    @Id @GeneratedValue
+    @Id
+    @GeneratedValue
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -71,22 +70,22 @@ public class Trade extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private TradeCancelReason cancelReason;
 
-    public User getOwner(){
+    public User getOwner() {
         return this.getOwnerExchangeItem().getUser();
     }
 
-    public boolean isParticipant(Long userId){
+    public boolean isParticipant(Long userId) {
         return getOwner().getId().equals(userId) || getRequester().getId().equals(userId);
     }
 
-    public void validateAccess(Long userId){
-        if(!isParticipant(userId)){
+    public void validateAccess(Long userId) {
+        if (!isParticipant(userId)) {
             throw new BusinessException(ErrorCode.TRADE_ACCESS_DENIED);
         }
     }
 
-    public User getPartner(Long userId){
-        return getRequester().getId().equals(userId)? getOwner() : getRequester();
+    public User getPartner(Long userId) {
+        return getRequester().getId().equals(userId) ? getOwner() : getRequester();
     }
 
     public void updateTradeStatus(TradeStatus tradeStatus) {
@@ -95,6 +94,10 @@ public class Trade extends BaseEntity {
 
     public void updateHasOwnerRequested(Boolean requestedStatus) {
         this.hasOwnerRequested = requestedStatus;
+    }
+
+    public void updateHasOwnerReceived(Boolean requestedStatus) {
+        this.hasOwnerReceived = requestedStatus;
     }
 
     public void updateHasRequesterReceived(Boolean requestedStatus) {
@@ -111,5 +114,38 @@ public class Trade extends BaseEntity {
 
     public void saveRequesterAddress(Address newAddress) {
         this.requesterAddress = newAddress;
+    }
+
+    @Builder
+    public Trade(
+            Long id,
+            User requester,
+            ExchangeItem ownerExchangeItem,
+            ExchangeItem requesterExchangeItem,
+            TradeStatus tradeStatus,
+            String ownerTrackingNumber,
+            String requesterTrackingNumber,
+            Address ownerAddress,
+            Address requesterAddress,
+            Boolean hasOwnerReceived,
+            Boolean hasRequesterReceived,
+            Boolean hasOwnerRequested,
+            Boolean hasRequesterRequested,
+            TradeCancelReason cancelReason
+    ) {
+        this.id = id;
+        this.requester = requester;
+        this.ownerExchangeItem = ownerExchangeItem;
+        this.requesterExchangeItem = requesterExchangeItem;
+        this.tradeStatus = tradeStatus;
+        this.ownerTrackingNumber = ownerTrackingNumber;
+        this.requesterTrackingNumber = requesterTrackingNumber;
+        this.ownerAddress = ownerAddress;
+        this.requesterAddress = requesterAddress;
+        this.hasOwnerReceived = hasOwnerReceived;
+        this.hasRequesterReceived = hasRequesterReceived;
+        this.hasOwnerRequested = hasOwnerRequested;
+        this.hasRequesterRequested = hasRequesterRequested;
+        this.cancelReason = cancelReason;
     }
 }

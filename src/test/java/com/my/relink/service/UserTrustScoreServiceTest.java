@@ -1,6 +1,6 @@
 package com.my.relink.service;
 
-import com.my.relink.domain.review.ReviewRepository;
+import com.my.relink.domain.review.repository.ReviewRepository;
 import com.my.relink.domain.user.User;
 import com.my.relink.util.DummyObject;
 import org.junit.jupiter.api.DisplayName;
@@ -11,7 +11,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.times;
 
