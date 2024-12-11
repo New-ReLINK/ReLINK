@@ -43,7 +43,7 @@ public class DonationItemService {
     }
 
     public DonationItemListRespDto getDonationItems(String category, String search, int page, int size) {
-        Pageable pageable = PageRequest.of(page - 1, size);
+        Pageable pageable = PageRequest.of(page, size);
         Page<DonationItem> donationItems = donationItemRepository.findAllByFilters(category, search, pageable);
 
         long totalCompletedDonations = donationItemRepository.countCompletedDonations();
