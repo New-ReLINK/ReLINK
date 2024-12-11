@@ -51,11 +51,30 @@ public class StompHandler implements ChannelInterceptor {
                 handleConnect(accessor);
             } else if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())){
                 handleSubscribe(accessor);
+            } else if (StompCommand.SEND.equals(accessor.getCommand())){
+                handleSend(accessor);
             }
             return message;
         }catch (BusinessException e){
             log.error("웹소켓 연결 검증 중 오류 발생: {}", e.getMessage(), e);
             throw new MessageDeliveryException(e.getMessage());
+        }
+    }
+
+    /**
+     * 채팅 시 거래 상태 검증
+     * 1. 메시지를 전송하려는 채팅방의 tradeId 추출
+     * 2. 거래 상태 검증
+     *
+     * @param accessor
+     */
+    private void handleSend(StompHeaderAccessor accessor){
+        String destination = accessor.getDestination();
+
+        if(destination != null && destination.startsWith("/topic/chats")){
+            Long tradeId = extractTradeIdFromPath(destination);
+            Trade trade = tradeService.findByIdWithUsersOrFail(tradeId);
+            validateTradeStatus(trade.getTradeStatus());
         }
     }
 
@@ -93,7 +112,7 @@ public class StompHandler implements ChannelInterceptor {
         if(destination != null && destination.startsWith("/topic/chats")){
             Long tradeId = extractTradeIdFromPath(destination);
             ChatPrincipal principal = (ChatPrincipal) accessor.getUser();
-            Trade trade = tradeService.findByIdOrFail(tradeId);
+            Trade trade = tradeService.findByIdWithUsersOrFail(tradeId);
 
             trade.validateAccess(principal.getUserId());
             validateTradeStatus(trade.getTradeStatus());
