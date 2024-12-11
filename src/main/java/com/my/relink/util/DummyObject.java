@@ -52,6 +52,38 @@ public class DummyObject {
                 .tradeStatus(TradeStatus.AVAILABLE)
                 .hasOwnerRequested(false)
                 .hasRequesterRequested(false)
+                .hasOwnerReceived(false)
+                .hasRequesterReceived(false)
                 .build();
     }
+
+    protected Trade mockTrade(User owner, User requester, boolean hasOwnerRequested, boolean hasRequesterRequested){
+        return Trade.builder()
+                .requester(requester)
+                .ownerExchangeItem(
+                        ExchangeItem.builder()
+                                .name("owner item")
+                                .user(owner)
+                                .isDeleted(false)
+                                .deposit(10000)
+                                .id(10L)
+                                .build()
+                )
+                .requesterExchangeItem(
+                        ExchangeItem.builder()
+                                .name("requester item")
+                                .user(requester)
+                                .isDeleted(false)
+                                .deposit(10000)
+                                .id(13L)
+                                .build()
+                )
+                .tradeStatus(TradeStatus.AVAILABLE)
+                .hasOwnerRequested(hasOwnerRequested)
+                .hasRequesterRequested(hasRequesterRequested)
+                .hasOwnerReceived(false)
+                .hasRequesterReceived(false)
+                .build();
+    }
+
 }
