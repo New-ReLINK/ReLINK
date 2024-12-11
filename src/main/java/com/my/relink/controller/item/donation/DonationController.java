@@ -1,9 +1,9 @@
 package com.my.relink.controller.item.donation;
 
 import com.my.relink.config.security.AuthUser;
-import com.my.relink.controller.item.donation.dto.DonationItemListRespDto;
-import com.my.relink.controller.item.donation.dto.DonationItemReqDto;
-import com.my.relink.controller.item.donation.dto.DonationItemRespDto;
+import com.my.relink.controller.item.donation.dto.resp.DonationItemListRespDto;
+import com.my.relink.controller.item.donation.dto.req.DonationItemReqDto;
+import com.my.relink.controller.item.donation.dto.resp.DonationItemIdRespDto;
 import com.my.relink.service.DonationItemService;
 import com.my.relink.util.api.ApiResult;
 import jakarta.validation.Valid;
@@ -19,8 +19,8 @@ public class DonationController {
     private final DonationItemService donationItemService;
 
     @PostMapping("/item/donation")
-    public ResponseEntity<ApiResult<DonationItemRespDto>> createDonationItem(@AuthenticationPrincipal AuthUser authUser, @RequestBody @Valid DonationItemReqDto request) {
-        DonationItemRespDto response = donationItemService.createDonationItem(request, authUser);
+    public ResponseEntity<ApiResult<DonationItemIdRespDto>> createDonationItem(@AuthenticationPrincipal AuthUser authUser, @RequestBody @Valid DonationItemReqDto request) {
+        DonationItemIdRespDto response = donationItemService.createDonationItem(request, authUser);
         return new ResponseEntity<>(ApiResult.success(response), HttpStatus.CREATED);
     }
 

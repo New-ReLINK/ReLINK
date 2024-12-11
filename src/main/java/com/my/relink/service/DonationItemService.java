@@ -2,6 +2,10 @@ package com.my.relink.service;
 
 import com.my.relink.config.security.AuthUser;
 import com.my.relink.controller.item.donation.dto.*;
+import com.my.relink.controller.item.donation.dto.req.DonationItemReqDto;
+import com.my.relink.controller.item.donation.dto.resp.DonationItemListRespDto;
+import com.my.relink.controller.item.donation.dto.resp.DonationItemIdRespDto;
+import com.my.relink.controller.item.donation.dto.resp.DonationItemRespDto;
 import com.my.relink.domain.category.Category;
 import com.my.relink.domain.category.repository.CategoryRepository;
 import com.my.relink.domain.item.donation.DonationItem;
@@ -24,7 +28,7 @@ public class DonationItemService {
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
 
-    public DonationItemRespDto createDonationItem(DonationItemReqDto request, AuthUser authUser) {
+    public DonationItemIdRespDto createDonationItem(DonationItemReqDto request, AuthUser authUser) {
         User user = userRepository.findById(authUser.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
@@ -35,7 +39,7 @@ public class DonationItemService {
 
         DonationItem savedItem = donationItemRepository.save(donationItem);
 
-        return new DonationItemRespDto(savedItem.getId());
+        return new DonationItemIdRespDto(savedItem.getId());
     }
 
     public DonationItemListRespDto getDonationItems(String category, String search, int page, int size) {
@@ -58,8 +62,8 @@ public class DonationItemService {
                 .build();
     }
 
-    private DonationItemDto mapToDto(DonationItem item) {
-        return DonationItemDto.builder()
+    private DonationItemRespDto mapToDto(DonationItem item) {
+        return DonationItemRespDto.builder()
                 .id(item.getId())
                 .name(item.getName())
                 .completedDate(item.getModifiedAt().toLocalDate())
