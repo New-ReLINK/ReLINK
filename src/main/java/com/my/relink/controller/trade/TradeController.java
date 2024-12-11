@@ -2,10 +2,10 @@ package com.my.relink.controller.trade;
 
 import com.my.relink.config.security.AuthUser;
 import com.my.relink.controller.trade.dto.request.AddressReqDto;
+import com.my.relink.controller.trade.dto.request.TrackingNumberReqDto;
 import com.my.relink.controller.trade.dto.response.AddressRespDto;
 import com.my.relink.controller.trade.dto.response.TradeCompleteRespDto;
 import com.my.relink.controller.trade.dto.response.TradeInquiryDetailRespDto;
-import com.my.relink.controller.trade.dto.request.TradeReqDto;
 import com.my.relink.controller.trade.dto.response.TradeRequestRespDto;
 import com.my.relink.service.TradeService;
 import com.my.relink.util.api.ApiResult;
@@ -21,15 +21,12 @@ public class TradeController {
 
     private final TradeService tradeService;
 
-
-
     @GetMapping("/chat/{tradeId}")
     public ResponseEntity<ApiResult<TradeInquiryDetailRespDto>> getTradeInquiryChatRoom(
             @PathVariable("tradeId") Long tradeId,
-            @AuthenticationPrincipal AuthUser authUser){
+            @AuthenticationPrincipal AuthUser authUser) {
         return ResponseEntity.ok(ApiResult.success(tradeService.getTradeInquiryDetail(tradeId, authUser.getId())));
     }
-
 
     @PostMapping("/trades/{tradeId}/request")
     public ResponseEntity<ApiResult<TradeRequestRespDto>> requestTrade(
@@ -40,7 +37,7 @@ public class TradeController {
     }
 
     @PostMapping("/trades/{tradeId}/request-cancel")
-    public ResponseEntity<Void> cancelTradeRequest(
+    public ResponseEntity<ApiResult<Void>> cancelTradeRequest(
             @PathVariable(name = "tradeId") Long tradeId,
             @AuthenticationPrincipal AuthUser authUser) {
         tradeService.cancelTradeRequest(tradeId, authUser);
@@ -51,7 +48,7 @@ public class TradeController {
     public ResponseEntity<ApiResult<AddressRespDto>> createAddress(
             @PathVariable(name = "tradeId") Long tradeId,
             @RequestBody AddressReqDto reqDto,
-            @AuthenticationPrincipal AuthUser authUser){
+            @AuthenticationPrincipal AuthUser authUser) {
         AddressRespDto responseDto = tradeService.createAddress(tradeId, reqDto, authUser);
         return new ResponseEntity<>(ApiResult.success(responseDto), HttpStatus.CREATED);
     }
@@ -59,9 +56,18 @@ public class TradeController {
     @PostMapping("/trades/{tradeId}/completion/received")
     public ResponseEntity<ApiResult<TradeCompleteRespDto>> completeTrade(
             @PathVariable(name = "tradeId") Long tradeId,
-            @AuthenticationPrincipal AuthUser authUser){
+            @AuthenticationPrincipal AuthUser authUser) {
         TradeCompleteRespDto responseDto = tradeService.completeTrade(tradeId, authUser);
         return new ResponseEntity<>(ApiResult.success(responseDto), HttpStatus.OK);
+    }
+
+    @PostMapping("/trades/{tradeId}/tracking-number")
+    public ResponseEntity<ApiResult<Void>> getTrackingNumber(
+            @PathVariable(name = "tradeId") Long tradeId,
+            @RequestBody TrackingNumberReqDto reqDto,
+            @AuthenticationPrincipal AuthUser authUser) {
+        tradeService.getTrackingNumber(tradeId, reqDto, authUser);
+        return ResponseEntity.noContent().build();
     }
 
 }
