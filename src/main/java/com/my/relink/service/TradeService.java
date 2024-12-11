@@ -6,6 +6,11 @@ import com.my.relink.controller.trade.dto.response.AddressRespDto;
 import com.my.relink.controller.trade.dto.response.TradeCompleteRespDto;
 import com.my.relink.controller.trade.dto.response.TradeInquiryDetailRespDto;
 import com.my.relink.controller.trade.dto.response.TradeRequestRespDto;
+import com.my.relink.domain.point.Point;
+import com.my.relink.domain.point.pointHistory.PointHistory;
+import com.my.relink.domain.point.pointHistory.PointTransactionType;
+import com.my.relink.domain.point.pointHistory.repository.PointHistoryRepository;
+import com.my.relink.domain.point.repository.PointRepository;
 import com.my.relink.domain.trade.Trade;
 import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.domain.trade.repository.TradeRepository;
@@ -28,7 +33,8 @@ public class TradeService {
     private final ImageService imageService;
     private final UserRepository userRepository;
     private final PointTransactionService pointTransactionService;
-
+    private final PointHistoryRepository pointHistoryRepository;
+    private final PointRepository pointRepository;
 
     /**
      * [문의하기] -> 해당 채팅방의 거래 정보, 상품 정보, 상대 유저 정보 내리기
@@ -130,6 +136,7 @@ public class TradeService {
         }
     }
 
+    @Transactional
     public TradeCompleteRespDto completeTrade(Long tradeId, AuthUser authUser) {
         User currentUser = userRepository.findById(authUser.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
@@ -148,8 +155,44 @@ public class TradeService {
         if(trade.getHasOwnerReceived()&&trade.getHasRequesterReceived()){
             trade.updateTradeStatus(TradeStatus.EXCHANGED);
         }
-
         //보증금 반환
+        //해당 tradeId를 갖는 포인트 히스토리가 있는지 찾음
+        PointHistory pointHistory = pointHistoryRepository.findFirstByTradeIdOrderByCreatedAtDesc(tradeId)
+                .orElseThrow(() -> new BusinessException(ErrorCode. POINT_HISTORY_NOT_FOUND));
+
+        //amount가 해당거래 아이팀의 보증금과 일지하는지 확인
+        Integer amount = trade.getOwnerExchangeItem().getDeposit();
+
+        //amount와 type확인 후 두 유저에게 반환
+        Point requesterPoint = pointRepository.findByUserId(trade.getRequester().getId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.POINT_NOT_FOUND));
+        Point ownerPoint = pointRepository.findByUserId(trade.getOwner().getId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.POINT_NOT_FOUND));
+
+        requesterPoint.restore(amount);
+        pointRepository.save(requesterPoint);
+
+        ownerPoint.restore(amount);
+        pointRepository.save(ownerPoint);
+
+        //환급 이력 생성
+        PointHistory requesterRestoreHistory = PointHistory.create(
+                amount,
+                PointTransactionType.RETURN,
+                requesterPoint,
+                trade
+        );
+        pointHistoryRepository.save(requesterRestoreHistory);
+
+        PointHistory ownerRestoreHistory = PointHistory.create(
+                amount,
+                PointTransactionType.RETURN,
+                ownerPoint,
+                trade
+        );
+        pointHistoryRepository.save(ownerRestoreHistory);
+
+        return new TradeCompleteRespDto(tradeId);
     }
 }
 
