@@ -49,7 +49,14 @@ public class TradeService {
         return new TradeInquiryDetailRespDto(trade, partner, trustScoreOfPartner, requestedItemImageUrl);
     }
 
+
+    public Trade findByIdOrFail(Long tradeId) {
+        return tradeRepository.findById(tradeId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
+    }
+
     @Transactional
+
     public TradeRequestRespDto requestTrade(Long tradeId, AuthUser authUser) {
 
         User currentUser = userRepository.findById(authUser.getId())
