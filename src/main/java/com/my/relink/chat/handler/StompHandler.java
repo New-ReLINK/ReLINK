@@ -16,7 +16,6 @@ import org.springframework.messaging.MessageDeliveryException;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
-import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.stereotype.Component;
 
@@ -71,8 +70,8 @@ public class StompHandler implements ChannelInterceptor {
     private void handleSend(StompHeaderAccessor accessor){
         String destination = accessor.getDestination();
 
-        if(destination != null && destination.startsWith("/topic/chats")){
-            Long tradeId = extractTradeIdFromPath(destination);
+        if(destination != null && destination.startsWith("/app/chats")){
+            Long tradeId = extractTradeIdFromSendPath(destination);
             Trade trade = tradeService.findByIdWithUsersOrFail(tradeId);
             validateTradeStatus(trade.getTradeStatus());
         }
@@ -110,7 +109,7 @@ public class StompHandler implements ChannelInterceptor {
         String destination = accessor.getDestination();
 
         if(destination != null && destination.startsWith("/topic/chats")){
-            Long tradeId = extractTradeIdFromPath(destination);
+            Long tradeId = extractTradeIdFromSubscribePath(destination);
             ChatPrincipal principal = (ChatPrincipal) accessor.getUser();
             Trade trade = tradeService.findByIdWithUsersOrFail(tradeId);
 
@@ -140,6 +139,7 @@ public class StompHandler implements ChannelInterceptor {
      * @throws BusinessException 거래가 이미 종료된 상태(EXCHANGED/CANCELED/UNAVAILABLE)인 경우
      */
     private void validateTradeStatus(TradeStatus tradeStatus) {
+        log.info("거래 상태 검증: {}", tradeStatus);
         if (List.of(TradeStatus.CANCELED, TradeStatus.EXCHANGED, TradeStatus.UNAVAILABLE).contains(tradeStatus)) {
             log.debug("더 이상 채팅 세션을 제공하지 않는 거래 채팅방에 접근 시도 - tradeStatus : {}", tradeStatus);
             throw new BusinessException(ErrorCode.CHATROOM_ACCESS_DENIED);
@@ -152,9 +152,14 @@ public class StompHandler implements ChannelInterceptor {
      * @param destination
      * @return 추출된 tradeId
      */
-    private Long extractTradeIdFromPath(String destination) {
+    private Long extractTradeIdFromSubscribePath(String destination) {
         String[] paths = destination.split("/");
         return Long.parseLong(paths[paths.length - 1]);
+    }
+
+    private Long extractTradeIdFromSendPath(String destination){
+        String[] paths = destination.split("/");
+        return Long.parseLong(paths[paths.length - 2]);
     }
 
 }
