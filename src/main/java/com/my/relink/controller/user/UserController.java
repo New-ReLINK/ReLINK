@@ -2,15 +2,10 @@ package com.my.relink.controller.user;
 
 import com.my.relink.config.security.AuthUser;
 import com.my.relink.controller.user.dto.req.UserCreateReqDto;
-import com.my.relink.controller.user.dto.resp.UserAddressRespDto;
+import com.my.relink.controller.user.dto.resp.*;
 import com.my.relink.controller.user.dto.req.UserInfoEditReqDto;
 import com.my.relink.controller.user.dto.req.UserValidEmailReqDto;
 import com.my.relink.controller.user.dto.req.UserValidNicknameRepDto;
-import com.my.relink.controller.user.dto.resp.UserCreateRespDto;
-import com.my.relink.controller.user.dto.resp.UserInfoRespDto;
-import com.my.relink.controller.user.dto.resp.UserPointRespDto;
-import com.my.relink.controller.user.dto.resp.UserValidEmailRespDto;
-import com.my.relink.controller.user.dto.resp.UserValidNicknameRespDto;
 import com.my.relink.service.UserService;
 import com.my.relink.util.api.ApiResult;
 import jakarta.validation.Valid;
@@ -80,5 +75,14 @@ public class UserController {
     @GetMapping("/users/check-email")
     public ResponseEntity<ApiResult<UserValidEmailRespDto>> duplicatedEmail(@Valid @RequestBody UserValidEmailReqDto dto) {
         return ResponseEntity.status(HttpStatus.OK).body(ApiResult.success(userService.validEmail(dto)));
+    }
+
+    @GetMapping("/users")
+    public ResponseEntity<ApiResult<UserProfileRespDto>> getUserDetailProfile(
+            @AuthenticationPrincipal AuthUser authUser
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResult.success(userService.getUserProfile(authUser.getId())));
     }
 }
