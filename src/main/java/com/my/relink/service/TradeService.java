@@ -3,8 +3,11 @@ package com.my.relink.service;
 import com.my.relink.config.security.AuthUser;
 import com.my.relink.controller.trade.dto.request.AddressReqDto;
 import com.my.relink.controller.trade.dto.response.AddressRespDto;
+import com.my.relink.controller.trade.dto.response.TradeCompleteRespDto;
 import com.my.relink.controller.trade.dto.response.TradeInquiryDetailRespDto;
 import com.my.relink.controller.trade.dto.response.TradeRequestRespDto;
+import com.my.relink.domain.point.pointHistory.repository.PointHistoryRepository;
+import com.my.relink.domain.point.repository.PointRepository;
 import com.my.relink.domain.trade.Trade;
 import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.domain.trade.repository.TradeRepository;
@@ -27,7 +30,8 @@ public class TradeService {
     private final ImageService imageService;
     private final UserRepository userRepository;
     private final PointTransactionService pointTransactionService;
-
+    private final PointHistoryRepository pointHistoryRepository;
+    private final PointRepository pointRepository;
 
     /**
      * [문의하기] -> 해당 채팅방의 거래 정보, 상품 정보, 상대 유저 정보 내리기
@@ -132,6 +136,32 @@ public class TradeService {
         } else {
             throw new BusinessException(ErrorCode.TRADE_ACCESS_DENIED);
         }
+    }
+
+    @Transactional
+    public TradeCompleteRespDto completeTrade(Long tradeId, AuthUser authUser) {
+        User currentUser = userRepository.findById(authUser.getId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        Trade trade = tradeRepository.findById(tradeId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
+
+        //요청자/소유자 여부에 따라 수령상태 변경
+        if(trade.getRequester().getId().equals(currentUser.getId())){
+            trade.updateHasRequesterReceived(true);
+        } else{
+            trade.updateHasOwnerReceived(true);
+        }
+
+        //양쪽 모두 수령 확인 시 거래 상태 변경
+        if(trade.getHasOwnerReceived() && trade.getHasRequesterReceived()){
+            trade.updateTradeStatus(TradeStatus.EXCHANGED);
+        }
+        //보증금 반환
+        Integer amount = trade.getOwnerExchangeItem().getDeposit();
+        pointTransactionService.restorePointsForAllTraders(trade, amount);
+
+        return new TradeCompleteRespDto(tradeId);
     }
 }
 
