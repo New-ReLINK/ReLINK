@@ -24,7 +24,6 @@ public class ChatController {
     @MessageMapping("/chats/{tradeId}/message")
     public void handleMessage(@DestinationVariable("tradeId") Long tradeId,
                               @Payload ChatMessageReqDto chatMessageReqDto,
-                              @Header("simpSessionId") String sessionId,
                               Principal principal) {
         ChatMessageRespDto response = chatService.saveAndSendMessage(
                         tradeId,

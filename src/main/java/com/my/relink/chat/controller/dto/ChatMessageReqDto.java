@@ -9,6 +9,9 @@ import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
 @Getter
+/**
+ * 클라이언트 -> 서버
+ */
 public class ChatMessageReqDto {
     private String content;
     private Long tradeId;
