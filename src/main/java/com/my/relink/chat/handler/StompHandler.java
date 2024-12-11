@@ -18,6 +18,8 @@ import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -65,8 +67,7 @@ public class StompHandler implements ChannelInterceptor {
             throw new BusinessException(ErrorCode.TRADE_STATUS_NOT_FOUND);
         }
 
-        if(TradeStatus.statusOf(tradeStatus) == TradeStatus.CANCELED
-                || TradeStatus.statusOf(tradeStatus) == TradeStatus.EXCHANGED){
+        if(List.of(TradeStatus.CANCELED, TradeStatus.EXCHANGED).contains(TradeStatus.statusOf(tradeStatus))){
             log.debug("더 이상 채팅 세션을 제공하지 않는 거래 채팅방에 접근 시도 - tradeStatus : {}", tradeStatus);
             throw new BusinessException(ErrorCode.CHATROOM_ACCESS_DENIED);
         }
