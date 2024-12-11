@@ -175,6 +175,10 @@ public class TradeService {
         } else {
             trade.updateOwnerTrackingNumber(reqDto.getTrackingNumber());
         }
+
+        if(!trade.getOwnerTrackingNumber().isEmpty() && !trade.getRequesterTrackingNumber().isEmpty()){
+            trade.updateTradeStatus(TradeStatus.IN_DELIVERY);
+        }
         tradeRepository.save(trade);
     }
 }
