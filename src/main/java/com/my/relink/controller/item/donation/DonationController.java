@@ -24,7 +24,7 @@ public class DonationController {
         return new ResponseEntity<>(ApiResult.success(response), HttpStatus.CREATED);
     }
 
-    @GetMapping("/item/donation")
+    @GetMapping("/item/donations")
     public ResponseEntity<ApiResult<DonationItemListRespDto>> getDonationItems(
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String search,
