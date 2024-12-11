@@ -6,9 +6,6 @@ import com.my.relink.controller.trade.dto.response.AddressRespDto;
 import com.my.relink.controller.trade.dto.response.TradeCompleteRespDto;
 import com.my.relink.controller.trade.dto.response.TradeInquiryDetailRespDto;
 import com.my.relink.controller.trade.dto.response.TradeRequestRespDto;
-import com.my.relink.domain.point.Point;
-import com.my.relink.domain.point.pointHistory.PointHistory;
-import com.my.relink.domain.point.pointHistory.PointTransactionType;
 import com.my.relink.domain.point.pointHistory.repository.PointHistoryRepository;
 import com.my.relink.domain.point.repository.PointRepository;
 import com.my.relink.domain.trade.Trade;
@@ -157,12 +154,12 @@ public class TradeService {
         }
 
         //양쪽 모두 수령 확인 시 거래 상태 변경
-        if(trade.getHasOwnerReceived()&&trade.getHasRequesterReceived()){
+        if(trade.getHasOwnerReceived() && trade.getHasRequesterReceived()){
             trade.updateTradeStatus(TradeStatus.EXCHANGED);
         }
         //보증금 반환
         Integer amount = trade.getOwnerExchangeItem().getDeposit();
-        pointTransactionService.restorePointsForTradeComplete(trade, amount);
+        pointTransactionService.restorePointsForAllTraders(trade, amount);
 
         return new TradeCompleteRespDto(tradeId);
     }
