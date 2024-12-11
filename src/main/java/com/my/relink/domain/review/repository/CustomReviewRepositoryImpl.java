@@ -53,13 +53,11 @@ public class CustomReviewRepositoryImpl implements CustomReviewRepository {
                 )
                 .fetchOne());
 
-        if (reviewOptional.isEmpty()) {
-            return Optional.empty();
-        }
-
-        List<ExchangeItemImageListRespDto> imageList = getExchangeItemImageList(reviewOptional.get().getExchangeItemId());
-        List<TradeReview> tradeReviews = getTradeReviews(reviewId);
-        return Optional.of(new ReviewDetailRepositoryDto(reviewOptional.get(), tradeReviews, imageList));
+        return reviewOptional.map(review -> {
+            List<ExchangeItemImageListRespDto> imageList = getExchangeItemImageList(reviewOptional.get().getExchangeItemId());
+            List<TradeReview> tradeReviews = getTradeReviews(reviewId);
+            return new ReviewDetailRepositoryDto(reviewOptional.get(), tradeReviews, imageList);
+        });
     }
 
     private List<TradeReview> getTradeReviews(Long reviewId) {
