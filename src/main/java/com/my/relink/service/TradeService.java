@@ -56,7 +56,14 @@ public class TradeService {
         return new TradeInquiryDetailRespDto(trade, partner, trustScoreOfPartner, requestedItemImageUrl);
     }
 
+
+    public Trade findByIdOrFail(Long tradeId) {
+        return tradeRepository.findById(tradeId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
+    }
+
     @Transactional
+
     public TradeRequestRespDto requestTrade(Long tradeId, AuthUser authUser) {
 
         User currentUser = userRepository.findById(authUser.getId())
@@ -66,7 +73,7 @@ public class TradeService {
                 orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
 
         //차감 메서드 위임
-        pointTransactionService.deductPoints(tradeId, authUser);
+        pointTransactionService.deductPoints(tradeId, currentUser);
 
         //요청자/소유자 여부에 따라 적절한 요청 상태 필드 업데이트
         if(trade.getRequester().getId().equals(currentUser.getId())){
@@ -93,7 +100,7 @@ public class TradeService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
 
         //복원 메서드 위임
-        pointTransactionService.restorePoints(tradeId, authUser);
+        pointTransactionService.restorePoints(tradeId, currentUser);
 
         // 요청 상태 업데이트
         if (trade.getRequester().getId().equals(currentUser.getId())) {
@@ -122,11 +129,9 @@ public class TradeService {
             if(trade.getRequester().getId().equals(currentUser.getId())){
                 Address requesterAddress = reqDto.toRequesterAddressEntity();  // 요청자 주소 생성
                 trade.saveRequesterAddress(requesterAddress);
-                //trade.saveOwnerAddress(reqDto.toOwnerAddressEntity());
             } else{
-                Address requesterAddress = reqDto.toRequesterAddressEntity();  // 요청자 주소 생성
-                trade.saveRequesterAddress(requesterAddress);
-                //trade.saveRequesterAddress(reqDto.toRequesterAddressEntity());
+                Address ownerAddress = reqDto.toOwnerAddressEntity();  // 소유자 주소 생성
+                trade.saveOwnerAddress(ownerAddress);
             }
 
             tradeRepository.save(trade);

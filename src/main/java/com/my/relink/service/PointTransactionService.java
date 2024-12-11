@@ -8,6 +8,7 @@ import com.my.relink.domain.point.pointHistory.repository.PointHistoryRepository
 import com.my.relink.domain.point.repository.PointRepository;
 import com.my.relink.domain.trade.Trade;
 import com.my.relink.domain.trade.repository.TradeRepository;
+import com.my.relink.domain.user.User;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -23,12 +24,12 @@ public class PointTransactionService {
     private final TradeRepository tradeRepository;
 
     @Transactional
-    public void restorePoints(Long tradeId, AuthUser authUser){
+    public void restorePoints(Long tradeId, User currentUser){
         // 해당 Trade에 연결된 PointHistory 확인
         PointHistory pointHistory = pointHistoryRepository.findFirstByTradeIdOrderByCreatedAtDesc(tradeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.POINT_HISTORY_NOT_FOUND));
 
-        Point point = pointRepository.findByUserId(authUser.getId())
+        Point point = pointRepository.findByUserId(currentUser.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.POINT_NOT_FOUND));
 
         Integer amount = pointHistory.getAmount();
@@ -46,9 +47,9 @@ public class PointTransactionService {
         pointHistoryRepository.save(restorePointHistory);
     }
 
-    public void deductPoints(Long tradeId, AuthUser authUser){
+    public void deductPoints(Long tradeId, User currentUser){
         //해당 로그인 유저의 포인트를 조회
-        Point point = pointRepository.findByUserId(authUser.getId())
+        Point point = pointRepository.findByUserId(currentUser.getId())
                 .orElseThrow(()-> new BusinessException(ErrorCode.POINT_NOT_FOUND));
 
         Trade trade = tradeRepository.findById(tradeId)

@@ -1,4 +1,3 @@
-
 server:
   port: 9090
   servlet:
@@ -7,14 +6,10 @@ server:
       force: true
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/relink
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    username: root
-    password: 8733
-#    url: jdbc:h2:mem:test;MODE=MySQL
-#    driver-class-name: org.h2.Driver
-#    username: sa
-#    password:
+    url: jdbc:h2:mem:test;MODE=MySQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
   h2:
     console:
       enabled: true

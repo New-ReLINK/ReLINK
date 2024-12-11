@@ -5,13 +5,13 @@ import com.my.relink.domain.BaseEntity;
 import com.my.relink.domain.trade.Trade;
 import com.my.relink.domain.user.User;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
+@AllArgsConstructor
+@Builder
 public class Message extends BaseEntity {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -5,6 +5,7 @@ import com.my.relink.controller.trade.dto.request.AddressReqDto;
 import com.my.relink.controller.trade.dto.response.AddressRespDto;
 import com.my.relink.controller.trade.dto.response.TradeCompleteRespDto;
 import com.my.relink.controller.trade.dto.response.TradeInquiryDetailRespDto;
+import com.my.relink.controller.trade.dto.request.TradeReqDto;
 import com.my.relink.controller.trade.dto.response.TradeRequestRespDto;
 import com.my.relink.service.TradeService;
 import com.my.relink.util.api.ApiResult;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 public class TradeController {
 
     private final TradeService tradeService;
+
 
 
     @GetMapping("/chat/{tradeId}")

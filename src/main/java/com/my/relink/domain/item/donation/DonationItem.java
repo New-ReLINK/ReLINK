@@ -1,6 +1,5 @@
 package com.my.relink.domain.item.donation;
 
-
 import com.my.relink.domain.BaseEntity;
 import com.my.relink.domain.category.Category;
 import com.my.relink.domain.user.Address;
@@ -58,4 +57,21 @@ public class DonationItem extends BaseEntity {
 
     @Enumerated(value = EnumType.STRING)
     private DisposalType disposalType;
+
+    public DonationItem(String name, String description, String desiredDestination, User user, Category category, ItemQuality itemQuality) {
+        this.name = name;
+        this.description = description;
+        this.desiredDestination = desiredDestination;
+        this.user = user;
+        this.category = category;
+        this.itemQuality = itemQuality;
+        this.detailRejectedReason = null;
+        this.certificateUrl = null;
+        this.destination = null;
+        this.returnAddress = null;
+        this.donationStatus = null;
+        this.rejectedReason = null;
+        this.disposalType = null;
+    }
+
 }
