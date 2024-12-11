@@ -9,6 +9,7 @@ import com.my.relink.controller.trade.dto.response.TradeInquiryDetailRespDto;
 import com.my.relink.controller.trade.dto.response.TradeRequestRespDto;
 import com.my.relink.service.TradeService;
 import com.my.relink.util.api.ApiResult;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -64,7 +65,7 @@ public class TradeController {
     @PostMapping("/trades/{tradeId}/tracking-number")
     public ResponseEntity<ApiResult<Void>> getTrackingNumber(
             @PathVariable(name = "tradeId") Long tradeId,
-            @RequestBody TrackingNumberReqDto reqDto,
+            @Valid @RequestBody TrackingNumberReqDto reqDto,
             @AuthenticationPrincipal AuthUser authUser) {
         tradeService.getTrackingNumber(tradeId, reqDto, authUser);
         return ResponseEntity.noContent().build();
