@@ -5,6 +5,7 @@ import com.my.relink.domain.like.repository.dto.LikeExchangeItemListRepositoryDt
 import com.my.relink.domain.user.QUser;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.JPAExpressions;
+import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -25,10 +26,25 @@ import static com.my.relink.domain.review.QReview.review;
 public class CustomLikeRepositoryImpl implements CustomLikeRepository {
 
     private final JPAQueryFactory jpaQueryFactory;
+    private final QUser likedUser = new QUser("likedUser");
 
     @Override
     public Page<LikeExchangeItemListRepositoryDto> findUserLikeExchangeItem(Long userId, Pageable pageable) {
-        QUser likedUser = new QUser("likedUser");
+        JPQLQuery<String> firstImageSubQuery = JPAExpressions
+                .select(image.imageUrl)
+                .from(image)
+                .where(
+                        image.entityId.eq(exchangeItem.id),
+                        image.entityType.eq(EntityType.EXCHANGE_ITEM)
+                )
+                .orderBy(image.createdAt.asc())
+                .limit(1);
+
+        JPQLQuery<Double> avgStarSubQuery = JPAExpressions
+                .select(review.star.avg())
+                .from(review)
+                .where(review.exchangeItem.id.eq(exchangeItem.id));
+
 
         List<LikeExchangeItemListRepositoryDto> itemListDtos = jpaQueryFactory.select(
                         Projections.constructor(LikeExchangeItemListRepositoryDto.class,
@@ -37,17 +53,8 @@ public class CustomLikeRepositoryImpl implements CustomLikeRepository {
                                 exchangeItem.tradeStatus,
                                 exchangeItem.desiredItem,
                                 likedUser.nickname,
-                                JPAExpressions.select(image.imageUrl)
-                                        .from(image)
-                                        .where(
-                                                image.entityId.eq(exchangeItem.id),
-                                                image.entityType.eq(EntityType.EXCHANGE_ITEM)
-                                        )
-                                        .orderBy(image.createdAt.asc())
-                                        .limit(1),
-                                JPAExpressions.select(review.star.avg())
-                                        .from(review)
-                                        .where(review.exchangeItem.id.eq(exchangeItem.id))
+                                firstImageSubQuery,
+                                avgStarSubQuery
                         )
                 )
                 .from(like)
@@ -59,7 +66,8 @@ public class CustomLikeRepositoryImpl implements CustomLikeRepository {
                 .orderBy(like.modifiedAt.desc())
                 .fetch();
 
-        JPAQuery<Long> totalCount = jpaQueryFactory.select(exchangeItem.count())
+        JPAQuery<Long> totalCount = jpaQueryFactory
+                .select(exchangeItem.count())
                 .from(like)
                 .join(like.user, likedUser)
                 .join(like.exchangeItem, exchangeItem)
