@@ -1,17 +1,19 @@
 package com.my.relink.service;
 
 import com.my.relink.config.security.AuthUser;
-import com.my.relink.controller.item.donation.dto.DonationItemReqDto;
+import com.my.relink.controller.item.donation.dto.*;
 import com.my.relink.domain.category.Category;
 import com.my.relink.domain.category.repository.CategoryRepository;
 import com.my.relink.domain.item.donation.DonationItem;
 import com.my.relink.domain.user.User;
-import com.my.relink.controller.item.donation.dto.DonationItemRespDto;
 import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import com.my.relink.controller.item.donation.repository.DonationItemRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -34,5 +36,33 @@ public class DonationItemService {
         DonationItem savedItem = donationItemRepository.save(donationItem);
 
         return new DonationItemRespDto(savedItem.getId());
+    }
+
+    public DonationItemListRespDto getDonationItems(String category, String search, int page, int size) {
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<DonationItem> donationItems = donationItemRepository.findAllByFilters(category, search, pageable);
+
+        long totalCompletedDonations = donationItemRepository.countCompletedDonations();
+        long completedDonationsThisMonth = donationItemRepository.countCompletedDonationsThisMonth();
+
+        return DonationItemListRespDto.builder()
+                .totalCompletedDonations(totalCompletedDonations)
+                .completedDonationsThisMonth(completedDonationsThisMonth)
+                .items(donationItems.getContent().stream().map(this::mapToDto).toList())
+                .pagingInfo(PagingInfo.builder()
+                        .totalDataCount(donationItems.getTotalElements())
+                        .totalPages(donationItems.getTotalPages())
+                        .hasPrev(donationItems.hasPrevious())
+                        .hasNext(donationItems.hasNext())
+                        .build())
+                .build();
+    }
+
+    private DonationItemDto mapToDto(DonationItem item) {
+        return DonationItemDto.builder()
+                .id(item.getId())
+                .name(item.getName())
+                .completedDate(item.getModifiedAt().toLocalDate())
+                .build();
     }
 }
