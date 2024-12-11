@@ -25,7 +25,7 @@ public class ReviewListRespDto {
         this.reviewId = dto.getReviewId();
         this.itemName = dto.getItemName();
         this.star = dto.getStar();
-        this.description = dto.getDescription();
+        this.description = dto.getDescription().length() > 60 ? dto.getDescription().substring(0, 60) : dto.getDescription();
         this.createdAt = DateTimeFormatterUtil.format(dto.getCreatedAt());
         this.tradeStatusList = dto.getTradeStatusList();
     }
