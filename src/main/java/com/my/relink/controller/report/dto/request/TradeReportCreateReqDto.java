@@ -7,11 +7,13 @@ import com.my.relink.domain.report.ReportType;
 import com.my.relink.domain.trade.Trade;
 import com.my.relink.domain.user.User;
 import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
 @Getter
+@AllArgsConstructor
 public class TradeReportCreateReqDto {
 
     @EnumValidator(enumClass = ReportReason.class)
