@@ -214,6 +214,10 @@ public class TradeService {
         User partnerUser = userRepository.findById(trade.getPartner(currentUser.getId()).getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
+        String completedAt = (trade.getModifiedAt() != null)
+                ? trade.getModifiedAt().format(DateTimeFormatter.ofPattern("yyyy년 M월 d일 HH:mm"))
+                : "N/A";
+
         return TradeCompletionRespDto.builder()
                 .myItem(TradeCompletionRespDto.TradeItemInfo.builder()
                         .itemName(myExchangeItem.getName())
@@ -234,7 +238,7 @@ public class TradeService {
                         .build())
 
                 .tradeStatusInfo(TradeCompletionRespDto.TradeStatusInfo.builder()
-                        .completedAt(trade.getModifiedAt().format(DateTimeFormatter.ofPattern("yyyy년 M월 d일 HH:mm")))
+                        .completedAt(completedAt)
                         .tradeStatus(trade.getTradeStatus())
                         .build())
                 .build();
