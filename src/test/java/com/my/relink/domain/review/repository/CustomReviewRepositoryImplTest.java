@@ -8,6 +8,7 @@ import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.review.Review;
 import com.my.relink.domain.review.TradeReview;
 import com.my.relink.domain.review.repository.dto.ReviewDetailRepositoryDto;
+import com.my.relink.domain.review.repository.dto.ReviewDetailWithExchangeItemRepositoryDto;
 import com.my.relink.domain.trade.Trade;
 import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.domain.user.Address;
@@ -18,6 +19,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -32,7 +36,7 @@ class CustomReviewRepositoryImplTest {
     EntityManager em;
 
     @Autowired
-    CustomReviewRepositoryImpl customUserRepository;
+    CustomReviewRepositoryImpl reviewRepository;
 
 
     @Test
@@ -61,7 +65,7 @@ class CustomReviewRepositoryImplTest {
         em.clear();
 
         // when
-        ReviewDetailRepositoryDto respDto = customUserRepository.getReviewDetails(1L, 1L).get();
+        ReviewDetailRepositoryDto respDto = reviewRepository.getReviewDetails(user.getId(), review.getId()).get();
 
         // then
         assertThat(respDto).isNotNull();
@@ -127,4 +131,88 @@ class CustomReviewRepositoryImplTest {
                 .build();
     }
 
+    @Test
+    @DisplayName("사용자 페이지 조회 시 리뷰 페이지가 정상적으로 조회한다.")
+    void findReviewListSuccessTest() {
+        // given
+        User user1 = User.builder()
+                .nickname("user1")
+                .isDeleted(false)
+                .build();
+
+        User user2 = User.builder()
+                .nickname("user2")
+                .isDeleted(false)
+                .build();
+
+        em.persist(user1);
+        em.persist(user2);
+        em.flush();
+
+
+        ExchangeItem item1 = ExchangeItem.builder()
+                .name("item1")
+                .user(user1)
+                .isDeleted(false)
+                .build();
+
+        ExchangeItem item2 = ExchangeItem.builder()
+                .name("item2")
+                .user(user1)
+                .isDeleted(false)
+                .build();
+
+        ExchangeItem item3 = ExchangeItem.builder()
+                .name("item3")
+                .user(user2)
+                .isDeleted(false)
+                .build();
+
+        em.persist(item1);
+        em.persist(item2);
+        em.persist(item3);
+        em.flush();
+
+        Review review1 = Review.builder()
+                .star(new BigDecimal("4"))
+                .description("Good")
+                .writer(user2)
+                .exchangeItem(item1)
+                .tradeReview(List.of(TradeReview.TIME_PUNCTUAL))
+                .build();
+        Review review2 = Review.builder()
+                .star(new BigDecimal("5"))
+                .description("Excellent")
+                .writer(user2)
+                .exchangeItem(item2)
+                .tradeReview(List.of(TradeReview.TIME_PUNCTUAL))
+                .build();
+
+        em.persist(review1);
+        em.persist(review2);
+
+        em.flush();
+        em.clear();
+
+        Pageable pageable = PageRequest.of(0, 10);
+
+        // when
+        Page<ReviewDetailWithExchangeItemRepositoryDto> allReviews = reviewRepository.findReviewDetails(user1.getId(), pageable);
+
+        // then
+        assertThat(allReviews).isNotNull();
+        assertThat(allReviews.getContent()).hasSize(2);
+        assertThat(allReviews.getTotalElements()).isEqualTo(2);
+        assertThat(allReviews.getTotalPages()).isEqualTo(1);
+
+        ReviewDetailWithExchangeItemRepositoryDto detail1 = allReviews.getContent().get(0);
+        assertThat(detail1.getStar().doubleValue()).isEqualTo(review2.getStar().doubleValue());
+        assertThat(detail1.getNickName()).isEqualTo(user2.getNickname());
+        assertThat(detail1.getDescription()).isEqualTo(review2.getDescription());
+
+        ReviewDetailWithExchangeItemRepositoryDto detail2 = allReviews.getContent().get(1);
+        assertThat(detail2.getStar().doubleValue()).isEqualTo(review1.getStar().doubleValue());
+        assertThat(detail2.getNickName()).isEqualTo(user2.getNickname());
+        assertThat(detail2.getDescription()).isEqualTo(review1.getDescription());
+    }
 }
