@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.internal.matchers.Null;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
@@ -261,6 +262,56 @@ class TradeServiceTest extends DummyObject {
         assertEquals("REQ123456", trade.getRequesterTrackingNumber());
         assertEquals("OWN123456", trade.getOwnerTrackingNumber());
         assertEquals(TradeStatus.IN_DELIVERY, trade.getTradeStatus());
+        verify(tradeRepository, times(1)).save(trade);
+    }
+
+    @Test
+    @DisplayName("교환 진행 페이지 : 요청자만 운송장 입력받기 성공케이스")
+    void testGetTrackingNumber_RequesterTrackingNumber_TradeStatusUpdated() {
+        // Given
+        Long tradeId = 1L;
+        User requester = mockRequesterUser();
+        User owner = mockOwnerUser();
+        Trade trade = mockTrade(owner, requester);
+        trade.updateOwnerTrackingNumber("");
+        trade.updateRequesterTrackingNumber("");
+        TrackingNumberReqDto reqDto = new TrackingNumberReqDto("REQ123456");
+
+        when(userRepository.findById(requester.getId())).thenReturn(Optional.of(requester));
+        when(tradeRepository.findById(tradeId)).thenReturn(Optional.of(trade));
+
+        // When
+        tradeService.getExchangeItemTrackingNumber(tradeId, reqDto, new AuthUser(requester.getId(), "test@email.com", Role.USER));
+
+        // Then
+        assertEquals("REQ123456", trade.getRequesterTrackingNumber());
+        assertEquals("", trade.getOwnerTrackingNumber());
+        assertNotEquals(TradeStatus.IN_DELIVERY, trade.getTradeStatus());
+        verify(tradeRepository, times(1)).save(trade);
+    }
+
+    @Test
+    @DisplayName("교환 진행 페이지 : 소유자만 운송장 입력받기 성공케이스")
+    void testGetTrackingNumber_OwnerTrackingNumber_TradeStatusUpdated() {
+        // Given
+        Long tradeId = 1L;
+        User requester = mockRequesterUser();
+        User owner = mockOwnerUser();
+        Trade trade = mockTrade(owner, requester);
+        trade.updateOwnerTrackingNumber("");
+        trade.updateRequesterTrackingNumber("");
+        TrackingNumberReqDto reqDto = new TrackingNumberReqDto("OWN123456");
+
+        when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
+        when(tradeRepository.findById(tradeId)).thenReturn(Optional.of(trade));
+
+        // When
+        tradeService.getExchangeItemTrackingNumber(tradeId, reqDto, new AuthUser(owner.getId(), "test@email.com", Role.USER));
+
+        // Then
+        assertEquals("OWN123456", trade.getOwnerTrackingNumber());
+        assertEquals("", trade.getRequesterTrackingNumber());
+        assertNotEquals(TradeStatus.IN_DELIVERY, trade.getTradeStatus());
         verify(tradeRepository, times(1)).save(trade);
     }
 
