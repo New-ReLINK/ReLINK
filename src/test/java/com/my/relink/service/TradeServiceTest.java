@@ -20,6 +20,7 @@ import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
+import com.my.relink.util.DateTimeUtil;
 import com.my.relink.util.DummyObject;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.DisplayName;
@@ -55,6 +56,8 @@ class TradeServiceTest extends DummyObject {
     private PointTransactionService pointTransactionService;
     @Mock
     private ImageRepository imageRepository;
+    @Mock
+    private DateTimeUtil dateTimeUtil;
 
     @InjectMocks
     private TradeService tradeService;
@@ -358,10 +361,12 @@ class TradeServiceTest extends DummyObject {
 
         Mockito.when(userRepository.findById(requester.getId())).thenReturn(Optional.of(requester));
         Mockito.when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
-        Mockito.when(tradeRepository.findById(tradeId)).thenReturn(Optional.of(trade));
-        Mockito.when(imageRepository.findByEntityIdAndEntityType(myExchangeItem.getId(), EntityType.EXCHANGE_ITEM)).thenReturn(Optional.of(myImage));
-        Mockito.when(imageRepository.findByEntityIdAndEntityType(partnerExchangeItem.getId(), EntityType.EXCHANGE_ITEM)).thenReturn(Optional.of(partnerImage));
+        Mockito.when(tradeRepository.findTradeWithDetails(tradeId, EntityType.EXCHANGE_ITEM)).thenReturn(Optional.of(trade));
+        Mockito.when(imageRepository.findTopByEntityIdAndEntityTypeOrderByCreatedAtAsc(myExchangeItem.getId(), EntityType.EXCHANGE_ITEM)).thenReturn(Optional.of(myImage));
+        Mockito.when(imageRepository.findTopByEntityIdAndEntityTypeOrderByCreatedAtAsc(partnerExchangeItem.getId(), EntityType.EXCHANGE_ITEM)).thenReturn(Optional.of(partnerImage));
         Mockito.when(userRepository.findById(trade.getPartner(requester.getId()).getId())).thenReturn(Optional.of(partnerUser));
+        Mockito.when(dateTimeUtil.getTradeStatusFormattedTime(trade.getModifiedAt()))
+                .thenReturn("2024년 12월 12일 14:30");
 
         TradeCompletionRespDto result = tradeService.findCompleteTradeInfo(tradeId, new AuthUser(requester.getId(), "test@email.com", Role.USER));
 

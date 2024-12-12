@@ -17,6 +17,8 @@ import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
+import com.my.relink.util.DateTimeFormatterUtil;
+import com.my.relink.util.DateTimeUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +38,7 @@ public class TradeService {
     private final PointTransactionService pointTransactionService;
     private final ExchangeItemRepository exchangeItemRepository;
     private final ImageRepository imageRepository;
+    private final DateTimeUtil dateTimeUtil;
 
     /**
      * [문의하기] -> 해당 채팅방의 거래 정보, 상품 정보, 상대 유저 정보 내리기
@@ -193,7 +196,7 @@ public class TradeService {
         User currentUser = userRepository.findById(authUser.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        Trade trade = tradeRepository.findById(tradeId)
+        Trade trade = tradeRepository.findTradeWithDetails(tradeId,EntityType.EXCHANGE_ITEM)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
 
         ExchangeItem myExchangeItem;
@@ -208,15 +211,13 @@ public class TradeService {
             partnerExchangeItem = trade.getRequesterExchangeItem();
         }
 
-        Image myImage = imageRepository.findByEntityIdAndEntityType(myExchangeItem.getId(), EntityType.EXCHANGE_ITEM).orElse(null);
-        Image partnerImage = imageRepository.findByEntityIdAndEntityType(partnerExchangeItem.getId(), EntityType.EXCHANGE_ITEM).orElse(null);
+        Image myImage = imageRepository.findTopByEntityIdAndEntityTypeOrderByCreatedAtAsc(myExchangeItem.getId(), EntityType.EXCHANGE_ITEM).orElse(null);
+        Image partnerImage = imageRepository.findTopByEntityIdAndEntityTypeOrderByCreatedAtAsc(partnerExchangeItem.getId(), EntityType.EXCHANGE_ITEM).orElse(null);
 
         User partnerUser = userRepository.findById(trade.getPartner(currentUser.getId()).getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        String completedAt = (trade.getModifiedAt() != null)
-                ? trade.getModifiedAt().format(DateTimeFormatter.ofPattern("yyyy년 M월 d일 HH:mm"))
-                : "N/A";
+        String completedAt = dateTimeUtil.getTradeStatusFormattedTime(trade.getModifiedAt());
 
         return TradeCompletionRespDto.builder()
                 .myItem(TradeCompletionRespDto.TradeItemInfo.builder()
