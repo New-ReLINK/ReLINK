@@ -24,6 +24,11 @@ public class UserService {
     private final ImageRepository imageRepository;
     private final PointRepository pointRepository;
 
+    public User findByIdOrFail(Long userId){
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+    }
+
 
     public UserCreateRespDto register(UserCreateReqDto dto) {
         dto.changePassword(passwordEncoder.encode(dto.getPassword()));
