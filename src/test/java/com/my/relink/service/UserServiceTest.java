@@ -1,13 +1,6 @@
 package com.my.relink.service;
 
 
-
-import com.my.relink.domain.review.ReviewRepository;
-import com.my.relink.domain.user.User;
-import com.my.relink.util.DummyObject;
-import com.my.relink.domain.image.EntityType;
-import com.my.relink.domain.image.Image;
-import com.my.relink.domain.image.ImageRepository;
 import com.my.relink.controller.user.dto.req.*;
 import com.my.relink.controller.user.dto.resp.*;
 import com.my.relink.domain.image.EntityType;

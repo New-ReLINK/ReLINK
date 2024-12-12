@@ -48,6 +48,7 @@ public class PointTransactionService {
         pointHistoryRepository.save(restorePointHistory);
     }
 
+    @Transactional
     public void deductPoints(Long tradeId, User currentUser) {
         //해당 로그인 유저의 포인트를 조회
         Point point = pointRepository.findByUserId(currentUser.getId())

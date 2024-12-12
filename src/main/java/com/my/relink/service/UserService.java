@@ -5,7 +5,6 @@ import com.my.relink.controller.user.dto.resp.*;
 import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.image.Image;
 import com.my.relink.domain.image.ImageRepository;
-import com.my.relink.domain.review.ReviewRepository;
 import com.my.relink.domain.point.Point;
 import com.my.relink.domain.point.repository.PointRepository;
 import com.my.relink.domain.user.User;
@@ -24,7 +23,6 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final ImageRepository imageRepository;
     private final PointRepository pointRepository;
-
 
 
     public UserCreateRespDto register(UserCreateReqDto dto) {

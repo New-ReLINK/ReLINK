@@ -1,5 +1,6 @@
 package com.my.relink.domain.trade;
 
+import com.my.relink.controller.trade.dto.request.TrackingNumberReqDto;
 import com.my.relink.domain.BaseEntity;
 import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.user.Address;
@@ -114,6 +115,18 @@ public class Trade extends BaseEntity {
 
     public void saveRequesterAddress(Address newAddress) {
         this.requesterAddress = newAddress;
+    }
+
+    public void updateRequesterTrackingNumber(String requesterTrackingNumber) {
+        this.requesterTrackingNumber = requesterTrackingNumber;
+    }
+
+    public void updateOwnerTrackingNumber(String ownerTrackingNumber) {
+        this.ownerTrackingNumber = ownerTrackingNumber;
+    }
+
+    public boolean isRequester(Long userId) {
+        return this.requester.getId().equals(userId);
     }
 
     @Builder
