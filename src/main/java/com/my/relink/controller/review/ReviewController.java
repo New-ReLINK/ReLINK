@@ -2,9 +2,10 @@ package com.my.relink.controller.review;
 
 import com.my.relink.config.security.AuthUser;
 import com.my.relink.controller.review.dto.resp.ReviewDetailsRespDto;
-import com.my.relink.controller.review.dto.resp.ReviewPageInfoRespDto;
+import com.my.relink.controller.review.dto.resp.ReviewListRespDto;
 import com.my.relink.service.ReviewService;
 import com.my.relink.util.api.ApiResult;
+import com.my.relink.util.page.PageResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -32,7 +33,7 @@ public class ReviewController {
     }
 
     @GetMapping("/users/reviews")
-    public ResponseEntity<ApiResult<ReviewPageInfoRespDto>> getReviewList(
+    public ResponseEntity<ApiResult<PageResponse<ReviewListRespDto>>> getReviewList(
             @AuthenticationPrincipal AuthUser authUser,
             @PageableDefault(page = 0, size = 100) Pageable pageable
     ) {
