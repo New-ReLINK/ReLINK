@@ -1,18 +1,26 @@
 package com.my.relink.service;
 
+import com.my.relink.controller.review.dto.resp.ReviewDetailWithExchangeItemListRespDto;
 import com.my.relink.controller.user.dto.req.*;
 import com.my.relink.controller.user.dto.resp.*;
 import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.image.Image;
 import com.my.relink.domain.image.ImageRepository;
+import com.my.relink.domain.item.donation.DonationStatus;
+import com.my.relink.domain.item.donation.repository.DonationItemRepository;
+import com.my.relink.domain.item.exchange.repository.ExchangeItemRepository;
 import com.my.relink.domain.point.Point;
 import com.my.relink.domain.point.repository.PointRepository;
+import com.my.relink.domain.review.repository.ReviewRepository;
+import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.domain.user.repository.dto.UserInfoWithCountRepositoryDto;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +32,9 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final ImageRepository imageRepository;
     private final PointRepository pointRepository;
+    private final ReviewRepository reviewRepository;
+    private final ExchangeItemRepository exchangeItemRepository;
+    private final DonationItemRepository donationItemRepository;
 
 
     public UserCreateRespDto register(UserCreateReqDto dto) {
@@ -97,5 +108,16 @@ public class UserService {
         Double avgStar = userRepository.avgStar(userId);
 
         return new UserProfileRespDto(avgStar, repositoryDto);
+    }
+
+    public UserReliabilityPageRespDto findReceivedReview(Long userId, Pageable pageable){
+        long totalExchangeItem = exchangeItemRepository.countByTradeStatusAndUserId(TradeStatus.EXCHANGED, userId);
+        long totalDonationItem = donationItemRepository.countByDonationStatusAndUserId(DonationStatus.DONATION_COMPLETED, userId);
+        Double starAvg = reviewRepository.getTotalStarAvg(userId);
+
+        Page<ReviewDetailWithExchangeItemListRespDto> content = reviewRepository.findReviewDetails(userId, pageable)
+                .map(ReviewDetailWithExchangeItemListRespDto::new);
+
+        return new UserReliabilityPageRespDto(totalExchangeItem, totalDonationItem, starAvg, content);
     }
 }
