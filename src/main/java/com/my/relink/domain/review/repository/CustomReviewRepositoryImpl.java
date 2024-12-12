@@ -4,10 +4,7 @@ import com.my.relink.controller.exchange.dto.resp.ExchangeItemImageListRespDto;
 import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.review.Review;
 import com.my.relink.domain.review.TradeReview;
-import com.my.relink.domain.review.repository.dto.ReviewDetailRepositoryDto;
-import com.my.relink.domain.review.repository.dto.ReviewDetailWithOutTradeReview;
-import com.my.relink.domain.review.repository.dto.ReviewListRepositoryDto;
-import com.my.relink.domain.review.repository.dto.ReviewListWithOutTradeStatusRepositoryDto;
+import com.my.relink.domain.review.repository.dto.*;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -19,9 +16,6 @@ import org.springframework.stereotype.Repository;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
 
 import static com.my.relink.domain.image.QImage.image;
 import static com.my.relink.domain.item.exchange.QExchangeItem.exchangeItem;
@@ -134,5 +128,35 @@ public class CustomReviewRepositoryImpl implements CustomReviewRepository {
                         Review::getId,
                         Review::getTradeReview
                 ));
+    }
+
+    @Override
+    public Page<ReviewDetailWithExchangeItemRepositoryDto> findReviewDetails(Long userId, Pageable pageable) {
+        List<ReviewDetailWithExchangeItemRepositoryDto> content = jpaQueryFactory.select(
+                        Projections.constructor(ReviewDetailWithExchangeItemRepositoryDto.class,
+                                exchangeItem.name,
+                                review.writer.nickname,
+                                review.star,
+                                review.description,
+                                review.createdAt
+                        )
+                )
+                .from(review)
+                .leftJoin(review.exchangeItem, exchangeItem)
+                .leftJoin(exchangeItem.user, user)
+                .where(review.exchangeItem.user.id.eq(userId))
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .orderBy(review.createdAt.desc())
+                .fetch();
+
+        JPAQuery<Long> totalCount = jpaQueryFactory
+                .select(review.count())
+                .from(review)
+                .leftJoin(review.exchangeItem, exchangeItem)
+                .leftJoin(exchangeItem.user, user)
+                .where(review.exchangeItem.user.id.eq(userId));
+
+        return PageableExecutionUtils.getPage(content, pageable, totalCount::fetchOne);
     }
 }
