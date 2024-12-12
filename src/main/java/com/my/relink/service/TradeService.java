@@ -217,32 +217,9 @@ public class TradeService {
         User partnerUser = userRepository.findById(trade.getPartner(currentUser.getId()).getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        String completedAt = dateTimeUtil.getTradeStatusFormattedTime(trade.getModifiedAt());
+        //String completedAt = dateTimeUtil.getTradeStatusFormattedTime(trade.getModifiedAt());
 
-        return TradeCompletionRespDto.builder()
-                .myItem(TradeCompletionRespDto.TradeItemInfo.builder()
-                        .itemName(myExchangeItem.getName())
-                        .itemQuality(myExchangeItem.getItemQuality())
-                        .itemId(myExchangeItem.getId())
-                        .itemImageUrl(myImage != null ? myImage.getImageUrl() : null)
-                        .build())
-
-                .partnerItem(TradeCompletionRespDto.TradeItemInfo.builder()
-                        .itemName(partnerExchangeItem.getName())
-                        .itemQuality(partnerExchangeItem.getItemQuality())
-                        .itemId(partnerExchangeItem.getId())
-                        .itemImageUrl(partnerImage != null ? partnerImage.getImageUrl() : null)
-                        .build())
-
-                .partnerInfo(TradeCompletionRespDto.UserInfo.builder()
-                        .partnerAddress(trade.isRequester(partnerUser.getId()) ? trade.getOwnerAddress() : trade.getRequesterAddress())
-                        .build())
-
-                .tradeStatusInfo(TradeCompletionRespDto.TradeStatusInfo.builder()
-                        .completedAt(completedAt)
-                        .tradeStatus(trade.getTradeStatus())
-                        .build())
-                .build();
+        return TradeCompletionRespDto.from(myExchangeItem, partnerExchangeItem, myImage, partnerImage, partnerUser, trade, dateTimeUtil);
     }
 }
 
