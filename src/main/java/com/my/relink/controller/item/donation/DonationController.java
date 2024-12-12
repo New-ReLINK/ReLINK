@@ -19,7 +19,8 @@ public class DonationController {
     private final DonationItemService donationItemService;
 
     @PostMapping("/item/donation")
-    public ResponseEntity<ApiResult<DonationItemIdRespDto>> createDonationItem(@AuthenticationPrincipal AuthUser authUser, @RequestBody @Valid DonationItemReqDto request) {
+    public ResponseEntity<ApiResult<DonationItemIdRespDto>> createDonationItem(@AuthenticationPrincipal AuthUser authUser,
+                                                                               @RequestBody @Valid DonationItemReqDto request) {
         DonationItemIdRespDto response = donationItemService.createDonationItem(request, authUser);
         return new ResponseEntity<>(ApiResult.success(response), HttpStatus.CREATED);
     }
