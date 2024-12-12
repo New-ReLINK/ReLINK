@@ -7,7 +7,7 @@ import com.my.relink.domain.category.Category;
 import com.my.relink.domain.category.repository.CategoryRepository;
 import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.image.Image;
-import com.my.relink.domain.image.ImageRepository;
+import com.my.relink.domain.image.repository.ImageRepository;
 import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.item.exchange.repository.ExchangeItemRepository;
 import com.my.relink.domain.point.Point;
@@ -42,7 +42,7 @@ public class ExchangeItemService {
     private final ImageRepository imageRepository;
 
     public long createExchangeItem(CreateExchangeItemReqDto reqDto, Long userId) {
-        Category category = getValidCategory(reqDto);
+        Category category = getValidCategory(reqDto.getCategoryId());
         User user = getValidUser(userId);
         // 보증금에 대한 유효성 검사
         validateDeposit(reqDto, userId);
@@ -67,6 +67,7 @@ public class ExchangeItemService {
         User user = getValidUser(userId);
         Pageable pageable = PageRequest.of(page - 1, size);
         Page<ExchangeItem> items = exchangeItemRepository.findByUserId(user.getId(), pageable);
+        // 내 교환상품 목록이 비어있는 경우 빈 결과 반환
         if (items.isEmpty()) {
             return GetExchangeItemsByUserRespDto.builder()
                     .content(List.of())
@@ -81,33 +82,40 @@ public class ExchangeItemService {
         List<Long> itemIds = items.getContent().stream().map(ExchangeItem::getId).toList();
         List<Trade> trades = tradeRepository.findByExchangeItemIds(itemIds);
         Map<Long, Trade> tradeMap = trades.stream()
-                .collect(Collectors.toMap(
-                        trade -> trade.getOwnerExchangeItem().getId().equals(userId)
-                                ? trade.getRequesterExchangeItem().getId()
-                                : trade.getOwnerExchangeItem().getId(),
-                        trade -> trade
-                ));
-        List<Image> images = imageRepository.findFirstImagesByEntityTypeAndEntityIds(EntityType.EXCHANGE_ITEM, itemIds);
+                .flatMap(trade -> List.of(
+                        Map.entry(trade.getOwnerExchangeItem().getId(), trade),
+                        Map.entry(trade.getRequesterExchangeItem().getId(), trade)
+                ).stream())
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        List<Image> images = imageRepository.findImages(EntityType.EXCHANGE_ITEM, itemIds);
         Map<Long, String> imageMap = images.stream()
                 .collect(Collectors.toMap(Image::getEntityId, Image::getImageUrl));
         List<GetExchangeItemRespDto> content = items.getContent().stream().map(item -> {
-            Trade trade = tradeMap.get(item.getId());
+            Trade trade = item.getTradeStatus() == TradeStatus.AVAILABLE ? null : tradeMap.get(item.getId());
             String imageUrl = imageMap.get(item.getId());
-            String partnerNickname = getPartnerNickname(trade, item);
+            String partnerNickname = getPartnerNickname(trade, item.getId());
             LocalDate completedDate = (trade != null && item.getTradeStatus() == TradeStatus.EXCHANGED)
                     ? trade.getModifiedAt().toLocalDate()
                     : null;
-            return GetExchangeItemRespDto.builder()
+            GetExchangeItemRespDto.GetExchangeItemRespDtoBuilder builder = GetExchangeItemRespDto.builder()
                     .exchangeItemId(item.getId())
                     .exchangeItemName(item.getName())
                     .imageUrl(imageUrl)
-                    .tradeStatus(item.getTradeStatus())
-                    .desiredItem(item.getTradeStatus() == TradeStatus.AVAILABLE ? item.getDesiredItem() : null)
-                    .size(item.getTradeStatus() == TradeStatus.AVAILABLE || item.getTradeStatus() == TradeStatus.IN_EXCHANGE ? item.getSize() : null)
-                    .tradePartnerNickname(partnerNickname)
-                    .tradeId(item.getTradeStatus() == TradeStatus.IN_EXCHANGE || item.getTradeStatus() == TradeStatus.EXCHANGED ? trade.getId() : null)
-                    .completedDate(item.getTradeStatus() == TradeStatus.EXCHANGED ? completedDate : null)
-                    .build();
+                    .tradeStatus(item.getTradeStatus());
+
+            if (item.getTradeStatus() == TradeStatus.AVAILABLE) {
+                builder.size(item.getSize());
+                builder.desiredItem(item.getDesiredItem());
+            } else if (item.getTradeStatus() == TradeStatus.IN_EXCHANGE) {
+                builder.size(item.getSize());
+                builder.tradePartnerNickname(partnerNickname);
+                builder.tradeId(trade != null ? trade.getId() : null);
+            } else if (item.getTradeStatus() == TradeStatus.EXCHANGED) {
+                builder.tradePartnerNickname(partnerNickname);
+                builder.completedDate(trade != null ? completedDate : null);
+                builder.tradeId(trade != null ? trade.getId() : null);
+            }
+            return builder.build();
         }).toList();
         return GetExchangeItemsByUserRespDto.builder()
                 .content(content)
@@ -122,8 +130,11 @@ public class ExchangeItemService {
 
     // 교환상대 닉네임 가져오기
     // trade 에서 해당 등록된 아이템들의 등록자id와 해당 유저의 id를 비교하여 상대방이 등록한 아이템을 통해 상대방의 닉네임을 추출
-    private String getPartnerNickname(Trade trade, ExchangeItem currentItem) {
-        ExchangeItem partnerItem = trade.getOwnerExchangeItem().getId().equals(currentItem.getId())
+    private String getPartnerNickname(Trade trade, Long itemId) {
+        if (trade == null) {
+            return null;
+        }
+        ExchangeItem partnerItem = trade.getOwnerExchangeItem().getId().equals(itemId)
                 ? trade.getRequesterExchangeItem()
                 : trade.getOwnerExchangeItem();
         return partnerItem.getUser().getNickname();
@@ -137,8 +148,8 @@ public class ExchangeItemService {
     }
 
     // category 가져오기
-    public Category getValidCategory(CreateExchangeItemReqDto reqDto) {
-        Category category = categoryRepository.findById(reqDto.getCategoryId())
+    public Category getValidCategory(Long categoryId) {
+        Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
         return category;
     }

@@ -12,17 +12,17 @@ import java.time.LocalDate;
 @ToString
 public class GetExchangeItemRespDto {
     // 공통
-    Long exchangeItemId;
-    String exchangeItemName;
-    String imageUrl;
-    TradeStatus tradeStatus;
+    private Long exchangeItemId;
+    private String exchangeItemName;
+    private String imageUrl;
+    private TradeStatus tradeStatus;
     // 교환 전 AVAILABLE
-    String desiredItem;
+    private String desiredItem;
     // 교환 전, 중 (AVAILABLE, IN_EXCHANGE)
-    String size;
+    private String size;
     // 교환 중, 완료 (IN_EXCHANGE, EXCHANGED)
-    String tradePartnerNickname;
-    Long tradeId;
+    private String tradePartnerNickname;
+    private Long tradeId;
     // 교환 완료 EXCHANGED
-    LocalDate completedDate;
+    private LocalDate completedDate;
 }

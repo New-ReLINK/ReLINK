@@ -3,7 +3,7 @@ package com.my.relink.domain.like.repository;
 import com.my.relink.config.TestConfig;
 import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.image.Image;
-import com.my.relink.domain.image.ImageRepository;
+import com.my.relink.domain.image.repository.ImageRepository;
 import com.my.relink.domain.item.donation.ItemQuality;
 import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.item.exchange.repository.ExchangeItemRepository;

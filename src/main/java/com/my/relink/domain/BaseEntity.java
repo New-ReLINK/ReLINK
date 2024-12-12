@@ -22,8 +22,4 @@ public abstract class BaseEntity {
     @LastModifiedDate
     private LocalDateTime modifiedAt;
 
-    // 테스트 전용 메서드
-    public void setModifiedAtForTest(LocalDateTime modifiedAt) {
-        this.modifiedAt = modifiedAt;
-    }
 }
