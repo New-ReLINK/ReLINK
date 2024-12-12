@@ -32,15 +32,10 @@ public enum ReportReason {
 
     @JsonCreator
     public static ReportReason from(String value) {
-
-        if(value == null){
-            return null;
-        }
-
         try {
             return ReportReason.valueOf(value);
         } catch (IllegalArgumentException e) {
-            return null;
+            throw new BusinessException(ErrorCode.INVALID_REPORT_REASON);
         }
     }
 }
