@@ -4,7 +4,7 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import java.util.Arrays;
 
-public class EnumValidatorImpl implements ConstraintValidator<EnumValidator, String> {
+public class EnumValidatorImpl implements ConstraintValidator<EnumValidator, Enum<?>> {
 
     private Class<? extends Enum<?>> enumClass;
 
@@ -14,7 +14,7 @@ public class EnumValidatorImpl implements ConstraintValidator<EnumValidator, Str
     }
 
     @Override
-    public boolean isValid(String value, ConstraintValidatorContext context) {
+    public boolean isValid(Enum<?> value, ConstraintValidatorContext context) {
         if (value == null) {
             return true; // null 값은 @NotNull 애너테이션에서 처리
         }
