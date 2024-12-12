@@ -20,7 +20,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        if (request.getRequestURI().contains("/auth")) {
+        if (request.getRequestURI().contains("/auth") || isWsEndPoint(request)) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -37,5 +37,8 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
         LoginAuthentication loginAuthentication = new LoginAuthentication(authUser);
         SecurityContextHolder.getContext().setAuthentication(loginAuthentication);
         filterChain.doFilter(request, response);
+    }
+    private boolean isWsEndPoint(HttpServletRequest request){
+        return request.getRequestURI().contains("/chats");
     }
 }

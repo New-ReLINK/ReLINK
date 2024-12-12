@@ -2,7 +2,6 @@ package com.my.relink.service;
 
 import com.my.relink.controller.review.dto.resp.ReviewDetailsRespDto;
 import com.my.relink.controller.review.dto.resp.ReviewListRespDto;
-import com.my.relink.controller.review.dto.resp.ReviewPageInfoRespDto;
 import com.my.relink.controller.review.dto.resp.ReviewStatisticsRespDto;
 import com.my.relink.domain.item.exchange.repository.ExchangeItemRepository;
 import com.my.relink.domain.review.repository.ReviewRepository;
@@ -30,11 +29,10 @@ public class ReviewService {
         return new ReviewDetailsRespDto(repositoryDto);
     }
 
-    public ReviewPageInfoRespDto findAllReviewByWriterUserId(Long userId, Pageable pageable) {
+    public PageResponse<ReviewListRespDto> findAllReviewByWriterUserId(Long userId, Pageable pageable) {
         Page<ReviewListRepositoryDto> allReviews = reviewRepository.findAllReviews(userId, pageable);
-        long totalReviewCount = allReviews.getTotalElements();
         Page<ReviewListRespDto> respDtos = allReviews.map(ReviewListRespDto::new);
-        return new ReviewPageInfoRespDto(totalReviewCount, PageResponse.of(respDtos));
+        return PageResponse.of(respDtos);
     }
 
     public ReviewStatisticsRespDto calculateUserStatistics(Long userId) {

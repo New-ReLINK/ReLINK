@@ -1,6 +1,5 @@
 package com.my.relink.domain.item.donation;
 
-
 import com.my.relink.domain.BaseEntity;
 import com.my.relink.domain.category.Category;
 import com.my.relink.domain.user.Address;
@@ -60,6 +59,7 @@ public class DonationItem extends BaseEntity {
 
     @Enumerated(value = EnumType.STRING)
     private DisposalType disposalType;
+
 
     @Builder
     public DonationItem(
