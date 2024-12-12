@@ -3,10 +3,12 @@ package com.my.relink.service;
 import com.my.relink.config.security.AuthUser;
 import com.my.relink.controller.trade.dto.request.AddressReqDto;
 import com.my.relink.controller.trade.dto.request.TrackingNumberReqDto;
-import com.my.relink.controller.trade.dto.response.AddressRespDto;
-import com.my.relink.controller.trade.dto.response.TradeCompleteRespDto;
-import com.my.relink.controller.trade.dto.response.TradeInquiryDetailRespDto;
-import com.my.relink.controller.trade.dto.response.TradeRequestRespDto;
+import com.my.relink.controller.trade.dto.response.*;
+import com.my.relink.domain.image.EntityType;
+import com.my.relink.domain.image.Image;
+import com.my.relink.domain.image.ImageRepository;
+import com.my.relink.domain.item.donation.ItemQuality;
+import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.point.pointHistory.repository.PointHistoryRepository;
 import com.my.relink.domain.point.repository.PointRepository;
 import com.my.relink.domain.trade.Trade;
@@ -26,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.internal.matchers.Null;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -50,6 +53,8 @@ class TradeServiceTest extends DummyObject {
     private PointRepository pointRepository;
     @Mock
     private PointTransactionService pointTransactionService;
+    @Mock
+    private ImageRepository imageRepository;
 
     @InjectMocks
     private TradeService tradeService;
@@ -325,5 +330,54 @@ class TradeServiceTest extends DummyObject {
         // When & Then
         assertThrows(BusinessException.class, () ->
                 tradeService.getExchangeItemTrackingNumber(tradeId, reqDto, new AuthUser(12L, "test@email.com", Role.USER)));
+    }
+
+    @Test
+    @DisplayName("교환 진행 페이지 : 조회 성공 케이스")
+    void testFindTradeCompletionInfo_success(){
+        Long tradeId = 1L;
+        User requester = mockRequesterUser();
+        User owner = mockOwnerUser();
+        Trade trade = mockTrade(owner, requester, true, true, true, true);
+
+        ExchangeItem myExchangeItem;
+        ExchangeItem partnerExchangeItem;
+
+        if (trade.isRequester(requester.getId())) {
+            myExchangeItem = trade.getRequesterExchangeItem();
+            partnerExchangeItem = trade.getOwnerExchangeItem();
+        } else {
+            myExchangeItem = trade.getOwnerExchangeItem();
+            partnerExchangeItem = trade.getRequesterExchangeItem();
+        }
+
+        Image myImage = new Image(1L, "http://example.com/my-image.jpg", 1L, EntityType.EXCHANGE_ITEM);
+        Image partnerImage = new Image(2L, "http://example.com/partner-image.jpg", 2L, EntityType.EXCHANGE_ITEM);
+
+        User partnerUser = trade.getPartner(requester.getId());  // 거래 상대방 (소유자)
+
+        Mockito.when(userRepository.findById(requester.getId())).thenReturn(Optional.of(requester));
+        Mockito.when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
+        Mockito.when(tradeRepository.findById(tradeId)).thenReturn(Optional.of(trade));
+        Mockito.when(imageRepository.findByEntityIdAndEntityType(myExchangeItem.getId(), EntityType.EXCHANGE_ITEM)).thenReturn(Optional.of(myImage));
+        Mockito.when(imageRepository.findByEntityIdAndEntityType(partnerExchangeItem.getId(), EntityType.EXCHANGE_ITEM)).thenReturn(Optional.of(partnerImage));
+        Mockito.when(userRepository.findById(trade.getPartner(requester.getId()).getId())).thenReturn(Optional.of(partnerUser));
+
+        TradeCompletionRespDto result = tradeService.findCompleteTradeInfo(tradeId, new AuthUser(requester.getId(), "test@email.com", Role.USER));
+
+        assertNotNull(result);
+
+        assertEquals("requester item", result.getMyItem().getItemName());
+        assertEquals(ItemQuality.NEW, result.getMyItem().getItemQuality());
+        assertEquals(13L, result.getMyItem().getItemId());
+        assertEquals("http://example.com/my-image.jpg", result.getMyItem().getItemImageUrl());
+
+        assertEquals("owner item", result.getPartnerItem().getItemName());
+        assertEquals(ItemQuality.NEW, result.getPartnerItem().getItemQuality());
+        assertEquals(10L, result.getPartnerItem().getItemId());
+        assertEquals("http://example.com/partner-image.jpg", result.getPartnerItem().getItemImageUrl());
+
+        assertNotNull(result.getTradeStatusInfo().getCompletedAt());
+        assertEquals(trade.getTradeStatus(), result.getTradeStatusInfo().getTradeStatus());
     }
 }

@@ -1,6 +1,5 @@
 package com.my.relink.domain.trade;
 
-import com.my.relink.controller.trade.dto.request.TrackingNumberReqDto;
 import com.my.relink.domain.BaseEntity;
 import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.user.Address;
@@ -8,7 +7,10 @@ import com.my.relink.domain.user.User;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
