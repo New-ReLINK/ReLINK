@@ -12,10 +12,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
-import org.springframework.messaging.MessageDeliveryException;
+import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.stereotype.Component;
 
@@ -55,9 +56,18 @@ public class StompHandler implements ChannelInterceptor {
             }
             return message;
         }catch (BusinessException e){
-            log.error("웹소켓 연결 검증 중 오류 발생: {}", e.getMessage(), e);
-            throw new MessageDeliveryException(e.getMessage());
+            log.warn("웹소켓 연결 검증 중 오류 발생: {}", e.getMessage(), e);
+            return createErrorMessage(accessor, e);
         }
+    }
+
+    private Message<?> createErrorMessage(StompHeaderAccessor accessor, BusinessException e){
+        StompHeaderAccessor errorAccessor = StompHeaderAccessor.create(StompCommand.ERROR);
+        errorAccessor.setNativeHeader("status", String.valueOf(e.getErrorCode().getStatus()));
+        errorAccessor.setSessionId(accessor.getSessionId());
+
+        MessageHeaders headers = errorAccessor.getMessageHeaders();
+        return MessageBuilder.createMessage(e.getMessage().getBytes(), headers);
     }
 
     /**
