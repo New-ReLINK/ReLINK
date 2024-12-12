@@ -1,5 +1,6 @@
 package com.my.relink.controller.user.dto.req;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.my.relink.domain.user.Role;
 import com.my.relink.domain.user.User;
 import jakarta.validation.Valid;
@@ -8,9 +9,11 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.Length;
 
 @Getter
+@NoArgsConstructor
 public class UserCreateReqDto {
 
     @NotBlank(message = "이름을 적어주세요.")
@@ -40,6 +43,7 @@ public class UserCreateReqDto {
     private String contact;
 
     @Valid
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private AddressCreateReqDto address;
 
     @Builder
@@ -59,7 +63,7 @@ public class UserCreateReqDto {
                 .email(dto.getEmail())
                 .password(dto.getPassword())
                 .contact(dto.getContact())
-                .address(dto.address.toEntity(dto.getAddress()))
+                .address(dto.getAddress() != null ? dto.getAddress().toEntity(dto.getAddress()) : null)
                 .role(Role.USER)
                 .build();
     }
