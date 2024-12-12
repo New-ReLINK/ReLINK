@@ -20,4 +20,11 @@ public interface TradeRepository extends JpaRepository<Trade, Long>, CustomTrade
             "where t.id = :tradeId")
     Optional<Trade> findByIdWithItemsAndUser(@Param("tradeId") Long tradeId);
 
+    @Query("select t from Trade t " +
+            "join fetch t.requester " +
+            "join fetch t.ownerExchangeItem oi " +
+            "join fetch oi.user " +
+            "where t.id = :tradeId")
+    Optional<Trade> findByIdWithUsers(@Param("tradeId") Long tradeId);
+
 }

@@ -40,7 +40,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
      */
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/chat")
+        registry.addEndpoint("/chats")
                 .setAllowedOriginPatterns("*")
                 .withSockJS()
                 .setStreamBytesLimit(512 * 1024) //512kb
