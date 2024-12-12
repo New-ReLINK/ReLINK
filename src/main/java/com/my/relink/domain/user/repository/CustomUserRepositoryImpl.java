@@ -66,14 +66,4 @@ public class CustomUserRepositoryImpl implements CustomUserRepository {
                 .where(user.id.eq(userId))
                 .fetchOne());
     }
-
-    @Override
-    public Double avgStar(Long userId) {
-        return jpaQueryFactory.select(review.star.avg())
-                .from(review)
-                .join(review.exchangeItem, exchangeItem)
-                .join(exchangeItem.user, user)
-                .where(user.id.eq(userId))
-                .fetchOne();
-    }
 }
