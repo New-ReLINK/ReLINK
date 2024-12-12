@@ -243,5 +243,36 @@ public class TradeService {
                         .build())
                 .build();
     }
+
+    public TradeCancelRespDto cancelTrade(Long tradeId, AuthUser authUser) {
+        User currentUser = userRepository.findById(authUser.getId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        Trade trade = tradeRepository.findById(tradeId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
+
+        User partnerUser = userRepository.findById(trade.getPartner(currentUser.getId()).getId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        ExchangeItem partnerExchangeItem;
+
+        if (trade.isRequester(currentUser.getId())) {
+            partnerExchangeItem = trade.getOwnerExchangeItem();
+
+        } else {
+            partnerExchangeItem = trade.getRequesterExchangeItem();
+        }
+
+        Image partnerImage = imageRepository.findByEntityIdAndEntityType(partnerExchangeItem.getId(), EntityType.EXCHANGE_ITEM).orElse(null);
+        String tradeStartedAt = trade.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy년 M월 d일 HH:mm"));
+
+        return TradeCancelRespDto.builder()
+                .partnerExchangeItemName(partnerExchangeItem.getName())
+                .partnerNickname(partnerUser.getNickname())
+                .tradeStartedAt(tradeStartedAt)
+                .partnerExchangeItemImageUrl(partnerImage != null ? partnerImage.getImageUrl() : null)
+                .build();
+
+    }
 }
 
