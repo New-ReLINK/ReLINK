@@ -10,6 +10,8 @@ import com.my.relink.service.UserService;
 import com.my.relink.util.api.ApiResult;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -84,5 +86,15 @@ public class UserController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ApiResult.success(userService.getUserProfile(authUser.getId())));
+    }
+
+    @GetMapping("/users/reliability")
+    public ResponseEntity<ApiResult<UserReliabilityPageRespDto>> myTrustPage(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PageableDefault(size = 0, page = 10) Pageable pageable
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResult.success(userService.findReceivedReview(authUser.getId(), pageable)));
     }
 }
