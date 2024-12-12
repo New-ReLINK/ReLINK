@@ -24,6 +24,7 @@ public enum ErrorCode {
     TRADE_STATUS_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "존재하지 않는 거래 상태 입니다"),
     CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "카테고리를 찾을 수 없습니다."),
     DEPOSIT_CANNOT_LESS_ZERO(HttpStatus.BAD_REQUEST.value(), "보증금은 0원보다 작을 수 없습니다."),
+    REPORT_REASON_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "해당 신고 사유는 존재하지 않습니다"),
 
     ;
 

@@ -4,6 +4,7 @@ package com.my.relink.domain.report;
 import com.my.relink.domain.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -31,5 +32,13 @@ public class Report extends BaseEntity {
     @Column(nullable = false)
     private ReportType reportType;
 
-
+    @Builder
+    public Report(Long id, ReportReason reportReason, Long entityId, String description, Long targetUserId, ReportType reportType) {
+        this.id = id;
+        this.reportReason = reportReason;
+        this.entityId = entityId;
+        this.description = description;
+        this.targetUserId = targetUserId;
+        this.reportType = reportType;
+    }
 }
