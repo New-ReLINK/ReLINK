@@ -34,7 +34,7 @@ public class ReviewController {
     @GetMapping("/users/reviews")
     public ResponseEntity<ApiResult<ReviewPageInfoRespDto>> getReviewList(
             @AuthenticationPrincipal AuthUser authUser,
-            @PageableDefault(page = 0, size = 10) Pageable pageable
+            @PageableDefault(page = 0, size = 100) Pageable pageable
     ) {
         return ResponseEntity
                 .status(HttpStatus.OK)
