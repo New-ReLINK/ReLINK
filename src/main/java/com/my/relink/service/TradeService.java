@@ -3,10 +3,12 @@ package com.my.relink.service;
 import com.my.relink.config.security.AuthUser;
 import com.my.relink.controller.trade.dto.request.AddressReqDto;
 import com.my.relink.controller.trade.dto.request.TrackingNumberReqDto;
-import com.my.relink.controller.trade.dto.response.AddressRespDto;
-import com.my.relink.controller.trade.dto.response.TradeCompleteRespDto;
-import com.my.relink.controller.trade.dto.response.TradeInquiryDetailRespDto;
-import com.my.relink.controller.trade.dto.response.TradeRequestRespDto;
+import com.my.relink.controller.trade.dto.response.*;
+import com.my.relink.domain.image.EntityType;
+import com.my.relink.domain.image.Image;
+import com.my.relink.domain.image.ImageRepository;
+import com.my.relink.domain.item.exchange.ExchangeItem;
+import com.my.relink.domain.item.exchange.repository.ExchangeItemRepository;
 import com.my.relink.domain.trade.Trade;
 import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.domain.trade.repository.TradeRepository;
@@ -19,6 +21,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -29,6 +34,8 @@ public class TradeService {
     private final ImageService imageService;
     private final UserRepository userRepository;
     private final PointTransactionService pointTransactionService;
+    private final ExchangeItemRepository exchangeItemRepository;
+    private final ImageRepository imageRepository;
 
     /**
      * [문의하기] -> 해당 채팅방의 거래 정보, 상품 정보, 상대 유저 정보 내리기
@@ -180,6 +187,57 @@ public class TradeService {
             trade.updateTradeStatus(TradeStatus.IN_DELIVERY);
         }
         tradeRepository.save(trade);
+    }
+
+    public TradeCompletionRespDto findCompleteTradeInfo(Long tradeId, AuthUser authUser) {
+        User currentUser = userRepository.findById(authUser.getId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        Trade trade = tradeRepository.findById(tradeId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
+
+        ExchangeItem myExchangeItem;
+        ExchangeItem partnerExchangeItem;
+
+        if (trade.isRequester(currentUser.getId())) {
+            myExchangeItem = trade.getRequesterExchangeItem();
+            partnerExchangeItem = trade.getOwnerExchangeItem();
+
+        } else {
+            myExchangeItem = trade.getOwnerExchangeItem();
+            partnerExchangeItem = trade.getRequesterExchangeItem();
+        }
+
+        Image myImage = imageRepository.findByEntityIdAndEntityType(myExchangeItem.getId(), EntityType.EXCHANGE_ITEM).orElse(null);
+        Image partnerImage = imageRepository.findByEntityIdAndEntityType(partnerExchangeItem.getId(), EntityType.EXCHANGE_ITEM).orElse(null);
+
+        User partnerUser = userRepository.findById(trade.getPartner(currentUser.getId()).getId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        return TradeCompletionRespDto.builder()
+                .myItem(TradeCompletionRespDto.TradeItemInfo.builder()
+                        .itemName(myExchangeItem.getName())
+                        .itemQuality(myExchangeItem.getItemQuality())
+                        .itemId(myExchangeItem.getId())
+                        .itemImageUrl(myImage != null ? myImage.getImageUrl() : null)
+                        .build())
+
+                .partnerItem(TradeCompletionRespDto.TradeItemInfo.builder()
+                        .itemName(partnerExchangeItem.getName())
+                        .itemQuality(partnerExchangeItem.getItemQuality())
+                        .itemId(partnerExchangeItem.getId())
+                        .itemImageUrl(partnerImage != null ? partnerImage.getImageUrl() : null)
+                        .build())
+
+                .partnerInfo(TradeCompletionRespDto.UserInfo.builder()
+                        .partnerAddress(trade.isRequester(partnerUser.getId()) ? trade.getOwnerAddress() : trade.getRequesterAddress())
+                        .build())
+
+                .tradeStatusInfo(TradeCompletionRespDto.TradeStatusInfo.builder()
+                        .completedAt(trade.getModifiedAt().format(DateTimeFormatter.ofPattern("yyyy년 M월 d일 HH:mm")))
+                        .tradeStatus(trade.getTradeStatus())
+                        .build())
+                .build();
     }
 }
 
