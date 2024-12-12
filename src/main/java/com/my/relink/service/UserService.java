@@ -7,8 +7,10 @@ import com.my.relink.domain.image.Image;
 import com.my.relink.domain.image.ImageRepository;
 import com.my.relink.domain.point.Point;
 import com.my.relink.domain.point.repository.PointRepository;
+import com.my.relink.domain.review.repository.ReviewRepository;
 import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.repository.UserRepository;
+import com.my.relink.domain.user.repository.dto.UserInfoWithCountRepositoryDto;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final ImageRepository imageRepository;
     private final PointRepository pointRepository;
+    private final ReviewRepository reviewRepository;
 
     public User findByIdOrFail(Long userId){
         return userRepository.findById(userId)
@@ -92,5 +95,14 @@ public class UserService {
 
     public UserValidEmailRespDto validEmail(UserValidEmailReqDto dto) {
         return new UserValidEmailRespDto(userRepository.findByEmail(dto.getEmail()).isPresent());
+    }
+
+    public UserProfileRespDto getUserProfile(Long userId) {
+        UserInfoWithCountRepositoryDto repositoryDto = userRepository.findUserDetailInfo(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        Double avgStar = reviewRepository.getTotalStarAvg(userId);
+
+        return new UserProfileRespDto(avgStar, repositoryDto);
     }
 }
