@@ -255,7 +255,7 @@ class TradeServiceTest extends DummyObject {
         when(tradeRepository.findById(tradeId)).thenReturn(Optional.of(trade));
 
         // When
-        tradeService.getTrackingNumber(tradeId, reqDto, new AuthUser(requester.getId(), "test@email.com", Role.USER));
+        tradeService.getExchangeItemTrackingNumber(tradeId, reqDto, new AuthUser(requester.getId(), "test@email.com", Role.USER));
 
         // Then
         assertEquals("REQ123456", trade.getRequesterTrackingNumber());
@@ -273,6 +273,6 @@ class TradeServiceTest extends DummyObject {
 
         // When & Then
         assertThrows(BusinessException.class, () ->
-                tradeService.getTrackingNumber(tradeId, reqDto, new AuthUser(12L,"test@email.com", Role.USER)));
+                tradeService.getExchangeItemTrackingNumber(tradeId, reqDto, new AuthUser(12L,"test@email.com", Role.USER)));
     }
 }

@@ -163,7 +163,7 @@ public class TradeService {
     }
 
     @Transactional
-    public void getTrackingNumber(Long tradeId, TrackingNumberReqDto reqDto, AuthUser authUser) {
+    public void getExchangeItemTrackingNumber(Long tradeId, TrackingNumberReqDto reqDto, AuthUser authUser) {
         User currentUser = userRepository.findById(authUser.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 

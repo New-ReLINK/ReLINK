@@ -67,7 +67,7 @@ public class TradeController {
             @PathVariable(name = "tradeId") Long tradeId,
             @Valid @RequestBody TrackingNumberReqDto reqDto,
             @AuthenticationPrincipal AuthUser authUser) {
-        tradeService.getTrackingNumber(tradeId, reqDto, authUser);
+        tradeService.getExchangeItemTrackingNumber(tradeId, reqDto, authUser);
         return ResponseEntity.noContent().build();
     }
 
