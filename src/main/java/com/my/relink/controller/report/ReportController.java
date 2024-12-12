@@ -1,6 +1,7 @@
 package com.my.relink.controller.report;
 
 import com.my.relink.config.security.AuthUser;
+import com.my.relink.controller.report.dto.request.ExchangeItemReportCreateReqDto;
 import com.my.relink.controller.report.dto.request.TradeReportCreateReqDto;
 import com.my.relink.service.ReportService;
 import com.my.relink.util.api.ApiResult;
@@ -24,6 +25,13 @@ public class ReportController {
                                                              @RequestBody @Valid TradeReportCreateReqDto tradeReportCreateReqDto,
                                                              @AuthenticationPrincipal AuthUser authUser){
         reportService.createTradeReport(tradeId, authUser.getId(), tradeReportCreateReqDto);
+        return ResponseEntity.ok(ApiResult.success(null));
+    }
+
+    @PostMapping("/items/exchanges/{itemId}/report")
+    public ResponseEntity<ApiResult<Void>> createExchangeItemReport(@PathVariable("itemId") Long itemId,
+                                                                    @RequestBody @Valid ExchangeItemReportCreateReqDto exchangeItemReportCreateReqDto){
+        reportService.createExchangeItemReport(itemId, exchangeItemReportCreateReqDto);
         return ResponseEntity.ok(ApiResult.success(null));
     }
 
