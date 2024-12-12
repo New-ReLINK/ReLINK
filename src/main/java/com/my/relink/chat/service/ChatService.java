@@ -22,11 +22,10 @@ public class ChatService {
     private final UserService userService;
 
     @Transactional
-    public ChatMessageRespDto saveAndSendMessage(Long tradeId, ChatMessageReqDto chatMessageReqDto, Long senderId) {
+    public ChatMessageRespDto saveMessage(Long tradeId, ChatMessageReqDto chatMessageReqDto, Long senderId) {
         User sender = userService.findByIdOrFail(senderId);
         Trade trade = tradeService.findByIdOrFail(tradeId);
-        Message message = chatMessageReqDto.toEntity(trade, sender);
-        messageRepository.save(message);
+        Message message = messageRepository.save(chatMessageReqDto.toEntity(trade, sender));
         return new ChatMessageRespDto(message);
     }
 

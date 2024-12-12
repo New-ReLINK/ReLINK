@@ -6,7 +6,6 @@ import com.my.relink.chat.controller.dto.ChatMessageRespDto;
 import com.my.relink.chat.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
-import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
@@ -25,7 +24,7 @@ public class ChatController {
     public void handleMessage(@DestinationVariable("tradeId") Long tradeId,
                               @Payload ChatMessageReqDto chatMessageReqDto,
                               Principal principal) {
-        ChatMessageRespDto response = chatService.saveAndSendMessage(
+        ChatMessageRespDto response = chatService.saveMessage(
                         tradeId,
                         chatMessageReqDto,
                         ((ChatPrincipal)principal).getUserId());
