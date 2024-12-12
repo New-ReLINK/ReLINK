@@ -4,7 +4,7 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import java.util.Arrays;
 
-public class EnumValidatorImpl implements ConstraintValidator<EnumValidator, Enum<?>> {
+public class EnumValidatorImpl implements ConstraintValidator<EnumValidator, String> {
 
     private Class<? extends Enum<?>> enumClass;
 
@@ -14,11 +14,15 @@ public class EnumValidatorImpl implements ConstraintValidator<EnumValidator, Enu
     }
 
     @Override
-    public boolean isValid(Enum<?> value, ConstraintValidatorContext context) {
+    public boolean isValid(String value, ConstraintValidatorContext context) {
         if (value == null) {
             return true; // null 값은 @NotNull 애너테이션에서 처리
         }
-        return Arrays.stream(enumClass.getEnumConstants())
-                .anyMatch(e -> e.name().equals(value));
+        try {
+            Enum.valueOf((Class<? extends Enum>) enumClass, value.toUpperCase());
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
     }
 }

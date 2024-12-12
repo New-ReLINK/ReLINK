@@ -50,7 +50,7 @@ class ReportServiceTest {
             partner = mock(User.class);
             trade = mock(Trade.class);
             reportDto = new TradeReportCreateReqDto(
-                    ReportReason.FALSE_INFORMATION,
+                    ReportReason.FALSE_INFORMATION.toString(),
                     "신고 내용입니다"
             );
         }

@@ -1,5 +1,6 @@
 package com.my.relink.domain.report;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import lombok.Getter;
@@ -29,11 +30,17 @@ public enum ReportReason {
         this.message = message;
     }
 
-    public static void isValidReportReason(String reason){
-        Arrays.stream(Arrays.stream(values()).toArray())
-                .map(Object::toString)
-                .filter(reportReason -> reportReason.equals(reason))
-                .findFirst()
-                .orElseThrow(() -> new BusinessException(ErrorCode.REPORT_REASON_NOT_FOUND));
+    @JsonCreator
+    public static ReportReason from(String value) {
+
+        if(value == null){
+            return null;
+        }
+
+        try {
+            return ReportReason.valueOf(value);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 }
