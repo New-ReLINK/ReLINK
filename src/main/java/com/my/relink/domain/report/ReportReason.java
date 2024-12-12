@@ -1,6 +1,11 @@
 package com.my.relink.domain.report;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.my.relink.ex.BusinessException;
+import com.my.relink.ex.ErrorCode;
 import lombok.Getter;
+
+import java.util.Arrays;
 
 @Getter
 public enum ReportReason {
@@ -23,5 +28,14 @@ public enum ReportReason {
 
     ReportReason(String message) {
         this.message = message;
+    }
+
+    @JsonCreator
+    public static ReportReason from(String value) {
+        try {
+            return ReportReason.valueOf(value);
+        } catch (IllegalArgumentException e) {
+            throw new BusinessException(ErrorCode.INVALID_REPORT_REASON);
+        }
     }
 }
