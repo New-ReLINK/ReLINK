@@ -1,24 +1,23 @@
 package com.my.relink.controller.exchangeItem.dto.resp;
 
+import com.my.relink.domain.trade.TradeStatus;
 import lombok.Builder;
-import lombok.Data;
 import lombok.Getter;
+import lombok.ToString;
 
-import java.util.List;
+import java.time.LocalDate;
 
-@Data
-@Builder
 @Getter
+@Builder
+@ToString
 public class GetExchangeItemsByUserRespDto {
-    private List<GetExchangeItemRespDto> content;
-    private PageInfo pageInfo;
-
-    @Data
-    @Builder
-    public static class PageInfo {
-        private long totalElements;
-        private int totalPages;
-        private boolean hasPrevious;
-        private boolean hasNext;
-    }
+    private Long exchangeItemId;
+    private String exchangeItemName;
+    private String imageUrl;
+    private TradeStatus tradeStatus;
+    private String desiredItem;
+    private String size;
+    private String tradePartnerNickname;
+    private Long tradeId;
+    private LocalDate completedDate;
 }
