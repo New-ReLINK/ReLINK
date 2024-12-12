@@ -11,7 +11,7 @@ import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
-import com.my.relink.controller.donation.repository.DonationItemRepository;
+import com.my.relink.domain.item.donation.repository.DonationItemRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

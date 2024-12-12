@@ -1,4 +1,4 @@
-package com.my.relink.controller.donation.repository;
+package com.my.relink.domain.item.donation.repository;
 
 
 import com.my.relink.domain.item.donation.DonationItem;
