@@ -3,6 +3,7 @@ package com.my.relink.controller.review;
 import com.my.relink.config.security.AuthUser;
 import com.my.relink.controller.review.dto.resp.ReviewDetailsRespDto;
 import com.my.relink.controller.review.dto.resp.ReviewPageInfoRespDto;
+import com.my.relink.controller.review.dto.resp.ReviewStatisticsRespDto;
 import com.my.relink.service.ReviewService;
 import com.my.relink.util.api.ApiResult;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +40,15 @@ public class ReviewController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ApiResult.success(reviewService.findAllReviewByWriterUserId(authUser.getId(), pageable)));
+    }
+
+    @GetMapping("/users/reliability")
+    public ResponseEntity<ApiResult<ReviewStatisticsRespDto>> getTrustScore(
+            @AuthenticationPrincipal AuthUser authUser
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResult.success(reviewService.calculateUserStatistics(authUser.getId())));
     }
 
 }
