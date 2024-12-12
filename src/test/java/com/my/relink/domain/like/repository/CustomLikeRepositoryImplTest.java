@@ -111,14 +111,14 @@ class CustomLikeRepositoryImplTest {
         // then
         assertThat(result.getContent()).hasSize(2);
         assertThat(result.getTotalElements()).isEqualTo(2);
-        LikeExchangeItemListRepositoryDto firstItem = result.getContent().get(0);
+        LikeExchangeItemListRepositoryDto firstItem = result.getContent().get(1);
         assertThat(firstItem.getItemId()).isEqualTo(item1.getId());
-        assertThat(firstItem.getItemName()).isEqualTo("item1");
+        assertThat(firstItem.getItemName()).isEqualTo(item1.getName());
         assertThat(firstItem.getTradeStatus()).isEqualTo(TradeStatus.AVAILABLE);
-        assertThat(firstItem.getDesiredItem()).isEqualTo("desired1");
-        assertThat(firstItem.getOwnerNickname()).isEqualTo("testUser");
-        assertThat(firstItem.getImageUrl()).isEqualTo("url1");
-        assertThat(firstItem.getAvgStar()).isEqualTo(4.5);
+        assertThat(firstItem.getDesiredItem()).isEqualTo(item1.getDesiredItem());
+        assertThat(firstItem.getOwnerNickname()).isEqualTo(item1.getUser().getNickname());
+        assertThat(firstItem.getImageUrl()).isEqualTo(image1.getImageUrl());
+        assertThat(firstItem.getAvgStar()).isEqualTo(review1.getStar().doubleValue());
     }
 
     @Test
