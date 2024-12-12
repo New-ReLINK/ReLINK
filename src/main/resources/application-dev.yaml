@@ -30,6 +30,8 @@ logging:
   level:
     org.hibernate.orm.jdbc.bind: TRACE
     com.my.relink: DEBUG
+    org.springframework.web.socket: DEBUG
+    org.springframework.messaging: DEBUG
 
 jwt:
   secret:

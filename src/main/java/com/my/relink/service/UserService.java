@@ -5,7 +5,6 @@ import com.my.relink.controller.user.dto.resp.*;
 import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.image.Image;
 import com.my.relink.domain.image.ImageRepository;
-import com.my.relink.domain.review.ReviewRepository;
 import com.my.relink.domain.point.Point;
 import com.my.relink.domain.point.repository.PointRepository;
 import com.my.relink.domain.user.User;
@@ -15,7 +14,6 @@ import com.my.relink.ex.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -25,7 +23,6 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final ImageRepository imageRepository;
     private final PointRepository pointRepository;
-
 
 
     public UserCreateRespDto register(UserCreateReqDto dto) {
@@ -64,12 +61,12 @@ public class UserService {
         return new UserAddressRespDto(user.getAddress());
     }
 
-    @Transactional
     public void userInfoEdit(Long userId, UserInfoEditReqDto dto) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         user.changeInfo(dto.getName(), dto.getNickname());
+        userRepository.save(user);
     }
 
     public void deleteUser(UserDeleteReqDto dto) {
@@ -81,6 +78,7 @@ public class UserService {
         }
 
         user.changeIsDeleted();
+        userRepository.save(user);
     }
 
     public UserValidNicknameRespDto validNickname(UserValidNicknameRepDto dto) {

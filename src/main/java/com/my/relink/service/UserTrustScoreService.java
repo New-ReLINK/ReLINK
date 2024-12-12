@@ -1,6 +1,6 @@
 package com.my.relink.service;
 
-import com.my.relink.domain.review.ReviewRepository;
+import com.my.relink.domain.review.repository.ReviewRepository;
 import com.my.relink.domain.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

@@ -5,6 +5,7 @@ import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.user.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -24,4 +25,11 @@ public class Like extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "exchange_item_id")
     private ExchangeItem exchangeItem;
+
+    @Builder
+    public Like(Long id, User user, ExchangeItem exchangeItem) {
+        this.id = id;
+        this.user = user;
+        this.exchangeItem = exchangeItem;
+    }
 }
