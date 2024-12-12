@@ -1,4 +1,4 @@
-package com.my.relink.ExchangeItem;
+package com.my.relink.exchangeItem;
 
 import com.my.relink.controller.exchangeItem.dto.req.CreateExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemRespDto;
@@ -43,7 +43,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-
 
 class ExchangeItemServiceTest {
     @InjectMocks
