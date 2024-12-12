@@ -380,4 +380,40 @@ class TradeServiceTest extends DummyObject {
         assertNotNull(result.getTradeStatusInfo().getCompletedAt());
         assertEquals(trade.getTradeStatus(), result.getTradeStatusInfo().getTradeStatus());
     }
+
+    @Test
+    @DisplayName("교환 진행 페이지 : 사용자 조회 실패 케이스")
+    void testFindTradeCompletionInfo_userNotFound() {
+        Long tradeId = 1L;
+        User requester = mockRequesterUser();
+
+        Mockito.when(userRepository.findById(requester.getId())).thenReturn(Optional.empty());
+
+        BusinessException exception = assertThrows(
+                BusinessException.class,
+                () -> tradeService.findCompleteTradeInfo(tradeId, new AuthUser(requester.getId(), "test@email.com", Role.USER)),
+                "사용자가 존재하지 않는 경우 예외가 발생해야 한다."
+        );
+
+        assertEquals(ErrorCode.USER_NOT_FOUND, exception.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("교환 진행 페이지 : 거래 조회 실패 케이스")
+    void testFindTradeCompletionInfo_tradeNotFound() {
+        Long tradeId = 1L;
+        User requester = mockRequesterUser();
+
+
+        Mockito.when(userRepository.findById(requester.getId())).thenReturn(Optional.of(requester));
+        Mockito.when(tradeRepository.findById(tradeId)).thenReturn(Optional.empty());  // 거래가 없음
+
+        BusinessException exception = assertThrows(
+                BusinessException.class,
+                () -> tradeService.findCompleteTradeInfo(tradeId, new AuthUser(requester.getId(), "test@email.com", Role.USER)),
+                "거래가 존재하지 않는 경우 예외가 발생해야 한다."
+        );
+
+        assertEquals(ErrorCode.TRADE_NOT_FOUND, exception.getErrorCode());
+    }
 }
