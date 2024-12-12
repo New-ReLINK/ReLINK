@@ -2,12 +2,11 @@ package com.my.relink.service;
 
 import com.my.relink.config.security.AuthUser;
 import com.my.relink.controller.trade.dto.request.AddressReqDto;
+import com.my.relink.controller.trade.dto.request.TrackingNumberReqDto;
 import com.my.relink.controller.trade.dto.response.AddressRespDto;
 import com.my.relink.controller.trade.dto.response.TradeCompleteRespDto;
 import com.my.relink.controller.trade.dto.response.TradeInquiryDetailRespDto;
 import com.my.relink.controller.trade.dto.response.TradeRequestRespDto;
-import com.my.relink.domain.point.pointHistory.repository.PointHistoryRepository;
-import com.my.relink.domain.point.repository.PointRepository;
 import com.my.relink.domain.trade.Trade;
 import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.domain.trade.repository.TradeRepository;
@@ -30,8 +29,6 @@ public class TradeService {
     private final ImageService imageService;
     private final UserRepository userRepository;
     private final PointTransactionService pointTransactionService;
-    private final PointHistoryRepository pointHistoryRepository;
-    private final PointRepository pointRepository;
 
     /**
      * [문의하기] -> 해당 채팅방의 거래 정보, 상품 정보, 상대 유저 정보 내리기
@@ -73,13 +70,13 @@ public class TradeService {
         pointTransactionService.deductPoints(tradeId, currentUser);
 
         //요청자/소유자 여부에 따라 적절한 요청 상태 필드 업데이트
-        if(trade.getRequester().getId().equals(currentUser.getId())){
+        if (trade.isRequester(currentUser.getId())) {
             trade.updateHasRequesterRequested(true);
-        } else{
+        } else {
             trade.updateHasOwnerRequested(true);
         }
         // 양쪽 모두 requested가 true라면 거래 상태를 in_exchange로 변경
-        if(trade.getHasRequesterRequested()&&trade.getHasOwnerRequested()){
+        if (trade.getHasRequesterRequested() && trade.getHasOwnerRequested()) {
             trade.updateTradeStatus(TradeStatus.IN_EXCHANGE);
             tradeRepository.save(trade);
         }
@@ -100,7 +97,7 @@ public class TradeService {
         pointTransactionService.restorePoints(tradeId, currentUser);
 
         // 요청 상태 업데이트
-        if (trade.getRequester().getId().equals(currentUser.getId())) {
+        if (trade.isRequester(currentUser.getId())) {
             trade.updateHasRequesterRequested(false);
         } else {
             trade.updateHasOwnerRequested(false);
@@ -121,12 +118,12 @@ public class TradeService {
         Trade trade = tradeRepository.findById(tradeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
 
-        if(trade.getHasOwnerRequested()&&trade.getHasRequesterRequested()){
+        if (trade.getHasOwnerRequested() && trade.getHasRequesterRequested()) {
             // 소유자 주소와 요청자 주소 업데이트
-            if(trade.getRequester().getId().equals(currentUser.getId())){
+            if (trade.isRequester(currentUser.getId())) {
                 Address requesterAddress = reqDto.toRequesterAddressEntity();  // 요청자 주소 생성
                 trade.saveRequesterAddress(requesterAddress);
-            } else{
+            } else {
                 Address ownerAddress = reqDto.toOwnerAddressEntity();  // 소유자 주소 생성
                 trade.saveOwnerAddress(ownerAddress);
             }
@@ -147,21 +144,42 @@ public class TradeService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
 
         //요청자/소유자 여부에 따라 수령상태 변경
-        if(trade.getRequester().getId().equals(currentUser.getId())){
+        if (trade.isRequester(currentUser.getId())) {
             trade.updateHasRequesterReceived(true);
-        } else{
+        } else {
             trade.updateHasOwnerReceived(true);
         }
 
         //양쪽 모두 수령 확인 시 거래 상태 변경
-        if(trade.getHasOwnerReceived() && trade.getHasRequesterReceived()){
+        if (trade.getHasOwnerReceived() && trade.getHasRequesterReceived()) {
             trade.updateTradeStatus(TradeStatus.EXCHANGED);
         }
         //보증금 반환
         Integer amount = trade.getOwnerExchangeItem().getDeposit();
         pointTransactionService.restorePointsForAllTraders(trade, amount);
+        tradeRepository.save(trade);
 
         return new TradeCompleteRespDto(tradeId);
+    }
+
+    @Transactional
+    public void getExchangeItemTrackingNumber(Long tradeId, TrackingNumberReqDto reqDto, AuthUser authUser) {
+        User currentUser = userRepository.findById(authUser.getId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        Trade trade = tradeRepository.findById(tradeId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
+
+        if (trade.isRequester(currentUser.getId())) {
+            trade.updateRequesterTrackingNumber(reqDto.getTrackingNumber());
+        } else {
+            trade.updateOwnerTrackingNumber(reqDto.getTrackingNumber());
+        }
+
+        if (!trade.getOwnerTrackingNumber().isEmpty() && !trade.getRequesterTrackingNumber().isEmpty()) {
+            trade.updateTradeStatus(TradeStatus.IN_DELIVERY);
+        }
+        tradeRepository.save(trade);
     }
 }
 
