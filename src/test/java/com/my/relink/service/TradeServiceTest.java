@@ -324,6 +324,6 @@ class TradeServiceTest extends DummyObject {
 
         // When & Then
         assertThrows(BusinessException.class, () ->
-                tradeService.getExchangeItemTrackingNumber(tradeId, reqDto, new AuthUser(12L,"test@email.com", Role.USER)));
+                tradeService.getExchangeItemTrackingNumber(tradeId, reqDto, new AuthUser(12L, "test@email.com", Role.USER)));
     }
 }

@@ -25,7 +25,6 @@ public class UserService {
     private final PointRepository pointRepository;
 
 
-
     public UserCreateRespDto register(UserCreateReqDto dto) {
         dto.changePassword(passwordEncoder.encode(dto.getPassword()));
         User savedUser = userRepository.save(dto.toEntity(dto));
