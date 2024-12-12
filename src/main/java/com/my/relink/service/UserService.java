@@ -30,12 +30,6 @@ public class UserService {
     }
 
 
-    public User findByIdOrFail(Long userId){
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-    }
-
-
     public UserCreateRespDto register(UserCreateReqDto dto) {
         dto.changePassword(passwordEncoder.encode(dto.getPassword()));
         User savedUser = userRepository.save(dto.toEntity(dto));
