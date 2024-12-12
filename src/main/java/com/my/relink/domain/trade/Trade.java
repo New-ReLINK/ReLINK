@@ -125,6 +125,10 @@ public class Trade extends BaseEntity {
         this.ownerTrackingNumber = ownerTrackingNumber;
     }
 
+    public boolean isRequester(Long userId) {
+        return this.requester.getId().equals(userId);
+    }
+
     @Builder
     public Trade(
             Long id,

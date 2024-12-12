@@ -70,7 +70,7 @@ public class TradeService {
         pointTransactionService.deductPoints(tradeId, currentUser);
 
         //요청자/소유자 여부에 따라 적절한 요청 상태 필드 업데이트
-        if (trade.getRequester().getId().equals(currentUser.getId())) {
+        if (trade.isRequester(currentUser.getId())) {
             trade.updateHasRequesterRequested(true);
         } else {
             trade.updateHasOwnerRequested(true);
@@ -97,7 +97,7 @@ public class TradeService {
         pointTransactionService.restorePoints(tradeId, currentUser);
 
         // 요청 상태 업데이트
-        if (trade.getRequester().getId().equals(currentUser.getId())) {
+        if (trade.isRequester(currentUser.getId())) {
             trade.updateHasRequesterRequested(false);
         } else {
             trade.updateHasOwnerRequested(false);
@@ -120,7 +120,7 @@ public class TradeService {
 
         if (trade.getHasOwnerRequested() && trade.getHasRequesterRequested()) {
             // 소유자 주소와 요청자 주소 업데이트
-            if (trade.getRequester().getId().equals(currentUser.getId())) {
+            if (trade.isRequester(currentUser.getId())) {
                 Address requesterAddress = reqDto.toRequesterAddressEntity();  // 요청자 주소 생성
                 trade.saveRequesterAddress(requesterAddress);
             } else {
@@ -144,7 +144,7 @@ public class TradeService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
 
         //요청자/소유자 여부에 따라 수령상태 변경
-        if (trade.getRequester().getId().equals(currentUser.getId())) {
+        if (trade.isRequester(currentUser.getId())) {
             trade.updateHasRequesterReceived(true);
         } else {
             trade.updateHasOwnerReceived(true);
@@ -170,7 +170,7 @@ public class TradeService {
         Trade trade = tradeRepository.findById(tradeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
 
-        if (trade.getRequester().getId().equals(currentUser.getId())) {
+        if (trade.isRequester(currentUser.getId())) {
             trade.updateRequesterTrackingNumber(reqDto.getTrackingNumber());
         } else {
             trade.updateOwnerTrackingNumber(reqDto.getTrackingNumber());
