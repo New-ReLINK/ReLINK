@@ -1,4 +1,4 @@
-package com.my.relink.controller.item.donation.dto;
+package com.my.relink.controller.donation.dto;
 
 import lombok.Builder;
 import lombok.Getter;

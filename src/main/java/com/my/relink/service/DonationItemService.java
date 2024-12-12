@@ -1,11 +1,9 @@
 package com.my.relink.service;
 
 import com.my.relink.config.security.AuthUser;
-import com.my.relink.controller.item.donation.dto.*;
-import com.my.relink.controller.item.donation.dto.req.DonationItemReqDto;
-import com.my.relink.controller.item.donation.dto.resp.DonationItemListRespDto;
-import com.my.relink.controller.item.donation.dto.resp.DonationItemIdRespDto;
-import com.my.relink.controller.item.donation.dto.resp.DonationItemRespDto;
+import com.my.relink.controller.donation.dto.req.DonationItemReqDto;
+import com.my.relink.controller.donation.dto.resp.DonationItemListRespDto;
+import com.my.relink.controller.donation.dto.resp.DonationItemIdRespDto;
 import com.my.relink.domain.category.Category;
 import com.my.relink.domain.category.repository.CategoryRepository;
 import com.my.relink.domain.item.donation.DonationItem;
@@ -13,7 +11,7 @@ import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
-import com.my.relink.controller.item.donation.repository.DonationItemRepository;
+import com.my.relink.controller.donation.repository.DonationItemRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

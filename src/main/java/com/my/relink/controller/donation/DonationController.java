@@ -1,9 +1,9 @@
-package com.my.relink.controller.item.donation;
+package com.my.relink.controller.donation;
 
 import com.my.relink.config.security.AuthUser;
-import com.my.relink.controller.item.donation.dto.resp.DonationItemListRespDto;
-import com.my.relink.controller.item.donation.dto.req.DonationItemReqDto;
-import com.my.relink.controller.item.donation.dto.resp.DonationItemIdRespDto;
+import com.my.relink.controller.donation.dto.resp.DonationItemListRespDto;
+import com.my.relink.controller.donation.dto.req.DonationItemReqDto;
+import com.my.relink.controller.donation.dto.resp.DonationItemIdRespDto;
 import com.my.relink.service.DonationItemService;
 import com.my.relink.util.api.ApiResult;
 import jakarta.validation.Valid;

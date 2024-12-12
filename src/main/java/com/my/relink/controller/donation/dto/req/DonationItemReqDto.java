@@ -1,6 +1,6 @@
-package com.my.relink.controller.item.donation.dto.req;
+package com.my.relink.controller.donation.dto.req;
 
-import com.my.relink.controller.item.donation.validation.ValidItemQuality;
+import com.my.relink.controller.donation.validation.ValidItemQuality;
 import com.my.relink.domain.category.Category;
 import com.my.relink.domain.item.donation.DonationItem;
 import com.my.relink.domain.item.donation.ItemQuality;

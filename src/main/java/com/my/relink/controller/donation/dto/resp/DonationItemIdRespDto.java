@@ -1,4 +1,4 @@
-package com.my.relink.controller.item.donation.dto.resp;
+package com.my.relink.controller.donation.dto.resp;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

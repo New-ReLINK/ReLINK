@@ -1,6 +1,6 @@
-package com.my.relink.controller.item.donation.dto.resp;
+package com.my.relink.controller.donation.dto.resp;
 
-import com.my.relink.controller.item.donation.dto.PagingInfo;
+import com.my.relink.controller.donation.dto.PagingInfo;
 import com.my.relink.domain.item.donation.DonationItem;
 import lombok.Builder;
 import lombok.Getter;
