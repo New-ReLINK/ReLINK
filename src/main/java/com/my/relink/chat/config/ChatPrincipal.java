@@ -7,14 +7,14 @@ import java.security.Principal;
 @Getter
 public class ChatPrincipal implements Principal {
 
-    private final AuthUser authUser;
+    private final Long userId;
 
     public ChatPrincipal(AuthUser authUser) {
-        this.authUser = authUser;
+        this.userId = authUser.getId();
     }
 
     @Override
     public String getName() {
-        return authUser.getId().toString();
+        return userId.toString();
     }
 }
