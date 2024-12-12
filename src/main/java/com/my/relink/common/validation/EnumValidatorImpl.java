@@ -18,11 +18,7 @@ public class EnumValidatorImpl implements ConstraintValidator<EnumValidator, Str
         if (value == null) {
             return true; // null 값은 @NotNull 애너테이션에서 처리
         }
-        try {
-            Enum.valueOf((Class<? extends Enum>) enumClass, value.toUpperCase());
-            return true;
-        } catch (IllegalArgumentException e) {
-            return false;
-        }
+        return Arrays.stream(enumClass.getEnumConstants())
+                .anyMatch(e -> e.name().equals(value));
     }
 }
