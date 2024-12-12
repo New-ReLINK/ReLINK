@@ -79,7 +79,7 @@ public class TradeController {
     @GetMapping("/trades/{tradeId}/cancel")
     public ResponseEntity<ApiResult<TradeCancelRespDto>> cancelTrade(
             @PathVariable(name = "tradeId") Long tradeId,
-            @AuthenticationPrincipal AuthUser authUser){
+            @AuthenticationPrincipal AuthUser authUser) {
         TradeCancelRespDto responseDto = tradeService.cancelTrade(tradeId, authUser);
         return new ResponseEntity<>(ApiResult.success(responseDto), HttpStatus.OK);
     }

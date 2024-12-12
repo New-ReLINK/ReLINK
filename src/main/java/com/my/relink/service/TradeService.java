@@ -272,7 +272,6 @@ public class TradeService {
                 .tradeStartedAt(tradeStartedAt)
                 .partnerExchangeItemImageUrl(partnerImage != null ? partnerImage.getImageUrl() : null)
                 .build();
-
     }
 }
 
