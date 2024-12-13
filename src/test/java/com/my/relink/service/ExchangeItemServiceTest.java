@@ -1,9 +1,9 @@
-package com.my.relink.exchangeItem;
+package com.my.relink.service;
 
 import com.my.relink.controller.exchangeItem.dto.req.ExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemRespDto;
-import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemsByUserRespDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemsAndPageByUserRespDto;
+import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemsByUserRespDto;
 import com.my.relink.domain.BaseEntity;
 import com.my.relink.domain.category.Category;
 import com.my.relink.domain.category.repository.CategoryRepository;
@@ -23,7 +23,6 @@ import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
-import com.my.relink.service.ExchangeItemService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

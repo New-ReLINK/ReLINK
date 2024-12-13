@@ -154,11 +154,17 @@ public class ExchangeItemService {
         if (reqDto.getDeposit() < 0) {
             throw new BusinessException(ErrorCode.DEPOSIT_CANNOT_LESS_ZERO);
         }
+        // 포인트가 없거나 포인트가 보증금보다 적은 경우
         Point point = pointRepository.findByUserId(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.POINT_NOT_FOUND));
         if (point.getAmount() < reqDto.getDeposit()) {
             throw new BusinessException(ErrorCode.POINT_SHORTAGE);
         }
+    }
+
+    public ExchangeItem findByIdOrFail(Long itemId){
+        return exchangeItemRepository.findById(itemId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.EXCHANGE_ITEM_NOT_FOUND));
     }
     // 교환상대 닉네임 가져오기
     // trade 에서 해당 등록된 아이템들의 등록자id와 해당 유저의 id를 비교하여 상대방이 등록한 아이템을 통해 상대방의 닉네임을 추출
@@ -193,4 +199,3 @@ public class ExchangeItemService {
         return exchangeItem;
     }
 }
-

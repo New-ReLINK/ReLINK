@@ -1,7 +1,10 @@
 package com.my.relink.service;
 
 
+import com.my.relink.controller.report.dto.request.ExchangeItemReportCreateReqDto;
 import com.my.relink.controller.report.dto.request.TradeReportCreateReqDto;
+import com.my.relink.domain.item.exchange.ExchangeItem;
+import com.my.relink.domain.report.Report;
 import com.my.relink.domain.report.ReportType;
 import com.my.relink.domain.report.repository.ReportRepository;
 import com.my.relink.domain.trade.Trade;
@@ -19,6 +22,7 @@ public class ReportService {
 
     private final TradeService tradeService;
     private final ReportRepository reportRepository;
+    private final ExchangeItemService exchangeItemService;
 
     @Transactional
     public void createTradeReport(Long tradeId, Long userId, TradeReportCreateReqDto tradeReportCreateReqDto) {
@@ -33,5 +37,11 @@ public class ReportService {
             throw new BusinessException(ErrorCode.ALREADY_REPORTED_TRADE);
         });
         reportRepository.save(tradeReportCreateReqDto.toEntity(trade, partner));
+    }
+
+    @Transactional
+    public void createExchangeItemReport(Long itemId, ExchangeItemReportCreateReqDto exchangeItemReportCreateReqDto) {
+        ExchangeItem exchangeItem = exchangeItemService.findByIdOrFail(itemId);
+        reportRepository.save(exchangeItemReportCreateReqDto.toEntity(exchangeItem));
     }
 }
