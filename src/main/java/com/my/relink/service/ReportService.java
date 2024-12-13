@@ -50,7 +50,7 @@ public class ReportService {
     }
 
     /**
-     * 거래 신고하기
+     * 신고 전 거래 정보 조회
      * - 거래에 참여한 상대방이 탈퇴해도 거래 자체의 신고는 가능하다
      * @param tradeId
      * @param userId
