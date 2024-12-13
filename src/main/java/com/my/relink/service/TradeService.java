@@ -207,15 +207,6 @@ public class TradeService {
         ExchangeItem myExchangeItem = trade.getMyExchangeItem(currentUser.getId());
         ExchangeItem partnerExchangeItem = trade.getPartnerExchangeItem(currentUser.getId());
 
-//        if (trade.isRequester(currentUser.getId())) {
-//            myExchangeItem = trade.getRequesterExchangeItem();
-//            partnerExchangeItem = trade.getOwnerExchangeItem();
-//
-//        } else {
-//            myExchangeItem = trade.getOwnerExchangeItem();
-//            partnerExchangeItem = trade.getRequesterExchangeItem();
-//        }
-
         Image myImage = imageRepository.findTopByEntityIdAndEntityTypeOrderByCreatedAtAsc(myExchangeItem.getId(), EntityType.EXCHANGE_ITEM).orElse(null);
         Image partnerImage = imageRepository.findTopByEntityIdAndEntityTypeOrderByCreatedAtAsc(partnerExchangeItem.getId(), EntityType.EXCHANGE_ITEM).orElse(null);
 
