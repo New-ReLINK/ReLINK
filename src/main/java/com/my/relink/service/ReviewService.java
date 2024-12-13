@@ -3,6 +3,7 @@ package com.my.relink.service;
 import com.my.relink.controller.review.dto.resp.ReviewDetailsRespDto;
 import com.my.relink.controller.review.dto.resp.ReviewListRespDto;
 import com.my.relink.controller.review.dto.resp.ReviewStatisticsRespDto;
+import com.my.relink.controller.review.dto.resp.ReviewWithExchangeItemListRespDto;
 import com.my.relink.domain.item.exchange.repository.ExchangeItemRepository;
 import com.my.relink.domain.review.repository.ReviewRepository;
 import com.my.relink.domain.review.repository.dto.ReviewDetailRepositoryDto;
@@ -41,5 +42,12 @@ public class ReviewService {
         long totalReviewCount = reviewRepository.countByUserIdAndTradStatus(TradeStatus.EXCHANGED, userId);
 
         return new ReviewStatisticsRespDto(starAvg, totalTradeCount, totalReviewCount);
+    }
+
+    public PageResponse<ReviewWithExchangeItemListRespDto> getReviewWithExchange(Long userId, Pageable pageable) {
+        Page<ReviewWithExchangeItemListRespDto> reviews = reviewRepository.findMyReviewsWithExchangeItems(userId, pageable)
+                .map(ReviewWithExchangeItemListRespDto::new);
+
+        return PageResponse.of(reviews);
     }
 }
