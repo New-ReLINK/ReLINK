@@ -53,7 +53,7 @@ public class ReviewController {
                 .body(ApiResult.success(reviewService.calculateUserStatistics(authUser.getId())));
     }
 
-    @GetMapping("/users/feedback")
+    @GetMapping("/users/reliability-reviews")
     public ResponseEntity<ApiResult<PageResponse<ReviewWithExchangeItemListRespDto>>> getFeetBack(
             @AuthenticationPrincipal AuthUser authUser,
             @PageableDefault(page = 0, size = 100) Pageable pageable

@@ -17,7 +17,7 @@ public class ReviewWithExchangeItemListRespDto {
 
     public ReviewWithExchangeItemListRespDto(ReviewWithExchangeItemRepositoryDto dto) {
         this.itemName = dto.getItemName();
-        this.star = dto.getStar() != null ? dto.getStar().doubleValue() : 0.0;
+        this.star = dto.getStar().doubleValue();
         this.description = dto.getDescription();
         this.createAt = DateTimeFormatterUtil.format(dto.getCreateAt());
     }
