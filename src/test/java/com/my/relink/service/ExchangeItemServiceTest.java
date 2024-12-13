@@ -1,6 +1,7 @@
 package com.my.relink.service;
 
-import com.my.relink.controller.exchangeItem.dto.CreateExchangeItemReqDto;
+
+import com.my.relink.controller.exchangeItem.dto.req.CreateExchangeItemReqDto;
 import com.my.relink.domain.category.Category;
 import com.my.relink.domain.category.repository.CategoryRepository;
 import com.my.relink.domain.item.donation.ItemQuality;
@@ -57,7 +58,8 @@ class ExchangeItemServiceTest {
                 "M",
                 "Brand Name",
                 "Desired Item",
-                10000
+                10000,
+                false
         );
         Category category = new Category("의류");
         User user = new User("tester", "testUser", "test@mail.com", "1234", "010-1234-5678", Role.USER);
@@ -91,7 +93,8 @@ class ExchangeItemServiceTest {
                 "M",
                 "Brand Name",
                 "Desired Item",
-                -1 // 유효하지 않은 보증금 값
+                -1, // 유효하지 않은 보증금 값
+                false
         );
 
         Category category = new Category("의류");
@@ -118,7 +121,8 @@ class ExchangeItemServiceTest {
                 "M",
                 "Brand Name",
                 "Desired Item",
-                20000
+                20000,
+                false
         );
         Category category = new Category("의류");
         User user = new User("tester", "testUser", "test@mail.com", "1234", "010-1234-5678", Role.USER);
