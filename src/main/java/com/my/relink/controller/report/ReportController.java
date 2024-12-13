@@ -19,9 +19,9 @@ public class ReportController {
     private final ReportService reportService;
 
     @GetMapping("/trades/{tradeId}/report")
-    public ResponseEntity<ApiResult<TradeInfoRespDto>> getTradeInfo(@PathVariable("tradeId") Long tradeId,
+    public ResponseEntity<ApiResult<TradeInfoRespDto>> getTradeInfoForReport(@PathVariable("tradeId") Long tradeId,
                                                                     @AuthenticationPrincipal AuthUser authUser){
-        return ResponseEntity.ok(ApiResult.success(reportService.getTradeInfo(tradeId, authUser.getId())));
+        return ResponseEntity.ok(ApiResult.success(reportService.getTradeInfoForReport(tradeId, authUser.getId())));
     }
 
     @PostMapping("/trades/{tradeId}/report")

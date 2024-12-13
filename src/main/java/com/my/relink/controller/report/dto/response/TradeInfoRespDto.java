@@ -11,17 +11,20 @@ import lombok.NoArgsConstructor;
 @Getter
 public class TradeInfoRespDto {
 
+    private static final String WITHDRAWN_USER_DISPLAY_NICKNAME = "탈퇴한 사용자";
+
+
     private String partnerNickname;
     private String partnerExchangeItemName;
     private Long partnerExchangeItemId;
     private String partnerExchangeItemImageUrl;
     private String exchangeStartDate;
 
-    public TradeInfoRespDto(Trade trade, ExchangeItem item, String partnerExchangeItemImageUrl, User partner, DateTimeUtil dateTimeUtil) {
-        this.partnerNickname = partner.isDeleted()? "탈퇴한 사용자" : partner.getNickname();
+    public TradeInfoRespDto(Trade trade, ExchangeItem item, String partnerExchangeItemImageUrl, User partner, String exchangeStartDate) {
+        this.partnerNickname = partner.isDeleted()? WITHDRAWN_USER_DISPLAY_NICKNAME : partner.getNickname();
         this.partnerExchangeItemName = item.getName();
         this.partnerExchangeItemId = item.getId();
         this.partnerExchangeItemImageUrl = partnerExchangeItemImageUrl;
-        this.exchangeStartDate = dateTimeUtil.getExchangeStartFormattedTime(trade.getCreatedAt());
+        this.exchangeStartDate = exchangeStartDate;
     }
 }

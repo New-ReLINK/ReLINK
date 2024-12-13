@@ -57,15 +57,18 @@ public class ReportService {
      * @param userId
      * @return
      */
-    public TradeInfoRespDto getTradeInfo(Long tradeId, Long userId) {
+    public TradeInfoRespDto getTradeInfoForReport(Long tradeId, Long userId) {
         Trade trade = tradeService.findByIdWithItemsAndUsersOrFail(tradeId);
         trade.validateAccess(userId);
         User partner = userRepository.findTradePartnerByUserIdAndTradeId(userId, tradeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-        ExchangeItem exchangeItem = trade.isRequester(userId) ?
-                trade.getOwnerExchangeItem() :
-                trade.getRequesterExchangeItem();
+        ExchangeItem exchangeItem = exchangeItemService.findByUserIdIncludeWithdrawn(partner.getId());
         String exchangeItemUrl = imageService.getExchangeItemUrl(exchangeItem);
-        return new TradeInfoRespDto(trade, exchangeItem, exchangeItemUrl, partner, dateTimeUtil);
+        return new TradeInfoRespDto(
+                trade,
+                exchangeItem,
+                exchangeItemUrl,
+                partner,
+                dateTimeUtil.getExchangeStartFormattedTime(trade.getCreatedAt()));
     }
 }
