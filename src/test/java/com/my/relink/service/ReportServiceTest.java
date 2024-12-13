@@ -2,6 +2,8 @@ package com.my.relink.service;
 
 import com.my.relink.controller.report.dto.request.ExchangeItemReportCreateReqDto;
 import com.my.relink.controller.report.dto.request.TradeReportCreateReqDto;
+import com.my.relink.controller.report.dto.response.TradeInfoRespDto;
+import com.my.relink.domain.image.Image;
 import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.report.Report;
 import com.my.relink.domain.report.ReportReason;
@@ -11,6 +13,7 @@ import com.my.relink.domain.trade.Trade;
 import com.my.relink.domain.user.User;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
+import com.my.relink.util.DateTimeUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -20,10 +23,14 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -40,28 +47,129 @@ class ReportServiceTest {
     @Mock
     private ExchangeItemService exchangeItemService;
 
+    @Mock
+    private ImageService imageService;
+
+    @Mock
+    private DateTimeUtil dateTimeUtil;
+
 
     @Nested
     @DisplayName("신고 전 거래 정보 조회 테스트")
-    class GetTradeInfo{
+    class GetTradeInfoForReport{
+
+        private Long tradeId = 1L;
+        private Long ownerId = 10L;
+        private Long requesterId = 20L;
+        private Trade trade;
+        private User owner;
+        private User requester;
+        private ExchangeItem ownerItem;
+        private ExchangeItem requesterItem;
+        private LocalDateTime now = LocalDateTime.now();
+
+        private String exchangedStartDate = "2024-12-13";
 
         @BeforeEach
         void setUp() {
+            owner = User.builder()
+                    .id(ownerId)
+                    .nickname("owner")
+                    .build();
 
+            requester = User.builder()
+                    .id(requesterId)
+                    .nickname("requester")
+                    .build();
+
+            ownerItem = ExchangeItem.builder()
+                    .id(1L)
+                    .name("owner 상품")
+                    .user(owner)
+                    .build();
+
+            requesterItem = ExchangeItem.builder()
+                    .id(2L)
+                    .name("requester 상품")
+                    .user(requester)
+                    .build();
+
+            trade = Trade.builder()
+                    .id(tradeId)
+                    .ownerExchangeItem(ownerItem)
+                    .requester(requester)
+                    .requesterExchangeItem(requesterItem)
+                    .build();
+
+            ReflectionTestUtils.setField(trade, "createdAt", now);
         }
 
         @Nested
         @DisplayName("성공 케이스")
         class SuccessCase {
 
+            private String imageUrl = "imageUrl";
+
             @BeforeEach
             void setUp(){
-
+                when(tradeService.findByIdWithItemsAndUsersOrFail(tradeId)).thenReturn(trade);
             }
 
             @Test
-            @DisplayName("거래 정보 조회에 성공한다")
-            void success() {
+            @DisplayName("owner가 requester의 정보를 조회할 수 있다")
+            void owner_can_get_requester_info() {
+                when(tradeService.getTradePartnerIncludeWithdrawn(ownerId, tradeId)).thenReturn(requester);
+                when(exchangeItemService.findByUserIdIncludeWithdrawn(requesterId)).thenReturn(requesterItem);
+                when(imageService.getExchangeItemUrl(requesterItem)).thenReturn(imageUrl);
+                when(dateTimeUtil.getExchangeStartFormattedTime(now)).thenReturn(exchangedStartDate);
+
+                TradeInfoRespDto result = reportService.getTradeInfoForReport(tradeId, ownerId);
+
+                assertAll(() -> {
+                    assertEquals(result.getPartnerExchangeItemId(), requesterItem.getId());
+                    assertEquals(result.getPartnerNickname(), requester.getNickname());
+                    assertEquals(result.getPartnerExchangeItemImageUrl(), imageUrl);
+                    assertEquals(result.getExchangeStartDate(), exchangedStartDate);
+                });
+            }
+
+            @Test
+            @DisplayName("requester가 owner의 정보를 조회할 수 있다")
+            void requester_can_get_owner_info() {
+                when(tradeService.getTradePartnerIncludeWithdrawn(requesterId, tradeId)).thenReturn(owner);
+                when(exchangeItemService.findByUserIdIncludeWithdrawn(ownerId)).thenReturn(ownerItem);
+                when(imageService.getExchangeItemUrl(ownerItem)).thenReturn(imageUrl);
+                when(dateTimeUtil.getExchangeStartFormattedTime(now)).thenReturn(exchangedStartDate);
+
+                TradeInfoRespDto result = reportService.getTradeInfoForReport(tradeId, requesterId);
+
+                assertAll(() -> {
+                    assertEquals(result.getPartnerExchangeItemId(), ownerItem.getId());
+                    assertEquals(result.getPartnerNickname(), owner.getNickname());
+                    assertEquals(result.getPartnerExchangeItemImageUrl(), imageUrl);
+                    assertEquals(result.getExchangeStartDate(), exchangedStartDate);
+                });
+            }
+
+
+            @Test
+            @DisplayName("상대방이 탈퇴한 경우에도 조회할 수 있다")
+            void can_get_partner_info_when_partner_withdrawn(){
+                owner.changeIsDeleted();
+
+                when(tradeService.getTradePartnerIncludeWithdrawn(requesterId, tradeId)).thenReturn(owner);
+                when(exchangeItemService.findByUserIdIncludeWithdrawn(ownerId)).thenReturn(ownerItem);
+                when(imageService.getExchangeItemUrl(ownerItem)).thenReturn(imageUrl);
+                when(dateTimeUtil.getExchangeStartFormattedTime(now)).thenReturn(exchangedStartDate);
+
+                TradeInfoRespDto result = reportService.getTradeInfoForReport(tradeId, requesterId);
+
+                assertAll(() -> {
+                    assertEquals(result.getPartnerExchangeItemId(), ownerItem.getId());
+                    assertEquals(result.getPartnerNickname(), "탈퇴한 사용자");
+                    assertEquals(result.getPartnerExchangeItemImageUrl(), imageUrl);
+                    assertEquals(result.getExchangeStartDate(), exchangedStartDate);
+                });
 
             }
         }
@@ -70,6 +178,46 @@ class ReportServiceTest {
         @DisplayName("실패 케이스")
         class FailureCase {
 
+            @Test
+            @DisplayName("존재하지 않는 거래면 예외가 발생한다")
+            void fail_if_trade_not_found() {
+                given(tradeService.findByIdWithItemsAndUsersOrFail(tradeId))
+                        .willThrow(new BusinessException(ErrorCode.TRADE_NOT_FOUND));
+
+                assertThatThrownBy(() -> reportService.getTradeInfoForReport(tradeId, ownerId))
+                        .isInstanceOf(BusinessException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.TRADE_NOT_FOUND);
+            }
+
+            @Test
+            @DisplayName("거래 당사자가 아니라면 예외가 발생한다")
+            void fail_if_not_trade_participant(){
+                Long invalidUserId = 11L;
+                when(tradeService.findByIdWithItemsAndUsersOrFail(tradeId)).thenReturn(trade);
+
+                assertThatThrownBy(() -> reportService.getTradeInfoForReport(tradeId, invalidUserId))
+                        .isInstanceOf(BusinessException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.TRADE_ACCESS_DENIED);
+            }
+
+            @Test
+            @DisplayName("거래 상대방을 찾을 수 없으면 예외가 발생한다")
+            void fail_if_partner_not_found() {
+                trade = Trade.builder()
+                        .id(tradeId)
+                        .ownerExchangeItem(ownerItem)
+                        .requester(null) //탈퇴 회원 보관 기간을 지나 아예 삭제된 경우라 가정
+                        .requesterExchangeItem(null)
+                        .build();
+
+                when(tradeService.findByIdWithItemsAndUsersOrFail(tradeId)).thenReturn(trade);
+                given(tradeService.getTradePartnerIncludeWithdrawn(ownerId, tradeId))
+                        .willThrow(new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+                assertThatThrownBy(() -> reportService.getTradeInfoForReport(tradeId, ownerId))
+                        .isInstanceOf(BusinessException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.USER_NOT_FOUND);
+            }
 
         }
     }

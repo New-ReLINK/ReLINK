@@ -27,7 +27,6 @@ public class ReportService {
     private final ExchangeItemService exchangeItemService;
     private final DateTimeUtil dateTimeUtil;
     private final ImageService imageService;
-    private final UserRepository userRepository;
 
     @Transactional
     public void createTradeReport(Long tradeId, Long userId, TradeReportCreateReqDto tradeReportCreateReqDto) {
