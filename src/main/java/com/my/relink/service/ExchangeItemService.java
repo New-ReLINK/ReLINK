@@ -47,4 +47,9 @@ public class ExchangeItemService {
             throw new BusinessException(ErrorCode.POINT_SHORTAGE);
         }
     }
+
+    public ExchangeItem findByIdOrFail(Long itemId){
+        return exchangeItemRepository.findById(itemId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.EXCHANGE_ITEM_NOT_FOUND));
+    }
 }
