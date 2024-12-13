@@ -76,7 +76,10 @@ public class Trade extends BaseEntity {
     }
 
     public boolean isParticipant(Long userId) {
-        return getOwner().getId().equals(userId) || getRequester().getId().equals(userId);
+        Long requesterId = getRequester() != null ? getRequester().getId() : null;
+        Long ownerId = getOwner() != null ? getOwner().getId() : null;
+
+        return userId.equals(requesterId) || userId.equals(ownerId);
     }
 
     public void validateAccess(Long userId) {

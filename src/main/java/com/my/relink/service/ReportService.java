@@ -1,16 +1,15 @@
 package com.my.relink.service;
 
 
-import com.my.relink.config.security.AuthUser;
 import com.my.relink.controller.report.dto.request.ExchangeItemReportCreateReqDto;
 import com.my.relink.controller.report.dto.request.TradeReportCreateReqDto;
 import com.my.relink.controller.report.dto.response.TradeInfoRespDto;
 import com.my.relink.domain.item.exchange.ExchangeItem;
-import com.my.relink.domain.report.Report;
 import com.my.relink.domain.report.ReportType;
 import com.my.relink.domain.report.repository.ReportRepository;
 import com.my.relink.domain.trade.Trade;
 import com.my.relink.domain.user.User;
+import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import com.my.relink.util.DateTimeUtil;
@@ -28,6 +27,7 @@ public class ReportService {
     private final ExchangeItemService exchangeItemService;
     private final DateTimeUtil dateTimeUtil;
     private final ImageService imageService;
+    private final UserRepository userRepository;
 
     @Transactional
     public void createTradeReport(Long tradeId, Long userId, TradeReportCreateReqDto tradeReportCreateReqDto) {
@@ -50,12 +50,22 @@ public class ReportService {
         reportRepository.save(exchangeItemReportCreateReqDto.toEntity(exchangeItem));
     }
 
+    /**
+     * 거래 신고하기
+     * - 거래에 참여한 상대방이 탈퇴해도 거래 자체의 신고는 가능하다
+     * @param tradeId
+     * @param userId
+     * @return
+     */
     public TradeInfoRespDto getTradeInfo(Long tradeId, Long userId) {
         Trade trade = tradeService.findByIdWithItemsAndUsersOrFail(tradeId);
+        trade.validateAccess(userId);
+        User partner = userRepository.findTradePartnerByUserIdAndTradeId(userId, tradeId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         ExchangeItem exchangeItem = trade.isRequester(userId) ?
-                trade.getRequesterExchangeItem() :
-                trade.getOwnerExchangeItem();
+                trade.getOwnerExchangeItem() :
+                trade.getRequesterExchangeItem();
         String exchangeItemUrl = imageService.getExchangeItemUrl(exchangeItem);
-        return new TradeInfoRespDto(trade, exchangeItem, exchangeItemUrl, dateTimeUtil);
+        return new TradeInfoRespDto(trade, exchangeItem, exchangeItemUrl, partner, dateTimeUtil);
     }
 }

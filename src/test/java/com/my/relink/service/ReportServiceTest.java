@@ -42,6 +42,41 @@ class ReportServiceTest {
 
 
     @Nested
+    @DisplayName("신고 전 거래 정보 조회 테스트")
+    class GetTradeInfo{
+
+        @BeforeEach
+        void setUp() {
+
+        }
+
+        @Nested
+        @DisplayName("성공 케이스")
+        class SuccessCase {
+
+            @BeforeEach
+            void setUp(){
+
+            }
+
+            @Test
+            @DisplayName("거래 정보 조회에 성공한다")
+            void success() {
+
+            }
+        }
+
+        @Nested
+        @DisplayName("실패 케이스")
+        class FailureCase {
+
+
+        }
+    }
+
+
+
+    @Nested
     @DisplayName("교환 상품 신고 생성 테스트")
     class CreateExchangeItemReport{
 

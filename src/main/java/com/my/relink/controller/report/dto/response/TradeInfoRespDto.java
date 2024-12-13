@@ -17,8 +17,8 @@ public class TradeInfoRespDto {
     private String partnerExchangeItemImageUrl;
     private String exchangeStartDate;
 
-    public TradeInfoRespDto(Trade trade, ExchangeItem item, String partnerExchangeItemImageUrl, DateTimeUtil dateTimeUtil) {
-        this.partnerNickname = item.getUser().getNickname();
+    public TradeInfoRespDto(Trade trade, ExchangeItem item, String partnerExchangeItemImageUrl, User partner, DateTimeUtil dateTimeUtil) {
+        this.partnerNickname = partner.isDeleted()? "탈퇴한 사용자" : partner.getNickname();
         this.partnerExchangeItemName = item.getName();
         this.partnerExchangeItemId = item.getId();
         this.partnerExchangeItemImageUrl = partnerExchangeItemImageUrl;
