@@ -21,7 +21,6 @@ import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import com.my.relink.util.DummyObject;
-import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -29,7 +28,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.internal.matchers.Null;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
@@ -445,7 +443,7 @@ class TradeServiceTest extends DummyObject {
         Mockito.when(trade.getCreatedAt()).thenReturn(LocalDateTime.of(2024, 12, 12, 14, 30));
 
         // 서비스 호출
-        TradeCancelRespDto result = tradeService.cancelTrade(tradeId, new AuthUser(requester.getId(), "test@email.com", Role.USER));
+        ViewTradeCancelRespDto result = tradeService.viewCancelTrade(tradeId, new AuthUser(requester.getId(), "test@email.com", Role.USER));
 
         // 검증
         assertNotNull(result);
@@ -468,7 +466,7 @@ class TradeServiceTest extends DummyObject {
         // 예외 발생을 검증
         BusinessException exception = assertThrows(
                 BusinessException.class,
-                () -> tradeService.cancelTrade(tradeId, new AuthUser(requester.getId(), "test@email.com", Role.USER)),
+                () -> tradeService.viewCancelTrade(tradeId, new AuthUser(requester.getId(), "test@email.com", Role.USER)),
                 "거래가 존재하지 않는 경우 예외가 발생해야 한다."
         );
 
@@ -487,7 +485,7 @@ class TradeServiceTest extends DummyObject {
         // 예외 발생을 검증
         BusinessException exception = assertThrows(
                 BusinessException.class,
-                () -> tradeService.cancelTrade(tradeId, new AuthUser(1L, "test@email.com", Role.USER)),
+                () -> tradeService.viewCancelTrade(tradeId, new AuthUser(1L, "test@email.com", Role.USER)),
                 "사용자 정보가 존재하지 않는 경우 예외가 발생해야 한다."
         );
 
