@@ -1,6 +1,8 @@
 package com.my.relink.service;
 
+import com.my.relink.controller.report.dto.request.ExchangeItemReportCreateReqDto;
 import com.my.relink.controller.report.dto.request.TradeReportCreateReqDto;
+import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.report.Report;
 import com.my.relink.domain.report.ReportReason;
 import com.my.relink.domain.report.ReportType;
@@ -35,6 +37,74 @@ class ReportServiceTest {
 
     @Mock
     private ReportRepository reportRepository;
+    @Mock
+    private ExchangeItemService exchangeItemService;
+
+
+    @Nested
+    @DisplayName("교환 상품 신고 생성 테스트")
+    class CreateExchangeItemReport{
+
+        private ExchangeItemReportCreateReqDto reportDto;
+
+        private ExchangeItem exchangeItem;
+
+        private Long exchangeItemId = 1L;
+        private Long ownerId = 1L;
+        private User owner;
+
+        @BeforeEach
+        void setUp(){
+            exchangeItem = mock(ExchangeItem.class);
+            reportDto = new ExchangeItemReportCreateReqDto(
+                    ReportReason.ILLEGAL_ITEM.toString(),
+                    "신고합니다"
+            );
+        }
+
+        @Test
+        @DisplayName("교환 상품 신고에 성공한다")
+        void success(){
+            ArgumentCaptor<Report> reportCaptor = ArgumentCaptor.forClass(Report.class);
+
+            when(exchangeItem.getId()).thenReturn(exchangeItemId);
+            owner = mock(User.class);
+            when(exchangeItem.getUser()).thenReturn(owner);
+            when(exchangeItem.getUser().getId()).thenReturn(ownerId);
+            when(exchangeItemService.findByIdOrFail(exchangeItemId)).thenReturn(exchangeItem);
+
+            reportService.createExchangeItemReport(exchangeItemId, reportDto);
+
+            verify(reportRepository).save(reportCaptor.capture());
+            Report savedReport = reportCaptor.getValue();
+            assertAll(() -> {
+                assertEquals(savedReport.getReportType(), ReportType.ITEM);
+                assertEquals(savedReport.getReportReason(), ReportReason.ILLEGAL_ITEM);
+                assertEquals(savedReport.getTargetUserId(), ownerId);
+                assertEquals(savedReport.getEntityId(), exchangeItemId);
+                assertEquals(savedReport.getDescription(), "신고합니다");
+            });
+
+        }
+
+        @Test
+        @DisplayName("존재하지 않는 교환 상품 id를 신고 시 예외가 발생한다")
+        void throwsException_whenExchangeItemNotFound(){
+            when(exchangeItemService.findByIdOrFail(exchangeItemId))
+                    .thenThrow(new BusinessException(ErrorCode.EXCHANGE_ITEM_NOT_FOUND));
+
+            BusinessException exception = assertThrows(BusinessException.class, () ->
+                    reportService.createExchangeItemReport(exchangeItemId, reportDto));
+
+            verify(reportRepository, never()).save(any());
+            assertEquals(exception.getErrorCode(), ErrorCode.EXCHANGE_ITEM_NOT_FOUND);
+        }
+
+
+
+    }
+
+
 
     @Nested
     @DisplayName("거래 신고 생성 테스트")
