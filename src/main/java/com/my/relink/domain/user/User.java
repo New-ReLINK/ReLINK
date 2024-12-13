@@ -41,6 +41,12 @@ public class User extends BaseEntity {
     @Embedded
     private Address address;
 
+    private static final String WITHDRAWN_USER_DISPLAY_NICKNAME = "탈퇴한 사용자";
+
+    public String getNickname(){
+        return this.isDeleted ? WITHDRAWN_USER_DISPLAY_NICKNAME : this.nickname;
+    }
+
     @Builder
     public User(Long id, String name, String nickname, String email, String password, String contact, boolean isDeleted, Role role, Address address) {
         this.id = id;

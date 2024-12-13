@@ -50,10 +50,6 @@ public class TradeService {
         return new TradeInquiryDetailRespDto(trade, partner, trustScoreOfPartner, requestedItemImageUrl);
     }
 
-    public User getTradePartnerIncludeWithdrawn(Long userId, Long tradeId){
-        return userRepository.findTradePartnerByUserIdAndTradeId(userId, tradeId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-    }
 
 
     public Trade findByIdOrFail(Long tradeId) {
@@ -66,7 +62,7 @@ public class TradeService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
     }
 
-    public Trade findByIdWithItemsAndUsersOrFail(Long tradeId){
+    public Trade findByIdFetchItemsAndUsersOrFail(Long tradeId){
         return tradeRepository.findByIdWithItemsAndUser(tradeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
     }

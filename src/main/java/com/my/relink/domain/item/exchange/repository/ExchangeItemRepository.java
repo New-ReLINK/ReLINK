@@ -12,14 +12,6 @@ import java.util.Optional;
 public interface ExchangeItemRepository extends JpaRepository<ExchangeItem, Long> {
 
 
-    @Query(value = """
-            select ei.*
-            from exchange_item ei
-            where ei.user_id = :userId
-            """
-            ,nativeQuery = true)
-    Optional<ExchangeItem> findByUserIdIncludingWithdrawn(@Param("userId") Long userId);
-
     long countByTradeStatusAndUserId(TradeStatus status, Long userId);
 
     @Query("select ei from ExchangeItem ei join fetch ei.user where ei.id = :itemId and ei.isDeleted = false")

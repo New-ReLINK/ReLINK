@@ -130,14 +130,12 @@ class ReportServiceTest {
 
             @BeforeEach
             void setUp(){
-                when(tradeService.findByIdWithItemsAndUsersOrFail(tradeId)).thenReturn(trade);
+                when(tradeService.findByIdFetchItemsAndUsersOrFail(tradeId)).thenReturn(trade);
             }
 
             @Test
             @DisplayName("owner가 requester의 정보를 조회할 수 있다")
             void owner_can_get_requester_info() {
-                when(tradeService.getTradePartnerIncludeWithdrawn(ownerId, tradeId)).thenReturn(requester);
-                when(exchangeItemService.findByUserIdIncludeWithdrawn(requesterId)).thenReturn(requesterItem);
                 when(imageService.getExchangeItemThumbnailUrl(requesterItem)).thenReturn(imageUrl);
                 when(dateTimeUtil.getExchangeStartFormattedTime(now)).thenReturn(exchangedStartDate);
 
@@ -154,8 +152,6 @@ class ReportServiceTest {
             @Test
             @DisplayName("requester가 owner의 정보를 조회할 수 있다")
             void requester_can_get_owner_info() {
-                when(tradeService.getTradePartnerIncludeWithdrawn(requesterId, tradeId)).thenReturn(owner);
-                when(exchangeItemService.findByUserIdIncludeWithdrawn(ownerId)).thenReturn(ownerItem);
                 when(imageService.getExchangeItemThumbnailUrl(ownerItem)).thenReturn(imageUrl);
                 when(dateTimeUtil.getExchangeStartFormattedTime(now)).thenReturn(exchangedStartDate);
 
@@ -175,8 +171,6 @@ class ReportServiceTest {
             void can_get_partner_info_when_partner_withdrawn(){
                 owner.changeIsDeleted();
 
-                when(tradeService.getTradePartnerIncludeWithdrawn(requesterId, tradeId)).thenReturn(owner);
-                when(exchangeItemService.findByUserIdIncludeWithdrawn(ownerId)).thenReturn(ownerItem);
                 when(imageService.getExchangeItemThumbnailUrl(ownerItem)).thenReturn(imageUrl);
                 when(dateTimeUtil.getExchangeStartFormattedTime(now)).thenReturn(exchangedStartDate);
 
@@ -199,7 +193,7 @@ class ReportServiceTest {
             @Test
             @DisplayName("존재하지 않는 거래면 예외가 발생한다")
             void fail_if_trade_not_found() {
-                given(tradeService.findByIdWithItemsAndUsersOrFail(tradeId))
+                given(tradeService.findByIdFetchItemsAndUsersOrFail(tradeId))
                         .willThrow(new BusinessException(ErrorCode.TRADE_NOT_FOUND));
 
                 assertThatThrownBy(() -> reportService.getTradeInfoForReport(tradeId, ownerId))
@@ -211,30 +205,11 @@ class ReportServiceTest {
             @DisplayName("거래 당사자가 아니라면 예외가 발생한다")
             void fail_if_not_trade_participant(){
                 Long invalidUserId = 11L;
-                when(tradeService.findByIdWithItemsAndUsersOrFail(tradeId)).thenReturn(trade);
+                when(tradeService.findByIdFetchItemsAndUsersOrFail(tradeId)).thenReturn(trade);
 
                 assertThatThrownBy(() -> reportService.getTradeInfoForReport(tradeId, invalidUserId))
                         .isInstanceOf(BusinessException.class)
                         .hasFieldOrPropertyWithValue("errorCode", ErrorCode.TRADE_ACCESS_DENIED);
-            }
-
-            @Test
-            @DisplayName("거래 상대방을 찾을 수 없으면 예외가 발생한다")
-            void fail_if_partner_not_found() {
-                trade = Trade.builder()
-                        .id(tradeId)
-                        .ownerExchangeItem(ownerItem)
-                        .requester(null) //탈퇴 회원 보관 기간을 지나 아예 삭제된 경우라 가정
-                        .requesterExchangeItem(null)
-                        .build();
-
-                when(tradeService.findByIdWithItemsAndUsersOrFail(tradeId)).thenReturn(trade);
-                given(tradeService.getTradePartnerIncludeWithdrawn(ownerId, tradeId))
-                        .willThrow(new BusinessException(ErrorCode.USER_NOT_FOUND));
-
-                assertThatThrownBy(() -> reportService.getTradeInfoForReport(tradeId, ownerId))
-                        .isInstanceOf(BusinessException.class)
-                        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.USER_NOT_FOUND);
             }
 
         }

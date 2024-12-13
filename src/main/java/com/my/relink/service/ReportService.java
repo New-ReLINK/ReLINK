@@ -59,16 +59,13 @@ public class ReportService {
      * @return
      */
     public TradeInfoRespDto getTradeInfoForReport(Long tradeId, Long userId) {
-        Trade trade = tradeService.findByIdWithItemsAndUsersOrFail(tradeId);
+        Trade trade = tradeService.findByIdFetchItemsAndUsersOrFail(tradeId);
         trade.validateAccess(userId);
-        User partner = tradeService.getTradePartnerIncludeWithdrawn(userId, tradeId);
-        ExchangeItem exchangeItem = exchangeItemService.findByUserIdIncludeWithdrawn(partner.getId());
+        ExchangeItem exchangeItem = trade.getPartnerItem(userId);
         String exchangeItemUrl = imageService.getExchangeItemThumbnailUrl(exchangeItem);
         return new TradeInfoRespDto(
-                trade,
                 exchangeItem,
                 exchangeItemUrl,
-                partner,
                 dateTimeUtil.getExchangeStartFormattedTime(trade.getCreatedAt()));
     }
 
