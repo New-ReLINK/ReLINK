@@ -6,11 +6,11 @@ import com.my.relink.controller.report.dto.request.TradeReportCreateReqDto;
 import com.my.relink.controller.report.dto.response.ExchangeItemInfoRespDto;
 import com.my.relink.controller.report.dto.response.TradeInfoRespDto;
 import com.my.relink.domain.item.exchange.ExchangeItem;
+import com.my.relink.domain.item.exchange.repository.ExchangeItemRepository;
 import com.my.relink.domain.report.ReportType;
 import com.my.relink.domain.report.repository.ReportRepository;
 import com.my.relink.domain.trade.Trade;
 import com.my.relink.domain.user.User;
-import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import com.my.relink.util.DateTimeUtil;
@@ -28,6 +28,7 @@ public class ReportService {
     private final ExchangeItemService exchangeItemService;
     private final DateTimeUtil dateTimeUtil;
     private final ImageService imageService;
+    private final ExchangeItemRepository exchangeItemRepository;
 
     @Transactional
     public void createTradeReport(Long tradeId, Long userId, TradeReportCreateReqDto tradeReportCreateReqDto) {
@@ -62,7 +63,7 @@ public class ReportService {
         trade.validateAccess(userId);
         User partner = tradeService.getTradePartnerIncludeWithdrawn(userId, tradeId);
         ExchangeItem exchangeItem = exchangeItemService.findByUserIdIncludeWithdrawn(partner.getId());
-        String exchangeItemUrl = imageService.getExchangeItemUrl(exchangeItem);
+        String exchangeItemUrl = imageService.getExchangeItemThumbnailUrl(exchangeItem);
         return new TradeInfoRespDto(
                 trade,
                 exchangeItem,
@@ -71,8 +72,14 @@ public class ReportService {
                 dateTimeUtil.getExchangeStartFormattedTime(trade.getCreatedAt()));
     }
 
+    /**
+     * 신고 전 교환 상품 정보 조회
+     * @param itemId 교환 가능/교환 중인 상품 id
+     * @return 교환 상품 및 소유자 정보
+     */
     public ExchangeItemInfoRespDto getExchangeItemInfoForReport(Long itemId) {
-        ExchangeItem exchangeItem = exchangeItemService.findByIdOrFail(itemId);
-
+        ExchangeItem exchangeItem = exchangeItemService.findByIdFetchUser(itemId);
+        String exchangeItemUrl = imageService.getExchangeItemThumbnailUrl(exchangeItem);
+        return new ExchangeItemInfoRespDto(exchangeItem, exchangeItemUrl);
     }
 }

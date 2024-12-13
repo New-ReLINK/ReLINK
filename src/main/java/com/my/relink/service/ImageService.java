@@ -15,7 +15,7 @@ public class ImageService {
 
     private final ImageRepository imageRepository;
 
-    public String getExchangeItemUrl(ExchangeItem exchangeItem){
+    public String getExchangeItemThumbnailUrl(ExchangeItem exchangeItem){
         return imageRepository.findTopByEntityIdAndEntityTypeOrderByCreatedAtAsc(
                 exchangeItem.getId(),
                 EntityType.EXCHANGE_ITEM)

@@ -19,14 +19,12 @@ import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import com.my.relink.util.DummyObject;
-import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.internal.matchers.Null;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
@@ -72,14 +70,14 @@ class TradeServiceTest extends DummyObject {
                 int trustScore = 80;
 
                 when(tradeRepository.findByIdWithItemsAndUser(trade.getId())).thenReturn(Optional.of(trade));
-                when(imageService.getExchangeItemUrl(trade.getRequesterExchangeItem())).thenReturn(imageUrl);
+                when(imageService.getExchangeItemThumbnailUrl(trade.getRequesterExchangeItem())).thenReturn(imageUrl);
                 when(userTrustScoreService.getTrustScore(partner)).thenReturn(trustScore);
 
                 TradeInquiryDetailRespDto result = tradeService.getTradeInquiryDetail(trade.getId(), user.getId());
 
                 assertAll(
                         () -> assertNotNull(result),
-                        () -> verify(imageService).getExchangeItemUrl(trade.getRequesterExchangeItem()),
+                        () -> verify(imageService).getExchangeItemThumbnailUrl(trade.getRequesterExchangeItem()),
                         () -> verify(userTrustScoreService).getTrustScore(partner),
                         () -> assertEquals(imageUrl, result.getExchangeItemInfoDto().getRequestedItem().getImgUrl()),
                         () -> assertEquals(trustScore, result.getTradePartnerInfoDto().getTrustScore())

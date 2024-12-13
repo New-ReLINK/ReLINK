@@ -3,7 +3,6 @@ package com.my.relink.service;
 import com.my.relink.controller.report.dto.request.ExchangeItemReportCreateReqDto;
 import com.my.relink.controller.report.dto.request.TradeReportCreateReqDto;
 import com.my.relink.controller.report.dto.response.TradeInfoRespDto;
-import com.my.relink.domain.image.Image;
 import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.report.Report;
 import com.my.relink.domain.report.ReportReason;
@@ -52,6 +51,25 @@ class ReportServiceTest {
 
     @Mock
     private DateTimeUtil dateTimeUtil;
+
+
+    @Nested
+    @DisplayName("신고 전 교환 상품 조회 테스트")
+    class GetExchangeItemInfoForReport{
+
+
+        @Nested
+        @DisplayName("성공 케이스")
+        class SuccessCase{
+
+        }
+
+        @Nested
+        @DisplayName("실패 케이스")
+        class FailCase{
+
+        }
+    }
 
 
     @Nested
@@ -120,7 +138,7 @@ class ReportServiceTest {
             void owner_can_get_requester_info() {
                 when(tradeService.getTradePartnerIncludeWithdrawn(ownerId, tradeId)).thenReturn(requester);
                 when(exchangeItemService.findByUserIdIncludeWithdrawn(requesterId)).thenReturn(requesterItem);
-                when(imageService.getExchangeItemUrl(requesterItem)).thenReturn(imageUrl);
+                when(imageService.getExchangeItemThumbnailUrl(requesterItem)).thenReturn(imageUrl);
                 when(dateTimeUtil.getExchangeStartFormattedTime(now)).thenReturn(exchangedStartDate);
 
                 TradeInfoRespDto result = reportService.getTradeInfoForReport(tradeId, ownerId);
@@ -138,7 +156,7 @@ class ReportServiceTest {
             void requester_can_get_owner_info() {
                 when(tradeService.getTradePartnerIncludeWithdrawn(requesterId, tradeId)).thenReturn(owner);
                 when(exchangeItemService.findByUserIdIncludeWithdrawn(ownerId)).thenReturn(ownerItem);
-                when(imageService.getExchangeItemUrl(ownerItem)).thenReturn(imageUrl);
+                when(imageService.getExchangeItemThumbnailUrl(ownerItem)).thenReturn(imageUrl);
                 when(dateTimeUtil.getExchangeStartFormattedTime(now)).thenReturn(exchangedStartDate);
 
                 TradeInfoRespDto result = reportService.getTradeInfoForReport(tradeId, requesterId);
@@ -159,7 +177,7 @@ class ReportServiceTest {
 
                 when(tradeService.getTradePartnerIncludeWithdrawn(requesterId, tradeId)).thenReturn(owner);
                 when(exchangeItemService.findByUserIdIncludeWithdrawn(ownerId)).thenReturn(ownerItem);
-                when(imageService.getExchangeItemUrl(ownerItem)).thenReturn(imageUrl);
+                when(imageService.getExchangeItemThumbnailUrl(ownerItem)).thenReturn(imageUrl);
                 when(dateTimeUtil.getExchangeStartFormattedTime(now)).thenReturn(exchangedStartDate);
 
                 TradeInfoRespDto result = reportService.getTradeInfoForReport(tradeId, requesterId);

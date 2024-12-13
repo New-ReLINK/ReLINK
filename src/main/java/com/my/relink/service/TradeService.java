@@ -43,7 +43,7 @@ public class TradeService {
 
         trade.validateAccess(userId);
 
-        String requestedItemImageUrl = imageService.getExchangeItemUrl(trade.getRequesterExchangeItem());
+        String requestedItemImageUrl = imageService.getExchangeItemThumbnailUrl(trade.getRequesterExchangeItem());
         User partner = trade.getPartner(userId);
         int trustScoreOfPartner = userTrustScoreService.getTrustScore(partner);
 
