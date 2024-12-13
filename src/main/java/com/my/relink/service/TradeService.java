@@ -263,7 +263,7 @@ public class TradeService {
             partnerExchangeItem = trade.getRequesterExchangeItem();
         }
 
-        Image partnerImage = imageRepository.findByEntityIdAndEntityType(partnerExchangeItem.getId(), EntityType.EXCHANGE_ITEM).orElse(null);
+        Image partnerImage = imageRepository.findTopByEntityIdAndEntityTypeOrderByCreatedAtAsc(partnerExchangeItem.getId(), EntityType.EXCHANGE_ITEM).orElse(null);
         String tradeStartedAt = trade.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy년 M월 d일 HH:mm"));
 
         return TradeCancelRespDto.builder()
