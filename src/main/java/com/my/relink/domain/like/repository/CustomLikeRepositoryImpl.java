@@ -52,7 +52,7 @@ public class CustomLikeRepositoryImpl implements CustomLikeRepository {
                                 exchangeItem.name,
                                 exchangeItem.tradeStatus,
                                 exchangeItem.desiredItem,
-                                likedUser.nickname,
+                                exchangeItem.user.nickname,
                                 firstImageSubQuery,
                                 avgStarSubQuery
                         )
@@ -63,7 +63,7 @@ public class CustomLikeRepositoryImpl implements CustomLikeRepository {
                 .where(like.user.id.eq(userId))
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
-                .orderBy(like.modifiedAt.desc())
+                .orderBy(like.createdAt.desc())
                 .fetch();
 
         JPAQuery<Long> totalCount = jpaQueryFactory

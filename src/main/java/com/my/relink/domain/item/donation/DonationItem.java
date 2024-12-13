@@ -6,6 +6,7 @@ import com.my.relink.domain.user.Address;
 import com.my.relink.domain.user.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -14,7 +15,8 @@ import lombok.NoArgsConstructor;
 @Getter
 public class DonationItem extends BaseEntity {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(length = 30)
@@ -58,20 +60,38 @@ public class DonationItem extends BaseEntity {
     @Enumerated(value = EnumType.STRING)
     private DisposalType disposalType;
 
-    public DonationItem(String name, String description, String desiredDestination, User user, Category category, ItemQuality itemQuality) {
+
+    @Builder
+    public DonationItem(
+            Long id,
+            String name,
+            String description,
+            String desiredDestination,
+            User user,
+            Category category,
+            String detailRejectedReason,
+            String certificateUrl,
+            String destination,
+            Address returnAddress,
+            ItemQuality itemQuality,
+            DonationStatus donationStatus,
+            RejectedReason rejectedReason,
+            DisposalType disposalType
+    ) {
+        this.id = id;
         this.name = name;
         this.description = description;
         this.desiredDestination = desiredDestination;
         this.user = user;
         this.category = category;
+        this.detailRejectedReason = detailRejectedReason;
+        this.certificateUrl = certificateUrl;
+        this.destination = destination;
+        this.returnAddress = returnAddress;
         this.itemQuality = itemQuality;
-        this.detailRejectedReason = null;
-        this.certificateUrl = null;
-        this.destination = null;
-        this.returnAddress = null;
-        this.donationStatus = DonationStatus.PENDING_REGISTRATION;
-        this.rejectedReason = null;
-        this.disposalType = null;
+        this.donationStatus = donationStatus;
+        this.rejectedReason = rejectedReason;
+        this.disposalType = disposalType;
     }
 
 }
