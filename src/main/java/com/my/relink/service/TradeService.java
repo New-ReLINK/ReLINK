@@ -3,12 +3,15 @@ package com.my.relink.service;
 import com.my.relink.config.security.AuthUser;
 import com.my.relink.controller.trade.dto.request.AddressReqDto;
 import com.my.relink.controller.trade.dto.request.TrackingNumberReqDto;
+import com.my.relink.controller.trade.dto.request.TradeCancelReqDto;
 import com.my.relink.controller.trade.dto.response.*;
 import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.image.Image;
 import com.my.relink.domain.image.ImageRepository;
 import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.item.exchange.repository.ExchangeItemRepository;
+import com.my.relink.domain.point.pointHistory.PointHistory;
+import com.my.relink.domain.point.pointHistory.repository.PointHistoryRepository;
 import com.my.relink.domain.trade.Trade;
 import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.domain.trade.repository.TradeRepository;
@@ -21,7 +24,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 @Service
@@ -36,6 +38,7 @@ public class TradeService {
     private final PointTransactionService pointTransactionService;
     private final ExchangeItemRepository exchangeItemRepository;
     private final ImageRepository imageRepository;
+    private final PointHistoryRepository pointHistoryRepository;
 
     /**
      * [문의하기] -> 해당 채팅방의 거래 정보, 상품 정보, 상대 유저 정보 내리기
@@ -162,8 +165,8 @@ public class TradeService {
             trade.updateTradeStatus(TradeStatus.EXCHANGED);
         }
         //보증금 반환
-        Integer amount = trade.getOwnerExchangeItem().getDeposit();
-        pointTransactionService.restorePointsForAllTraders(trade, amount);
+        //Integer amount = trade.getOwnerExchangeItem().getDeposit();
+        pointTransactionService.restorePointsForAllTraders(trade);
         tradeRepository.save(trade);
 
         return new TradeCompleteRespDto(tradeId);
@@ -244,7 +247,7 @@ public class TradeService {
                 .build();
     }
 
-    public TradeCancelRespDto cancelTrade(Long tradeId, AuthUser authUser) {
+    public ViewTradeCancelRespDto viewCancelTrade(Long tradeId, AuthUser authUser) {
         User currentUser = userRepository.findById(authUser.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
@@ -266,12 +269,46 @@ public class TradeService {
         Image partnerImage = imageRepository.findTopByEntityIdAndEntityTypeOrderByCreatedAtAsc(partnerExchangeItem.getId(), EntityType.EXCHANGE_ITEM).orElse(null);
         String tradeStartedAt = trade.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy년 M월 d일 HH:mm"));
 
-        return TradeCancelRespDto.builder()
+        return ViewTradeCancelRespDto.builder()
                 .partnerExchangeItemName(partnerExchangeItem.getName())
                 .partnerNickname(partnerUser.getNickname())
                 .tradeStartedAt(tradeStartedAt)
                 .partnerExchangeItemImageUrl(partnerImage != null ? partnerImage.getImageUrl() : null)
                 .build();
+    }
+
+    @Transactional
+    public TradeCancelRespDto cancelTrade(Long tradeId, TradeCancelReqDto reqDto, AuthUser authUser) {
+        User currentUser = userRepository.findById(authUser.getId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        Trade trade = tradeRepository.findById(tradeId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
+        //거래 상태 확인, 요청자 확인
+        //보증금 환급 처리
+        if (!trade.isTradeInExchange(trade) || !trade.isParticipant(currentUser.getId())) {
+            throw new BusinessException(ErrorCode.TRADE_ACCESS_DENIED);
+        }
+
+        PointHistory mypointHistory = pointHistoryRepository.findFirstByTradeIdAndUserIdByCreatedAtDesc(tradeId, currentUser.getId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.POINT_HISTORY_NOT_FOUND));
+        PointHistory partnerPointHistory = pointHistoryRepository.findFirstByTradeIdAndUserIdByCreatedAtDesc(tradeId, trade.getPartner(currentUser.getId()).getId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.POINT_HISTORY_NOT_FOUND));
+
+        if(mypointHistory.isRefunded() || partnerPointHistory.isRefunded()){
+            throw new BusinessException(ErrorCode.DEPOSIT_ALREADY_REFUNDED);
+        }
+
+        pointTransactionService.restorePointsForAllTraders(trade);
+
+        trade.updateTradeStatus(TradeStatus.CANCELED);
+        trade.getOwnerExchangeItem().updateStatus(TradeStatus.AVAILABLE);
+
+        trade.updateTradeCancelReason(reqDto.getTradeCancelReason(), reqDto.getTradeCancelDescription());
+        tradeRepository.save(trade);
+
+        return new TradeCancelRespDto(tradeId);
+
     }
 }
 

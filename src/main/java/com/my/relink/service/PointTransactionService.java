@@ -26,8 +26,8 @@ public class PointTransactionService {
 
     @Transactional
     public void restorePoints(Long tradeId, User currentUser) {
-        // 해당 Trade에 연결된 PointHistory 확인
-        PointHistory pointHistory = pointHistoryRepository.findFirstByTradeIdOrderByCreatedAtDesc(tradeId)
+        // 해당 Trade와 User에 연결된 PointHistory 확인
+        PointHistory pointHistory = pointHistoryRepository.findFirstByTradeIdAndUserIdByCreatedAtDesc(tradeId, currentUser.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.POINT_HISTORY_NOT_FOUND));
 
         Point point = pointRepository.findByUserId(currentUser.getId())
@@ -40,7 +40,7 @@ public class PointTransactionService {
 
         // 새로운 포인트 이력 생성 (복원 내역)
         PointHistory restorePointHistory = PointHistory.create(
-                pointHistory.getAmount(), // 복원 금액은 기존의 음수 금액을 양수로 변경
+                pointHistory.getAmount(),
                 PointTransactionType.RETURN,
                 point,
                 pointHistory.getTrade()
@@ -75,7 +75,10 @@ public class PointTransactionService {
     }
 
     @Transactional
-    public void restorePointsForAllTraders(Trade trade, Integer amount) {
+    public void restorePointsForAllTraders(Trade trade) {
+
+        Integer requesterDeposit = trade.getRequesterExchangeItem().getDeposit();
+        Integer ownerDeposit = trade.getOwnerExchangeItem().getDeposit();
         // 요청자와 소유자의 포인트가 복원되어 있는지 확인
         boolean isRequesterRestored = pointHistoryRepository.existsByTradeIdAndPointUserIdAndPointTransactionType(
                 trade.getId(), trade.getRequester().getId(), PointTransactionType.RETURN
@@ -85,11 +88,11 @@ public class PointTransactionService {
         );
 
         if (!isRequesterRestored) {
-            restorePointForTradeCompleteUser(trade.getRequester(), amount, trade);
+            restorePointForTradeCompleteUser(trade.getRequester(), requesterDeposit, trade);
         }
 
         if (!isOwnerRestored) {
-            restorePointForTradeCompleteUser(trade.getOwner(), amount, trade);
+            restorePointForTradeCompleteUser(trade.getOwner(), ownerDeposit, trade);
         }
     }
 
@@ -109,33 +112,4 @@ public class PointTransactionService {
         pointHistoryRepository.save(pointHistory);
     }
 
-//@Transactional
-//public void restorePointsForAllTraders(List<Long> traderIds, Integer amount) {
-//    for (Long traderId : traderIds) {
-//        restorePointForTrader(traderId, amount);
-//    }
-//}
-//
-//    private void restorePointForTrader(Long traderId, Integer amount) {
-//        // 포인트 히스토리에서 해당 거래의 반환 기록 확인
-//        boolean isRestored = pointHistoryRepository.existsByPointUserIdAndPointTransactionType(
-//                traderId, PointTransactionType.RETURN
-//        );
-//
-//        if (!isRestored) {
-//            Point point = pointRepository.findByUserId(traderId)
-//                    .orElseThrow(() -> new BusinessException(ErrorCode.POINT_NOT_FOUND));
-//
-//            point.restore(amount);
-//            pointRepository.save(point);
-//
-//            PointHistory pointHistory = PointHistory.create(
-//                    amount,
-//                    PointTransactionType.RETURN,
-//                    point,
-//                    null // 필요 시 추가 정보를 입력
-//            );
-//            pointHistoryRepository.save(pointHistory);
-//        }
-//    }
 }

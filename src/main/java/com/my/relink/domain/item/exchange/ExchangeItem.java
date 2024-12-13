@@ -82,4 +82,8 @@ public class ExchangeItem extends BaseEntity {
         this.tradeStatus = tradeStatus;
         this.isDeleted = isDeleted;
     }
+
+    public void updateStatus(TradeStatus tradeStatus) {
+        this.tradeStatus = tradeStatus;
+    }
 }
