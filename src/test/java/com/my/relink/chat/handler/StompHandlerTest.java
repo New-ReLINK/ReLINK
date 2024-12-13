@@ -2,6 +2,7 @@ package com.my.relink.chat.handler;
 
 import com.my.relink.config.security.AuthUser;
 import com.my.relink.config.security.jwt.JwtProvider;
+import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.domain.user.Role;
 import com.my.relink.domain.user.User;
 import com.my.relink.ex.BusinessException;
@@ -9,15 +10,18 @@ import com.my.relink.ex.ErrorCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.aop.AfterReturningAdvice;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageDeliveryException;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
-import org.springframework.messaging.simp.stomp.ConnectionLostException;
-import org.springframework.messaging.simp.stomp.StompHeaders;
-import org.springframework.messaging.simp.stomp.StompSession;
-import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
+import org.springframework.messaging.simp.stomp.*;
+import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -32,9 +36,11 @@ import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -44,6 +50,16 @@ class StompHandlerTest {
 
     @Autowired
     private JwtProvider jwtProvider;
+
+    private final StompHandler stompHandler;
+    private final MessageChannel messageChannel;
+
+    @Autowired
+    public StompHandlerTest(StompHandler stompHandler,
+                            @Qualifier("clientInboundChannel") MessageChannel messageChannel) { //클라이언트 -> 서버로 들어오는 채널을 확인해야 함
+        this.stompHandler = stompHandler;
+        this.messageChannel = messageChannel;
+    }
 
 
     private WebSocketStompClient stompClient;
@@ -78,53 +94,62 @@ class StompHandlerTest {
 
 
     @Test
-    @DisplayName("완료된 거래의 채팅방 접근시 에러가 발생한다")
-    void preSend_connectWithCompletedTradeStatus_throwsException() {
-        String token = createValidToken();
-        StompHeaders headers = createStompHeaders(token, "교환 완료");
+    @DisplayName("완료된 거래의 채팅방 접근시 에러 프레임을 생성한다")
+    void preSend_connectWithCompletedTradeStatus_createsErrorFrame() {
+        StompHeaderAccessor accessor = createStompHeaderAccessor(StompCommand.CONNECT, createValidToken(), TradeStatus.EXCHANGED.getMessage());
 
-        ExecutionException exception = assertThrows(ExecutionException.class, () -> {
-            stompClient
-                    .connectAsync(websocketUrl, new WebSocketHttpHeaders(), headers, new StompSessionHandlerAdapter() {
-                        @Override
-                        public void handleTransportError(StompSession session, Throwable exception) {
-                            if (exception.getCause() instanceof MessageDeliveryException) {
-                                MessageDeliveryException ex = (MessageDeliveryException) exception.getCause();
-                                assertEquals(ErrorCode.TRADE_ACCESS_DENIED.getMessage(), ex.getMessage());
-                            }
-                        }
-                    })
-                    .get(3, TimeUnit.SECONDS);
-        });
+        Message<?> connectMessage = MessageBuilder.createMessage(new byte[0], accessor.getMessageHeaders());
+        Message<?> resultMessage = stompHandler.preSend(connectMessage, messageChannel);
 
-        Throwable cause = exception.getCause();
-
-        assertTrue(cause instanceof ConnectionLostException);
+        StompHeaderAccessor resultAccessor = MessageHeaderAccessor.getAccessor(resultMessage, StompHeaderAccessor.class);
+        assertNotNull(resultAccessor);
+        assertEquals(StompCommand.ERROR, resultAccessor.getCommand());
+        assertEquals(String.valueOf(ErrorCode.CHATROOM_ACCESS_DENIED.getStatus()),
+                resultAccessor.getFirstNativeHeader("status"));
+        assertEquals(ErrorCode.CHATROOM_ACCESS_DENIED.getMessage(),
+                new String((byte[]) resultMessage.getPayload()));
     }
 
     @Test
     @DisplayName("취소된 거래의 채팅방 접근시 에러가 발생한다")
-    void preSend_connectWithCanceledTradeStatus_throwsException() {
-        String token = createValidToken();
-        StompHeaders headers = createStompHeaders(token, "교환 취소");
+    void preSend_connectWithCanceledTradeStatus_createsErrorFrame() {
+        StompHeaderAccessor accessor = createStompHeaderAccessor(StompCommand.CONNECT, createValidToken(), TradeStatus.CANCELED.getMessage());
 
-        ExecutionException exception = assertThrows(ExecutionException.class, () -> {
-            stompClient
-                    .connectAsync(websocketUrl, new WebSocketHttpHeaders(), headers, new StompSessionHandlerAdapter() {
-                        @Override
-                        public void handleTransportError(StompSession session, Throwable exception) {
-                            if (exception.getCause() instanceof MessageDeliveryException) {
-                                MessageDeliveryException ex = (MessageDeliveryException) exception.getCause();
-                                assertEquals(ErrorCode.TRADE_ACCESS_DENIED.getMessage(), ex.getMessage());
-                            }
-                        }
-                    })
-                    .get(3, TimeUnit.SECONDS);
-        });
+        Message<?> connectMessage = MessageBuilder.createMessage(new byte[0], accessor.getMessageHeaders());
+        Message<?> resultMessage = stompHandler.preSend(connectMessage, messageChannel);
 
-        Throwable cause = exception.getCause();
+        StompHeaderAccessor resultAccessor = MessageHeaderAccessor.getAccessor(resultMessage, StompHeaderAccessor.class);
+        assertNotNull(resultAccessor);
+        assertEquals(StompCommand.ERROR, resultAccessor.getCommand());
+        assertEquals(String.valueOf(ErrorCode.CHATROOM_ACCESS_DENIED.getStatus()),
+                resultAccessor.getFirstNativeHeader("status"));
+        assertEquals(ErrorCode.CHATROOM_ACCESS_DENIED.getMessage(),
+                new String((byte[]) resultMessage.getPayload()));
+    }
 
-        assertTrue(cause instanceof ConnectionLostException);
+
+    @Test
+    @DisplayName("교환 불가능 거래의 채팅방 접근시 에러가 발생한다")
+    void preSend_connectWithUNAVAILABLETradeStatus_createsErrorFrame() {
+        StompHeaderAccessor accessor = createStompHeaderAccessor(StompCommand.CONNECT, createValidToken(), TradeStatus.UNAVAILABLE.getMessage());
+
+        Message<?> connectMessage = MessageBuilder.createMessage(new byte[0], accessor.getMessageHeaders());
+        Message<?> resultMessage = stompHandler.preSend(connectMessage, messageChannel);
+
+        StompHeaderAccessor resultAccessor = MessageHeaderAccessor.getAccessor(resultMessage, StompHeaderAccessor.class);
+        assertNotNull(resultAccessor);
+        assertEquals(StompCommand.ERROR, resultAccessor.getCommand());
+        assertEquals(String.valueOf(ErrorCode.CHATROOM_ACCESS_DENIED.getStatus()),
+                resultAccessor.getFirstNativeHeader("status"));
+        assertEquals(ErrorCode.CHATROOM_ACCESS_DENIED.getMessage(),
+                new String((byte[]) resultMessage.getPayload()));
+    }
+
+    private StompHeaderAccessor createStompHeaderAccessor(StompCommand command, String token, String tradeStatus){
+        StompHeaderAccessor accessor = StompHeaderAccessor.create(command);
+        accessor.setNativeHeader(WebSocketHeader.AUTH_HEADER, token);
+        accessor.setNativeHeader(WebSocketHeader.TRADE_STATUS_HEADER, tradeStatus);
+        return accessor;
     }
 
 

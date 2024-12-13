@@ -61,7 +61,7 @@ class CustomReviewRepositoryImplTest {
         em.clear();
 
         // when
-        ReviewDetailRepositoryDto respDto = customUserRepository.getReviewDetails(1L, 1L).get();
+        ReviewDetailRepositoryDto respDto = customUserRepository.getReviewDetails(user.getId(), review.getId()).get();
 
         // then
         assertThat(respDto).isNotNull();

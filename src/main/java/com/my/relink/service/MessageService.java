@@ -2,7 +2,7 @@ package com.my.relink.service;
 
 import com.my.relink.controller.message.dto.response.MessageRespDto;
 import com.my.relink.domain.message.Message;
-import com.my.relink.domain.message.MessageRepository;
+import com.my.relink.domain.message.repository.MessageRepository;
 import com.my.relink.util.DateTimeUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
