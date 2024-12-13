@@ -1,13 +1,21 @@
 package com.my.relink.controller.donation;
 
 import com.my.relink.config.security.AuthUser;
+import com.my.relink.controller.donation.dto.PagingInfo;
 import com.my.relink.controller.donation.dto.resp.DonationItemListRespDto;
 import com.my.relink.controller.donation.dto.req.DonationItemReqDto;
 import com.my.relink.controller.donation.dto.resp.DonationItemIdRespDto;
+import com.my.relink.controller.donation.dto.resp.DonationItemRespDto;
+import com.my.relink.controller.donation.dto.resp.DonationItemUserListRespDto;
+import com.my.relink.domain.item.donation.DonationItem;
+import com.my.relink.domain.item.donation.DonationStatus;
 import com.my.relink.service.DonationItemService;
 import com.my.relink.util.api.ApiResult;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -33,6 +41,17 @@ public class DonationController {
             @RequestParam(defaultValue = "10") int size) {
 
         DonationItemListRespDto response = donationItemService.getDonationItems(category, search, page, size);
+        return ResponseEntity.ok(ApiResult.success(response));
+    }
+
+    @GetMapping("/user/donations")
+    public ResponseEntity<ApiResult<DonationItemUserListRespDto>> getUserDonationItems(
+            @AuthenticationPrincipal AuthUser authUser,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        DonationItemUserListRespDto response = donationItemService.getUserDonationItems(authUser, page, size);
+
         return ResponseEntity.ok(ApiResult.success(response));
     }
 
