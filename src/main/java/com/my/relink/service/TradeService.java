@@ -61,6 +61,11 @@ public class TradeService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
     }
 
+    public Trade findByIdWithItemsAndUsersOrFail(Long tradeId){
+        return tradeRepository.findByIdWithItemsAndUser(tradeId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
+    }
+
     @Transactional
 
     public TradeRequestRespDto requestTrade(Long tradeId, AuthUser authUser) {
