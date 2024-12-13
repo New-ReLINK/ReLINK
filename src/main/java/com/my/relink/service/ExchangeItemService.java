@@ -6,15 +6,12 @@ import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemsByUserResp
 import com.my.relink.domain.category.Category;
 import com.my.relink.domain.category.repository.CategoryRepository;
 import com.my.relink.domain.image.EntityType;
-import com.my.relink.domain.image.Image;
-import com.my.relink.domain.image.repository.ImageRepository;
 import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.item.exchange.repository.ExchangeItemRepository;
 import com.my.relink.domain.point.Point;
 import com.my.relink.domain.point.repository.PointRepository;
 import com.my.relink.domain.trade.Trade;
 import com.my.relink.domain.trade.TradeStatus;
-import com.my.relink.domain.trade.repository.TradeRepository;
 import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.BusinessException;
@@ -28,7 +25,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -98,14 +94,21 @@ public class ExchangeItemService {
 
     // 보증금 유효성 검사
     public void validateDeposit(CreateExchangeItemReqDto reqDto, Long userId) {
+        // 보증금이 0보다 작은 경우
         if (reqDto.getDeposit() < 0) {
             throw new BusinessException(ErrorCode.DEPOSIT_CANNOT_LESS_ZERO);
         }
+        // 포인트가 없거나 포인트가 보증금보다 적은 경우
         Point point = pointRepository.findByUserId(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.POINT_NOT_FOUND));
         if (point.getAmount() < reqDto.getDeposit()) {
             throw new BusinessException(ErrorCode.POINT_SHORTAGE);
         }
+    }
+
+    public ExchangeItem findByIdOrFail(Long itemId) {
+        return exchangeItemRepository.findById(itemId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.EXCHANGE_ITEM_NOT_FOUND));
     }
 
     // 빈 페이지 반환
@@ -120,6 +123,7 @@ public class ExchangeItemService {
                         .build())
                 .build();
     }
+
     // responseDto
     private GetExchangeItemRespDto mapToResponseDto(ExchangeItem item, Map<Long, Trade> tradeMap, Map<Long, String> imageMap) {
         Trade trade = item.getTradeStatus() == TradeStatus.AVAILABLE ? null : tradeMap.get(item.getId());
