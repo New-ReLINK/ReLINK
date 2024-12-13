@@ -3,7 +3,6 @@ package com.my.relink.service;
 import com.my.relink.controller.report.dto.request.ExchangeItemReportCreateReqDto;
 import com.my.relink.controller.report.dto.request.TradeReportCreateReqDto;
 import com.my.relink.controller.report.dto.response.TradeInfoRespDto;
-import com.my.relink.domain.image.Image;
 import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.report.Report;
 import com.my.relink.domain.report.ReportReason;
@@ -112,7 +111,7 @@ class ReportServiceTest {
 
             @BeforeEach
             void setUp(){
-                when(tradeService.findByIdWithItemsAndUsersOrFail(tradeId)).thenReturn(trade);
+                when(tradeService.findByIdFetchItemsAndUsersOrFail(tradeId)).thenReturn(trade);
             }
 
             @Test
@@ -181,7 +180,7 @@ class ReportServiceTest {
             @Test
             @DisplayName("존재하지 않는 거래면 예외가 발생한다")
             void fail_if_trade_not_found() {
-                given(tradeService.findByIdWithItemsAndUsersOrFail(tradeId))
+                given(tradeService.findByIdFetchItemsAndUsersOrFail(tradeId))
                         .willThrow(new BusinessException(ErrorCode.TRADE_NOT_FOUND));
 
                 assertThatThrownBy(() -> reportService.getTradeInfoForReport(tradeId, ownerId))
@@ -193,7 +192,7 @@ class ReportServiceTest {
             @DisplayName("거래 당사자가 아니라면 예외가 발생한다")
             void fail_if_not_trade_participant(){
                 Long invalidUserId = 11L;
-                when(tradeService.findByIdWithItemsAndUsersOrFail(tradeId)).thenReturn(trade);
+                when(tradeService.findByIdFetchItemsAndUsersOrFail(tradeId)).thenReturn(trade);
 
                 assertThatThrownBy(() -> reportService.getTradeInfoForReport(tradeId, invalidUserId))
                         .isInstanceOf(BusinessException.class)
@@ -210,7 +209,7 @@ class ReportServiceTest {
                         .requesterExchangeItem(null)
                         .build();
 
-                when(tradeService.findByIdWithItemsAndUsersOrFail(tradeId)).thenReturn(trade);
+                when(tradeService.findByIdFetchItemsAndUsersOrFail(tradeId)).thenReturn(trade);
                 given(tradeService.getTradePartnerIncludeWithdrawn(ownerId, tradeId))
                         .willThrow(new BusinessException(ErrorCode.USER_NOT_FOUND));
 

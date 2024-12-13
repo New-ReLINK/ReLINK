@@ -9,7 +9,6 @@ import com.my.relink.domain.report.ReportType;
 import com.my.relink.domain.report.repository.ReportRepository;
 import com.my.relink.domain.trade.Trade;
 import com.my.relink.domain.user.User;
-import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import com.my.relink.util.DateTimeUtil;
@@ -57,16 +56,13 @@ public class ReportService {
      * @return
      */
     public TradeInfoRespDto getTradeInfoForReport(Long tradeId, Long userId) {
-        Trade trade = tradeService.findByIdWithItemsAndUsersOrFail(tradeId);
+        Trade trade = tradeService.findByIdFetchItemsAndUsersOrFail(tradeId);
         trade.validateAccess(userId);
-        User partner = tradeService.getTradePartnerIncludeWithdrawn(userId, tradeId);
-        ExchangeItem exchangeItem = exchangeItemService.findByUserIdIncludeWithdrawn(partner.getId());
+        ExchangeItem exchangeItem = trade.getPartnerItem(userId);
         String exchangeItemUrl = imageService.getExchangeItemUrl(exchangeItem);
         return new TradeInfoRespDto(
-                trade,
                 exchangeItem,
                 exchangeItemUrl,
-                partner,
                 dateTimeUtil.getExchangeStartFormattedTime(trade.getCreatedAt()));
     }
 }
