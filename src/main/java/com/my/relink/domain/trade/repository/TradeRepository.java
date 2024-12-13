@@ -36,4 +36,5 @@ public interface TradeRepository extends JpaRepository<Trade, Long> {
             "join fetch oi.user " +
             "where t.id = :tradeId")
     Optional<Trade> findByIdWithUsers(@Param("tradeId") Long tradeId);
+
 }
