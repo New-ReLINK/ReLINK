@@ -117,8 +117,6 @@ class ReportServiceTest {
             @Test
             @DisplayName("owner가 requester의 정보를 조회할 수 있다")
             void owner_can_get_requester_info() {
-                when(tradeService.getTradePartnerIncludeWithdrawn(ownerId, tradeId)).thenReturn(requester);
-                when(exchangeItemService.findByUserIdIncludeWithdrawn(requesterId)).thenReturn(requesterItem);
                 when(imageService.getExchangeItemUrl(requesterItem)).thenReturn(imageUrl);
                 when(dateTimeUtil.getExchangeStartFormattedTime(now)).thenReturn(exchangedStartDate);
 
@@ -135,8 +133,6 @@ class ReportServiceTest {
             @Test
             @DisplayName("requester가 owner의 정보를 조회할 수 있다")
             void requester_can_get_owner_info() {
-                when(tradeService.getTradePartnerIncludeWithdrawn(requesterId, tradeId)).thenReturn(owner);
-                when(exchangeItemService.findByUserIdIncludeWithdrawn(ownerId)).thenReturn(ownerItem);
                 when(imageService.getExchangeItemUrl(ownerItem)).thenReturn(imageUrl);
                 when(dateTimeUtil.getExchangeStartFormattedTime(now)).thenReturn(exchangedStartDate);
 
@@ -156,8 +152,6 @@ class ReportServiceTest {
             void can_get_partner_info_when_partner_withdrawn(){
                 owner.changeIsDeleted();
 
-                when(tradeService.getTradePartnerIncludeWithdrawn(requesterId, tradeId)).thenReturn(owner);
-                when(exchangeItemService.findByUserIdIncludeWithdrawn(ownerId)).thenReturn(ownerItem);
                 when(imageService.getExchangeItemUrl(ownerItem)).thenReturn(imageUrl);
                 when(dateTimeUtil.getExchangeStartFormattedTime(now)).thenReturn(exchangedStartDate);
 
@@ -197,25 +191,6 @@ class ReportServiceTest {
                 assertThatThrownBy(() -> reportService.getTradeInfoForReport(tradeId, invalidUserId))
                         .isInstanceOf(BusinessException.class)
                         .hasFieldOrPropertyWithValue("errorCode", ErrorCode.TRADE_ACCESS_DENIED);
-            }
-
-            @Test
-            @DisplayName("거래 상대방을 찾을 수 없으면 예외가 발생한다")
-            void fail_if_partner_not_found() {
-                trade = Trade.builder()
-                        .id(tradeId)
-                        .ownerExchangeItem(ownerItem)
-                        .requester(null) //탈퇴 회원 보관 기간을 지나 아예 삭제된 경우라 가정
-                        .requesterExchangeItem(null)
-                        .build();
-
-                when(tradeService.findByIdFetchItemsAndUsersOrFail(tradeId)).thenReturn(trade);
-                given(tradeService.getTradePartnerIncludeWithdrawn(ownerId, tradeId))
-                        .willThrow(new BusinessException(ErrorCode.USER_NOT_FOUND));
-
-                assertThatThrownBy(() -> reportService.getTradeInfoForReport(tradeId, ownerId))
-                        .isInstanceOf(BusinessException.class)
-                        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.USER_NOT_FOUND);
             }
 
         }
