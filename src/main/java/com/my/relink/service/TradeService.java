@@ -20,10 +20,13 @@ import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
+import com.my.relink.util.DateTimeFormatterUtil;
+import com.my.relink.util.DateTimeUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 @Service
@@ -38,6 +41,7 @@ public class TradeService {
     private final PointTransactionService pointTransactionService;
     private final ExchangeItemRepository exchangeItemRepository;
     private final ImageRepository imageRepository;
+    private final DateTimeUtil dateTimeUtil;
     private final PointHistoryRepository pointHistoryRepository;
 
     /**
@@ -63,6 +67,11 @@ public class TradeService {
 
     public Trade findByIdOrFail(Long tradeId) {
         return tradeRepository.findById(tradeId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
+    }
+
+    public Trade findByIdWithUsersOrFail(Long tradeId){
+        return tradeRepository.findByIdWithUsers(tradeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
     }
 
@@ -165,8 +174,8 @@ public class TradeService {
             trade.updateTradeStatus(TradeStatus.EXCHANGED);
         }
         //보증금 반환
-        //Integer amount = trade.getOwnerExchangeItem().getDeposit();
-        pointTransactionService.restorePointsForAllTraders(trade);
+        Integer amount = trade.getOwnerExchangeItem().getDeposit();
+        pointTransactionService.restorePointsForAllTraders(trade, amount);
         tradeRepository.save(trade);
 
         return new TradeCompleteRespDto(tradeId);
@@ -196,55 +205,19 @@ public class TradeService {
         User currentUser = userRepository.findById(authUser.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        Trade trade = tradeRepository.findById(tradeId)
+        Trade trade = tradeRepository.findTradeWithDetails(tradeId,EntityType.EXCHANGE_ITEM)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
 
-        ExchangeItem myExchangeItem;
-        ExchangeItem partnerExchangeItem;
+        ExchangeItem myExchangeItem = trade.getMyExchangeItem(currentUser.getId());
+        ExchangeItem partnerExchangeItem = trade.getPartnerExchangeItem(currentUser.getId());
 
-        if (trade.isRequester(currentUser.getId())) {
-            myExchangeItem = trade.getRequesterExchangeItem();
-            partnerExchangeItem = trade.getOwnerExchangeItem();
-
-        } else {
-            myExchangeItem = trade.getOwnerExchangeItem();
-            partnerExchangeItem = trade.getRequesterExchangeItem();
-        }
-
-        Image myImage = imageRepository.findByEntityIdAndEntityType(myExchangeItem.getId(), EntityType.EXCHANGE_ITEM).orElse(null);
-        Image partnerImage = imageRepository.findByEntityIdAndEntityType(partnerExchangeItem.getId(), EntityType.EXCHANGE_ITEM).orElse(null);
+        Image myImage = imageRepository.findTopByEntityIdAndEntityTypeOrderByCreatedAtAsc(myExchangeItem.getId(), EntityType.EXCHANGE_ITEM).orElse(null);
+        Image partnerImage = imageRepository.findTopByEntityIdAndEntityTypeOrderByCreatedAtAsc(partnerExchangeItem.getId(), EntityType.EXCHANGE_ITEM).orElse(null);
 
         User partnerUser = userRepository.findById(trade.getPartner(currentUser.getId()).getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        String completedAt = (trade.getModifiedAt() != null)
-                ? trade.getModifiedAt().format(DateTimeFormatter.ofPattern("yyyy년 M월 d일 HH:mm"))
-                : "N/A";
-
-        return TradeCompletionRespDto.builder()
-                .myItem(TradeCompletionRespDto.TradeItemInfo.builder()
-                        .itemName(myExchangeItem.getName())
-                        .itemQuality(myExchangeItem.getItemQuality())
-                        .itemId(myExchangeItem.getId())
-                        .itemImageUrl(myImage != null ? myImage.getImageUrl() : null)
-                        .build())
-
-                .partnerItem(TradeCompletionRespDto.TradeItemInfo.builder()
-                        .itemName(partnerExchangeItem.getName())
-                        .itemQuality(partnerExchangeItem.getItemQuality())
-                        .itemId(partnerExchangeItem.getId())
-                        .itemImageUrl(partnerImage != null ? partnerImage.getImageUrl() : null)
-                        .build())
-
-                .partnerInfo(TradeCompletionRespDto.UserInfo.builder()
-                        .partnerAddress(trade.isRequester(partnerUser.getId()) ? trade.getOwnerAddress() : trade.getRequesterAddress())
-                        .build())
-
-                .tradeStatusInfo(TradeCompletionRespDto.TradeStatusInfo.builder()
-                        .completedAt(completedAt)
-                        .tradeStatus(trade.getTradeStatus())
-                        .build())
-                .build();
+        return TradeCompletionRespDto.from(myExchangeItem, partnerExchangeItem, myImage, partnerImage, partnerUser, trade, dateTimeUtil);
     }
 
     public ViewTradeCancelRespDto viewCancelTrade(Long tradeId, AuthUser authUser) {
@@ -299,7 +272,8 @@ public class TradeService {
             throw new BusinessException(ErrorCode.DEPOSIT_ALREADY_REFUNDED);
         }
 
-        pointTransactionService.restorePointsForAllTraders(trade);
+        Integer amount = trade.getOwnerExchangeItem().getDeposit();
+        pointTransactionService.restorePointsForAllTraders(trade, amount);
 
         trade.updateTradeStatus(TradeStatus.CANCELED);
         trade.getOwnerExchangeItem().updateStatus(TradeStatus.AVAILABLE);

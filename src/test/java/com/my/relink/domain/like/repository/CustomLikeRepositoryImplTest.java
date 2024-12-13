@@ -19,6 +19,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -47,12 +48,15 @@ class CustomLikeRepositoryImplTest {
     @Autowired
     private ReviewRepository reviewRepository;
 
+    @Autowired
+    TestEntityManager em;
+
     @Test
     @DisplayName("사용자가 좋아요한 교환 아이템 목록을 페이징하여 조회한다")
     void findUserLikeExchangeItem() {
         // given
-        User user = userRepository.save(User.builder()
-                .nickname("testUser")
+        User user1 = userRepository.save(User.builder()
+                .nickname("testUser1")
                 .email("test1@example.com")
                 .role(Role.USER)
                 .password("password1234")
@@ -60,12 +64,22 @@ class CustomLikeRepositoryImplTest {
                 .name("test")
                 .build());
 
+        User user2 = userRepository.save(User.builder()
+                .nickname("testUser2")
+                .email("test2@example.com")
+                .role(Role.USER)
+                .password("password1234")
+                .isDeleted(false)
+                .name("test")
+                .build());
+
+
         ExchangeItem item1 = exchangeItemRepository.save(ExchangeItem.builder()
                 .name("item1")
                 .tradeStatus(TradeStatus.AVAILABLE)
                 .desiredItem("desired1")
                 .isDeleted(false)
-                .user(user)
+                .user(user2)
                 .itemQuality(ItemQuality.NEW)
                 .deposit(10)
                 .description("test description1")
@@ -76,7 +90,7 @@ class CustomLikeRepositoryImplTest {
                 .tradeStatus(TradeStatus.AVAILABLE)
                 .desiredItem("desired2")
                 .isDeleted(false)
-                .user(user)
+                .user(user2)
                 .itemQuality(ItemQuality.NEW)
                 .deposit(10)
                 .description("test description1")
@@ -94,30 +108,33 @@ class CustomLikeRepositoryImplTest {
                 .build());
 
         Like like1 = likeRepository.save(Like.builder()
-                .user(user)
+                .user(user1)
                 .exchangeItem(item1)
                 .build());
 
+        em.flush();
+
         Like like2 = likeRepository.save(Like.builder()
-                .user(user)
+                .user(user1)
                 .exchangeItem(item2)
                 .build());
 
         Pageable pageable = PageRequest.of(0, 10);
 
         // when
-        Page<LikeExchangeItemListRepositoryDto> result = likeRepository.findUserLikeExchangeItem(user.getId(), pageable);
+        Page<LikeExchangeItemListRepositoryDto> result = likeRepository.findUserLikeExchangeItem(user1.getId(), pageable);
 
         // then
         assertThat(result.getContent()).hasSize(2);
         assertThat(result.getTotalElements()).isEqualTo(2);
         LikeExchangeItemListRepositoryDto firstItem = result.getContent().get(0);
+
         assertThat(firstItem.getItemId()).isEqualTo(item1.getId());
-        assertThat(firstItem.getItemName()).isEqualTo("item1");
+        assertThat(firstItem.getItemName()).isEqualTo(item1.getName());
         assertThat(firstItem.getTradeStatus()).isEqualTo(TradeStatus.AVAILABLE);
-        assertThat(firstItem.getDesiredItem()).isEqualTo("desired1");
-        assertThat(firstItem.getOwnerNickname()).isEqualTo("testUser");
-        assertThat(firstItem.getImageUrl()).isEqualTo("url1");
+        assertThat(firstItem.getDesiredItem()).isEqualTo(item1.getDesiredItem());
+        assertThat(firstItem.getOwnerNickname()).isEqualTo(user2.getNickname());
+        assertThat(firstItem.getImageUrl()).isEqualTo(image1.getImageUrl());
         assertThat(firstItem.getAvgStar()).isEqualTo(4.5);
     }
 

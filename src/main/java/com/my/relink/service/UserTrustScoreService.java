@@ -18,7 +18,7 @@ public class UserTrustScoreService {
      * @return 별점 평균 백분율 전환 값 (정수). 리뷰가 존재하지 않을 경우 0 반환
      */
     public int getTrustScore(User user) {
-        Double starAvg = reviewRepository.getTotalStarAvg(user);
+        Double starAvg = reviewRepository.getTotalStarAvg(user.getId());
         return starAvg == null ? 0 : (int) (starAvg * 20);
     }
 }

@@ -75,11 +75,8 @@ public class PointTransactionService {
     }
 
     @Transactional
-    public void restorePointsForAllTraders(Trade trade) {
+    public void restorePointsForAllTraders(Trade trade, Integer amount) {
 
-        Integer requesterDeposit = trade.getRequesterExchangeItem().getDeposit();
-        Integer ownerDeposit = trade.getOwnerExchangeItem().getDeposit();
-        // 요청자와 소유자의 포인트가 복원되어 있는지 확인
         boolean isRequesterRestored = pointHistoryRepository.existsByTradeIdAndPointUserIdAndPointTransactionType(
                 trade.getId(), trade.getRequester().getId(), PointTransactionType.RETURN
         );
@@ -88,11 +85,11 @@ public class PointTransactionService {
         );
 
         if (!isRequesterRestored) {
-            restorePointForTradeCompleteUser(trade.getRequester(), requesterDeposit, trade);
+            restorePointForTradeCompleteUser(trade.getRequester(), amount, trade);
         }
 
         if (!isOwnerRestored) {
-            restorePointForTradeCompleteUser(trade.getOwner(), ownerDeposit, trade);
+            restorePointForTradeCompleteUser(trade.getOwner(), amount, trade);
         }
     }
 
