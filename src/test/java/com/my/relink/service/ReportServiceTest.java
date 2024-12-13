@@ -2,6 +2,7 @@ package com.my.relink.service;
 
 import com.my.relink.controller.report.dto.request.ExchangeItemReportCreateReqDto;
 import com.my.relink.controller.report.dto.request.TradeReportCreateReqDto;
+import com.my.relink.controller.report.dto.response.ExchangeItemInfoRespDto;
 import com.my.relink.controller.report.dto.response.TradeInfoRespDto;
 import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.report.Report;
@@ -57,17 +58,61 @@ class ReportServiceTest {
     @DisplayName("신고 전 교환 상품 조회 테스트")
     class GetExchangeItemInfoForReport{
 
+        Long exchangeItemId = 1L;
+        ExchangeItem exchangeItem;
+        User user;
+
+        private String imgUrl = "img";
+
+        @BeforeEach
+        void setUp(){
+            user = User.builder()
+                    .nickname("닉네임")
+                    .build();
+
+            exchangeItem = ExchangeItem.builder()
+                    .id(exchangeItemId)
+                    .name("교환 상품명")
+                    .user(user)
+                    .build();
+        }
 
         @Nested
         @DisplayName("성공 케이스")
         class SuccessCase{
 
+            @Test
+            @DisplayName("정상 조회한다")
+            void success(){
+                when(exchangeItemService.findByIdFetchUser(exchangeItemId)).thenReturn(exchangeItem);
+                when(imageService.getExchangeItemThumbnailUrl(exchangeItem)).thenReturn(imgUrl);
+
+                ExchangeItemInfoRespDto result = reportService.getExchangeItemInfoForReport(exchangeItemId);
+
+                assertAll(() -> {
+                    assertEquals(result.getOwnerNickname(), user.getNickname());
+                    assertEquals(result.getExchangeItemId(), exchangeItemId);
+                    assertEquals(result.getExchangeItemName(), exchangeItem.getName());
+                    assertEquals(result.getExchangeItemImageUrl(), imgUrl);
+                });
+            }
         }
 
         @Nested
         @DisplayName("실패 케이스")
         class FailCase{
 
+            //삭제된 아이템을 조회할 경우 예외가 발생한다
+            @Test
+            @DisplayName("삭제된 교환 상품을 조회할 경우 예외가 발생한다")
+            void fail_if_exchangeItem_is_deleted(){
+                given(exchangeItemService.findByIdFetchUser(exchangeItemId))
+                        .willThrow(new BusinessException(ErrorCode.EXCHANGE_ITEM_NOT_FOUND));
+
+                assertThatThrownBy(() -> reportService.getExchangeItemInfoForReport(exchangeItemId))
+                        .isInstanceOf(BusinessException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.EXCHANGE_ITEM_NOT_FOUND);
+            }
         }
     }
 
