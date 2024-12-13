@@ -230,24 +230,12 @@ public class TradeService {
         User partnerUser = userRepository.findById(trade.getPartner(currentUser.getId()).getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        ExchangeItem partnerExchangeItem;
-
-        if (trade.isRequester(currentUser.getId())) {
-            partnerExchangeItem = trade.getOwnerExchangeItem();
-
-        } else {
-            partnerExchangeItem = trade.getRequesterExchangeItem();
-        }
+        ExchangeItem partnerExchangeItem = trade.getPartnerExchangeItem(currentUser.getId());
 
         Image partnerImage = imageRepository.findTopByEntityIdAndEntityTypeOrderByCreatedAtAsc(partnerExchangeItem.getId(), EntityType.EXCHANGE_ITEM).orElse(null);
-        String tradeStartedAt = trade.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy년 M월 d일 HH:mm"));
+        String tradeStartedAt = dateTimeUtil.getTradeStatusFormattedTime(trade.getCreatedAt());
 
-        return ViewTradeCancelRespDto.builder()
-                .partnerExchangeItemName(partnerExchangeItem.getName())
-                .partnerNickname(partnerUser.getNickname())
-                .tradeStartedAt(tradeStartedAt)
-                .partnerExchangeItemImageUrl(partnerImage != null ? partnerImage.getImageUrl() : null)
-                .build();
+        return ViewTradeCancelRespDto.from(partnerUser, partnerExchangeItem, partnerImage, tradeStartedAt);
     }
 
     @Transactional
