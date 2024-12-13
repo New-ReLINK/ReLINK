@@ -131,6 +131,22 @@ public class Trade extends BaseEntity {
         return this.requester.getId().equals(userId);
     }
 
+    public ExchangeItem getMyExchangeItem(Long myUserId) {
+        if (isRequester(myUserId)) {
+            return requesterExchangeItem;
+        } else {
+            return ownerExchangeItem;
+        }
+    }
+
+    public ExchangeItem getPartnerExchangeItem(Long myUserId) {
+        if (isRequester(myUserId)) {
+            return ownerExchangeItem;
+        } else {
+            return requesterExchangeItem;
+        }
+    }
+
     @Builder
     public Trade(
             Long id,

@@ -199,25 +199,23 @@ public class TradeService {
         Trade trade = tradeRepository.findTradeWithDetails(tradeId,EntityType.EXCHANGE_ITEM)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
 
-        ExchangeItem myExchangeItem;
-        ExchangeItem partnerExchangeItem;
+        ExchangeItem myExchangeItem = trade.getMyExchangeItem(currentUser.getId());
+        ExchangeItem partnerExchangeItem = trade.getPartnerExchangeItem(currentUser.getId());
 
-        if (trade.isRequester(currentUser.getId())) {
-            myExchangeItem = trade.getRequesterExchangeItem();
-            partnerExchangeItem = trade.getOwnerExchangeItem();
-
-        } else {
-            myExchangeItem = trade.getOwnerExchangeItem();
-            partnerExchangeItem = trade.getRequesterExchangeItem();
-        }
+//        if (trade.isRequester(currentUser.getId())) {
+//            myExchangeItem = trade.getRequesterExchangeItem();
+//            partnerExchangeItem = trade.getOwnerExchangeItem();
+//
+//        } else {
+//            myExchangeItem = trade.getOwnerExchangeItem();
+//            partnerExchangeItem = trade.getRequesterExchangeItem();
+//        }
 
         Image myImage = imageRepository.findTopByEntityIdAndEntityTypeOrderByCreatedAtAsc(myExchangeItem.getId(), EntityType.EXCHANGE_ITEM).orElse(null);
         Image partnerImage = imageRepository.findTopByEntityIdAndEntityTypeOrderByCreatedAtAsc(partnerExchangeItem.getId(), EntityType.EXCHANGE_ITEM).orElse(null);
 
         User partnerUser = userRepository.findById(trade.getPartner(currentUser.getId()).getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-
-        //String completedAt = dateTimeUtil.getTradeStatusFormattedTime(trade.getModifiedAt());
 
         return TradeCompletionRespDto.from(myExchangeItem, partnerExchangeItem, myImage, partnerImage, partnerUser, trade, dateTimeUtil);
     }
