@@ -50,6 +50,11 @@ public class TradeService {
         return new TradeInquiryDetailRespDto(trade, partner, trustScoreOfPartner, requestedItemImageUrl);
     }
 
+    public User getTradePartnerIncludeWithdrawn(Long userId, Long tradeId){
+        return userRepository.findTradePartnerByUserIdAndTradeId(userId, tradeId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+    }
+
 
     public Trade findByIdOrFail(Long tradeId) {
         return tradeRepository.findById(tradeId)

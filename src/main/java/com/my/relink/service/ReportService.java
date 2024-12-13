@@ -60,8 +60,7 @@ public class ReportService {
     public TradeInfoRespDto getTradeInfoForReport(Long tradeId, Long userId) {
         Trade trade = tradeService.findByIdWithItemsAndUsersOrFail(tradeId);
         trade.validateAccess(userId);
-        User partner = userRepository.findTradePartnerByUserIdAndTradeId(userId, tradeId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        User partner = tradeService.getTradePartnerIncludeWithdrawn(userId, tradeId);
         ExchangeItem exchangeItem = exchangeItemService.findByUserIdIncludeWithdrawn(partner.getId());
         String exchangeItemUrl = imageService.getExchangeItemUrl(exchangeItem);
         return new TradeInfoRespDto(
