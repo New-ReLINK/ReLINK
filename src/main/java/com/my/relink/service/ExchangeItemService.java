@@ -38,8 +38,8 @@ public class ExchangeItemService {
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
     private final PointRepository pointRepository;
-    private final TradeRepository tradeRepository;
-    private final ImageRepository imageRepository;
+    private final TradeService tradeService;
+    private final ImageService imageService;
 
     public long createExchangeItem(CreateExchangeItemReqDto reqDto, Long userId) {
         Category category = getValidCategory(reqDto.getCategoryId());
@@ -59,9 +59,9 @@ public class ExchangeItemService {
             return createEmptyResponse();
         }
 
-        List<Long> itemIds = extractItemIds(items);
-        Map<Long, Trade> tradeMap = getTradesByItemIds(itemIds);
-        Map<Long, String> imageMap = getImagesByItemIds(itemIds);
+        List<Long> itemIds = items.getContent().stream().map(ExchangeItem::getId).toList();
+        Map<Long, Trade> tradeMap = tradeService.getTradesByItemIds(itemIds);
+        Map<Long, String> imageMap = imageService.getImagesByItemIds(EntityType.EXCHANGE_ITEM, itemIds);
 
         List<GetExchangeItemRespDto> content = items.getContent().stream()
                 .map(item -> mapToResponseDto(item, tradeMap, imageMap))
@@ -120,32 +120,6 @@ public class ExchangeItemService {
                         .build())
                 .build();
     }
-
-    // itemId 추출
-    private List<Long> extractItemIds(Page<ExchangeItem> items) {
-        return items.getContent().stream()
-                .map(ExchangeItem::getId)
-                .toList();
-    }
-
-    // 거래 정보
-    private Map<Long, Trade> getTradesByItemIds(List<Long> itemIds) {
-        List<Trade> trades = tradeRepository.findByExchangeItemIds(itemIds);
-        return trades.stream()
-                .flatMap(trade -> List.of(
-                        Map.entry(trade.getOwnerExchangeItem().getId(), trade),
-                        Map.entry(trade.getRequesterExchangeItem().getId(), trade)
-                ).stream())
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-    }
-
-    // 이미지 정보
-    private Map<Long, String> getImagesByItemIds(List<Long> itemIds) {
-        List<Image> images = imageRepository.findImages(EntityType.EXCHANGE_ITEM, itemIds);
-        return images.stream()
-                .collect(Collectors.toMap(Image::getEntityId, Image::getImageUrl));
-    }
-
     // responseDto
     private GetExchangeItemRespDto mapToResponseDto(ExchangeItem item, Map<Long, Trade> tradeMap, Map<Long, String> imageMap) {
         Trade trade = item.getTradeStatus() == TradeStatus.AVAILABLE ? null : tradeMap.get(item.getId());
