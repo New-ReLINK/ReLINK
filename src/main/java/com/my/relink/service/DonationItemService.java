@@ -5,12 +5,10 @@ import com.my.relink.controller.donation.dto.PagingInfo;
 import com.my.relink.controller.donation.dto.req.DonationItemReqDto;
 import com.my.relink.controller.donation.dto.resp.DonationItemListRespDto;
 import com.my.relink.controller.donation.dto.resp.DonationItemIdRespDto;
-import com.my.relink.controller.donation.dto.resp.DonationItemRespDto;
 import com.my.relink.controller.donation.dto.resp.DonationItemUserListRespDto;
 import com.my.relink.domain.category.Category;
 import com.my.relink.domain.category.repository.CategoryRepository;
 import com.my.relink.domain.item.donation.DonationItem;
-import com.my.relink.domain.item.donation.DonationStatus;
 import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.BusinessException;
@@ -61,10 +59,8 @@ public class DonationItemService {
         Pageable pageable = PageRequest.of(page, size);
         Page<DonationItem> donationItems = donationItemRepository.findByUserId(authUser.getId(), pageable);
 
-        // 페이징 정보 생성
         PagingInfo pagingInfo = PagingInfo.fromPage(donationItems);
 
-        // 응답 데이터 생성
         return DonationItemUserListRespDto.of(donationItems, pagingInfo);
     }
 
