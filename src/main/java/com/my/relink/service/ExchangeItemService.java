@@ -1,6 +1,6 @@
 package com.my.relink.service;
 
-import com.my.relink.controller.exchangeItem.dto.req.CreateExchangeItemReqDto;
+import com.my.relink.controller.exchangeItem.dto.req.ExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemRespDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemsByUserRespDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemsAndPageByUserRespDto;
@@ -25,6 +25,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -42,7 +43,8 @@ public class ExchangeItemService {
     private final TradeRepository tradeRepository;
     private final ImageRepository imageRepository;
 
-    public long createExchangeItem(CreateExchangeItemReqDto reqDto, Long userId) {
+    @Transactional
+    public long createExchangeItem(ExchangeItemReqDto reqDto, Long userId) {
         Category category = getValidCategory(reqDto.getCategoryId());
         User user = getValidUser(userId);
         // 보증금에 대한 유효성 검사
@@ -117,13 +119,8 @@ public class ExchangeItemService {
     }
 
     public GetExchangeItemRespDto getExchangeItemModifyPage(Long itemId, Long userId) {
-
-        ExchangeItem exchangeItem = getValidExchangeItem(itemId);
-        if (!exchangeItem.getUser().getId().equals(userId)) {
-            throw new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS);
-        }
+        ExchangeItem exchangeItem = getValidExchangeItem(itemId, userId);
         Category category = exchangeItem.getCategory();
-
         return GetExchangeItemRespDto.builder()
                 .itemName(exchangeItem.getName())
                 .description(exchangeItem.getDescription())
@@ -135,12 +132,28 @@ public class ExchangeItemService {
                 .build();
     }
 
-    public void validateDeposit(CreateExchangeItemReqDto reqDto, Long userId) {
-        // 보증금이 0보다 작은 경우
+    @Transactional
+    public Long updateExchangeItem(Long itemId, ExchangeItemReqDto reqDto, Long userId) {
+        ExchangeItem exchangeItem = getValidExchangeItem(itemId, userId);
+        Category category = getValidCategory(reqDto.getCategoryId());
+        validateDeposit(reqDto, userId);
+        exchangeItem.update(
+                reqDto.getName(),
+                reqDto.getDescription(),
+                category,
+                reqDto.getItemQuality(),
+                reqDto.getSize(),
+                reqDto.getBrand(),
+                reqDto.getDesiredItem(),
+                reqDto.getDeposit()
+        );
+        return exchangeItem.getId();
+    }
+    // 보증금 유효성 검사
+    public void validateDeposit(ExchangeItemReqDto reqDto, Long userId) {
         if (reqDto.getDeposit() < 0) {
             throw new BusinessException(ErrorCode.DEPOSIT_CANNOT_LESS_ZERO);
         }
-        // 포인트가 없거나 포인트가 보증금보다 적은 경우
         Point point = pointRepository.findByUserId(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.POINT_NOT_FOUND));
         if (point.getAmount() < reqDto.getDeposit()) {
@@ -171,9 +184,13 @@ public class ExchangeItemService {
         return category;
     }
     // Item 가져오기
-    public ExchangeItem getValidExchangeItem(Long itemId) {
+    public ExchangeItem getValidExchangeItem(Long itemId, Long userId) {
         ExchangeItem exchangeItem = exchangeItemRepository.findById(itemId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ITEM_NOT_FOUND));
+        if (!exchangeItem.getUser().getId().equals(userId)) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS);
+        }
         return exchangeItem;
     }
 }
+

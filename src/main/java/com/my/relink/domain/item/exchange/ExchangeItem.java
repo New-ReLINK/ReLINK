@@ -82,4 +82,15 @@ public class ExchangeItem extends BaseEntity {
         this.tradeStatus = tradeStatus;
         this.isDeleted = isDeleted;
     }
+
+    public void update(String name, String description, Category category, ItemQuality itemQuality, String size, String brand, String desiredItem, Integer deposit) {
+        this.name = name;
+        this.description = description;
+        this.category = category;
+        this.itemQuality = itemQuality;
+        this.size = size;
+        this.brand = brand;
+        this.desiredItem = desiredItem;
+        this.deposit = deposit;
+    }
 }

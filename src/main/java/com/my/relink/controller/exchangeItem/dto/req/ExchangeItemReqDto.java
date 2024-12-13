@@ -16,7 +16,7 @@ import org.hibernate.validator.constraints.Length;
 @Getter
 @Builder
 @AllArgsConstructor
-public class CreateExchangeItemReqDto {
+public class ExchangeItemReqDto {
     @NotBlank(message = "상품명을 입력해주세요.")
     @Length(max = 30, message = "상품명은 30자 이내로 입력해주세요.")
     private String name;

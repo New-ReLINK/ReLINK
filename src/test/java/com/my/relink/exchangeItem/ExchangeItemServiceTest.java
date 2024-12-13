@@ -1,6 +1,6 @@
-package com.my.relink.ExchangeItem;
+package com.my.relink.exchangeItem;
 
-import com.my.relink.controller.exchangeItem.dto.req.CreateExchangeItemReqDto;
+import com.my.relink.controller.exchangeItem.dto.req.ExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemRespDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemsByUserRespDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemsAndPageByUserRespDto;
@@ -75,7 +75,7 @@ class ExchangeItemServiceTest {
     @DisplayName("내 교환상품 생성하기 성공")
     void testCreateExchangeItem_Success() {
         Long userId = 1L;
-        CreateExchangeItemReqDto reqDto = new CreateExchangeItemReqDto(
+        ExchangeItemReqDto reqDto = new ExchangeItemReqDto(
                 "Item Name",
                 "Description",
                 1L,
@@ -108,7 +108,7 @@ class ExchangeItemServiceTest {
     @DisplayName("내 교환상품 생성하기 실패 - 보증금 0 미만 입력된 경우")
     void testCreateExchangeItem_Fail_DepositLessZero() {
         Long userId = 1L;
-        CreateExchangeItemReqDto reqDto = new CreateExchangeItemReqDto(
+        ExchangeItemReqDto reqDto = new ExchangeItemReqDto(
                 "Item Name",
                 "Description",
                 1L,
@@ -131,7 +131,7 @@ class ExchangeItemServiceTest {
     @DisplayName("내 교환상품 생성하기 실패 - 포인트가 보증금보다 작은 경우")
     void testCreateExchangeItem_Fail_PointLessThenDeposit() {
         Long userId = 1L;
-        CreateExchangeItemReqDto reqDto = new CreateExchangeItemReqDto(
+        ExchangeItemReqDto reqDto = new ExchangeItemReqDto(
                 "Item Name",
                 "Description",
                 1L,
@@ -310,6 +310,139 @@ class ExchangeItemServiceTest {
             exchangeItemService.getExchangeItemModifyPage(itemId, userId);
         });
         Assertions.assertEquals(ErrorCode.ITEM_NOT_FOUND, exception.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("내 교환 상품 수정하기 성공")
+    void testUpdateExchangeItem_Success() {
+        Long userId = 1L;
+        Long itemId = 2L;
+        Category category = new Category("의류");
+        User user = User.builder().id(1L).build();
+        Point point = new Point(20000, user);
+        ExchangeItem exchangeItem = ExchangeItem.builder()
+                .id(itemId)
+                .name("Test Item")
+                .description("Test Description")
+                .category(category)
+                .itemQuality(ItemQuality.NEW)
+                .user(user)
+                .deposit(5000)
+                .size("M")
+                .brand("Test Brand")
+                .desiredItem("Test Desired Item")
+                .tradeStatus(TradeStatus.AVAILABLE)
+                .isDeleted(false)
+                .build();
+        ExchangeItemReqDto reqDto = new ExchangeItemReqDto(
+                "New Item Name",
+                "New Description",
+                1L,
+                ItemQuality.NEW,
+                "M",
+                "New Brand",
+                "New Desired Item",
+                10000,
+                false
+        );
+        when(exchangeItemRepository.findById(itemId)).thenReturn(Optional.of(exchangeItem));
+        when(categoryRepository.findById(reqDto.getCategoryId())).thenReturn(Optional.of(category));
+        when(pointRepository.findByUserId(userId)).thenReturn(Optional.of(point));
+
+        Long updatedItemId = exchangeItemService.updateExchangeItem(itemId, reqDto, userId);
+
+        assertThat(updatedItemId).isEqualTo(itemId);
+        assertThat(exchangeItem.getName()).isEqualTo(reqDto.getName());
+        assertThat(exchangeItem.getDescription()).isEqualTo(reqDto.getDescription());
+        assertThat(exchangeItem.getCategory()).isEqualTo(category);
+        assertThat(exchangeItem.getItemQuality()).isEqualTo(reqDto.getItemQuality());
+        assertThat(exchangeItem.getSize()).isEqualTo(reqDto.getSize());
+        assertThat(exchangeItem.getBrand()).isEqualTo(reqDto.getBrand());
+        assertThat(exchangeItem.getDesiredItem()).isEqualTo(reqDto.getDesiredItem());
+        assertThat(exchangeItem.getDeposit()).isEqualTo(reqDto.getDeposit());
+
+
+    }
+    @Test
+    @DisplayName("내 교환 상품 수정하기 실패 - 보증금 0 미만")
+    void testUpdateExchangeItem_Fail_DepositLessZero() {
+        Long userId = 1L;
+        Long itemId = 2L;
+        Category category = new Category("의류");
+        User user = User.builder().id(1L).build();
+        ExchangeItem exchangeItem = ExchangeItem.builder()
+                .id(itemId)
+                .name("Test Item")
+                .description("Test Description")
+                .category(category)
+                .itemQuality(ItemQuality.NEW)
+                .user(user)
+                .deposit(5000)
+                .size("M")
+                .brand("Test Brand")
+                .desiredItem("Test Desired Item")
+                .tradeStatus(TradeStatus.AVAILABLE)
+                .isDeleted(false)
+                .build();
+        ExchangeItemReqDto reqDto = new ExchangeItemReqDto(
+                "New Item Name",
+                "New Description",
+                1L,
+                ItemQuality.NEW,
+                "M",
+                "New Brand",
+                "New Desired Item",
+                -1, // 보증금이 0 미만
+                false
+        );
+        when(exchangeItemRepository.findById(itemId)).thenReturn(Optional.of(exchangeItem));
+        when(categoryRepository.findById(reqDto.getCategoryId())).thenReturn(Optional.of(category));
+
+        assertThatThrownBy(() -> exchangeItemService.updateExchangeItem(itemId, reqDto, userId))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("보증금은 0원보다 작을 수 없습니다.");
+    }
+
+    @Test
+    @DisplayName("내 교환 상품 수정하기 실패 - 포인트가 보증금보다 작은 경우")
+    void testUpdateExchangeItem_Fail_PointLessThenDeposit() {
+        Long userId = 1L;
+        Long itemId = 2L;
+        Category category = new Category("의류");
+        User user = User.builder().id(1L).build();
+        Point point = new Point(5000, user);
+        ExchangeItem exchangeItem = ExchangeItem.builder()
+                .id(itemId)
+                .name("Test Item")
+                .description("Test Description")
+                .category(category)
+                .itemQuality(ItemQuality.NEW)
+                .user(user)
+                .deposit(5000)
+                .size("M")
+                .brand("Test Brand")
+                .desiredItem("Test Desired Item")
+                .tradeStatus(TradeStatus.AVAILABLE)
+                .isDeleted(false)
+                .build();
+        ExchangeItemReqDto reqDto = new ExchangeItemReqDto(
+                "New Item Name",
+                "New Description",
+                1L,
+                ItemQuality.NEW,
+                "M",
+                "New Brand",
+                "New Desired Item",
+                10000, // 요구 보증금이 보유 포인트보다 큼
+                false
+        );
+        when(exchangeItemRepository.findById(itemId)).thenReturn(Optional.of(exchangeItem));
+        when(categoryRepository.findById(reqDto.getCategoryId())).thenReturn(Optional.of(category));
+        when(pointRepository.findByUserId(userId)).thenReturn(Optional.of(point));
+
+        assertThatThrownBy(() -> exchangeItemService.updateExchangeItem(itemId, reqDto, userId))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("포인트가 부족합니다");
     }
 
 }
