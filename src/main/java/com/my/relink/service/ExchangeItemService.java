@@ -52,4 +52,9 @@ public class ExchangeItemService {
         return exchangeItemRepository.findById(itemId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EXCHANGE_ITEM_NOT_FOUND));
     }
+
+    public ExchangeItem findByUserIdIncludeWithdrawn(Long userId){
+        return exchangeItemRepository.findByUserIdIncludingWithdrawn(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.EXCHANGE_ITEM_NOT_FOUND));
+    }
 }
