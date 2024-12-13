@@ -3,15 +3,20 @@ package com.my.relink.service;
 import com.my.relink.config.security.AuthUser;
 import com.my.relink.controller.trade.dto.request.AddressReqDto;
 import com.my.relink.controller.trade.dto.request.TrackingNumberReqDto;
+import com.my.relink.controller.trade.dto.request.TradeCancelReqDto;
 import com.my.relink.controller.trade.dto.response.*;
 import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.image.Image;
 import com.my.relink.domain.image.ImageRepository;
 import com.my.relink.domain.item.donation.ItemQuality;
 import com.my.relink.domain.item.exchange.ExchangeItem;
+import com.my.relink.domain.point.Point;
+import com.my.relink.domain.point.pointHistory.PointHistory;
+import com.my.relink.domain.point.pointHistory.PointTransactionType;
 import com.my.relink.domain.point.pointHistory.repository.PointHistoryRepository;
 import com.my.relink.domain.point.repository.PointRepository;
 import com.my.relink.domain.trade.Trade;
+import com.my.relink.domain.trade.TradeCancelReason;
 import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.domain.trade.repository.TradeRepository;
 import com.my.relink.domain.user.Address;
@@ -31,6 +36,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import javax.swing.text.html.Option;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -423,7 +429,7 @@ class TradeServiceTest extends DummyObject {
 
     @Test
     @DisplayName("교환 취소 페이지 : 교환 취소 성공 케이스")
-    void testCancelTrade_success() {
+    void testViewCancelTrade_success() {
         Long tradeId = 1L;
         User requester = mockRequesterUser();
         User owner = mockOwnerUser();
@@ -460,7 +466,7 @@ class TradeServiceTest extends DummyObject {
 
     @Test
     @DisplayName("교환 취소 페이지 : 거래가 존재하지 않는 경우 실패 케이스")
-    void testCancelTrade_tradeNotFound() {
+    void testViewCancelTrade_tradeNotFound() {
         Long tradeId = 1L;
         User requester = mockRequesterUser();
 
@@ -481,7 +487,7 @@ class TradeServiceTest extends DummyObject {
 
     @Test
     @DisplayName("교환 취소 페이지 : 사용자 정보가 존재하지 않는 경우 실패 케이스")
-    void testCancelTrade_userNotFound() {
+    void testViewCancelTrade_userNotFound() {
         Long tradeId = 1L;
 
         // 사용자 정보가 없으므로 userRepository는 빈 Optional 반환
@@ -496,5 +502,53 @@ class TradeServiceTest extends DummyObject {
 
         // 예외 메시지 확인
         assertEquals(ErrorCode.USER_NOT_FOUND, exception.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("교환 취소 : 성공 케이스")
+    void testCancelTrade(){
+        Long tradeId = 1L;
+        User requester = mockRequesterUser();
+        User owner = mockOwnerUser();
+        Trade trade = mockTradeInExchange(owner, requester, true, true, false, false);
+        Point mypoint = mockRequesterPoint(1L, 500);
+        Point partnerPoint = mockOwnerPoint(2L, 500);
+        PointHistory myPointHistory = PointHistory.create(100, PointTransactionType.DEPOSIT, mypoint, trade);
+        PointHistory partnerPointHistory = PointHistory.create(100, PointTransactionType.DEPOSIT, partnerPoint, trade);
+
+        Mockito.when(userRepository.findById(requester.getId())).thenReturn(Optional.of(requester));
+        Mockito.when(tradeRepository.findById(tradeId)).thenReturn(Optional.of(trade));
+        Mockito.when(pointHistoryRepository.findFirstByTradeIdAndUserIdByCreatedAtDesc(tradeId, requester.getId())).thenReturn(Optional.of(myPointHistory));
+        Mockito.when(pointHistoryRepository.findFirstByTradeIdAndUserIdByCreatedAtDesc(tradeId, owner.getId())).thenReturn(Optional.of(partnerPointHistory));
+
+        TradeCancelReqDto reqDto = new TradeCancelReqDto(TradeCancelReason.NO_RESPONSE, "연락이 없어요");
+
+        TradeCancelRespDto responseDto = tradeService.cancelTrade(tradeId, reqDto, new AuthUser(requester.getId(), "test@email.com", Role.USER));
+
+        assertNotNull(responseDto);
+        assertEquals(tradeId, responseDto.getTradeId());
+        assertEquals(trade.getCancelReason(), reqDto.getTradeCancelReason());
+        assertEquals(trade.getTradeCancelDescription(), reqDto.getTradeCancelDescription());
+    }
+
+    @Test
+    @DisplayName("교환 취소 : 거래 상태가 교환 중이 아닐 때 실패 케이스")
+    void cancelTrade_invalidTradeStatus() {
+        Long tradeId = 1L;
+        User requester = mockRequesterUser();
+        User owner = mockOwnerUser();
+        Trade trade = mockTrade(owner, requester, true, true, true, true);
+
+        Mockito.when(userRepository.findById(requester.getId())).thenReturn(Optional.of(requester));
+        Mockito.when(tradeRepository.findById(tradeId)).thenReturn(Optional.of(trade));
+
+        TradeCancelReqDto reqDto = new TradeCancelReqDto(TradeCancelReason.NO_RESPONSE, "연락이 없어요");
+
+        BusinessException exception = assertThrows(
+                BusinessException.class,
+                () -> tradeService.cancelTrade(tradeId, reqDto, new AuthUser(requester.getId(), "test@email.com", Role.USER))
+        );
+
+        assertEquals(ErrorCode.TRADE_ACCESS_DENIED, exception.getErrorCode());
     }
 }
