@@ -131,6 +131,6 @@ class ExchangeItemServiceTest {
         // Then
         assertThatThrownBy(() -> exchangeItemService.createExchangeItem(reqDto, userId))
                 .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("포인트가 부족합니다.");
+                .hasMessageContaining("포인트가 부족합니다");
     }
 }
