@@ -3,6 +3,7 @@ package com.my.relink.service;
 
 import com.my.relink.controller.report.dto.request.ExchangeItemReportCreateReqDto;
 import com.my.relink.controller.report.dto.request.TradeReportCreateReqDto;
+import com.my.relink.controller.report.dto.response.ExchangeItemInfoRespDto;
 import com.my.relink.controller.report.dto.response.TradeInfoRespDto;
 import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.report.ReportType;
@@ -68,5 +69,10 @@ public class ReportService {
                 exchangeItemUrl,
                 partner,
                 dateTimeUtil.getExchangeStartFormattedTime(trade.getCreatedAt()));
+    }
+
+    public ExchangeItemInfoRespDto getExchangeItemInfoForReport(Long itemId) {
+        ExchangeItem exchangeItem = exchangeItemService.findByIdOrFail(itemId);
+
     }
 }
