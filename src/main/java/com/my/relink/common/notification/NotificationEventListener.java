@@ -46,7 +46,7 @@ public class NotificationEventListener {
 
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void handleNotification(NotificationEvent<? extends Notification> event) {
+    public void sendNotification(NotificationEvent<? extends Notification> event) {
         SseEmitter emitter = emitters.get(event.data().getUserId());
 
         if (emitter != null) {
