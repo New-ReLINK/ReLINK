@@ -56,16 +56,10 @@ public class TossPaymentClient {
                     }))
                     .body(TossPaymentRespDto.class);
 
-            String cancelStatus = response.getCancels().stream()
-                    .findFirst()
-                    .map(TossPaymentRespDto.Cancels::getCancelStatus)
-                    .orElse("UNKNOWN");
-
-            log.info("[토스페이먼츠 결제 취소 성공] paymentKey={}, orderId={}, totalAmount={}, status = {} ",
+            log.info("[토스페이먼츠 결제 취소 성공] paymentKey={}, orderId={}, totalAmount={} ",
                     response.getPaymentKey(),
                     response.getOrderId(),
-                    response.getTotalAmount(),
-                    cancelStatus
+                    response.getTotalAmount()
             );
             return response;
         } catch (Exception e){
