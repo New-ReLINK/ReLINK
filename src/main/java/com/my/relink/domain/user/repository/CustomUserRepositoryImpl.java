@@ -3,6 +3,7 @@ package com.my.relink.domain.user.repository;
 import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.item.donation.DonationStatus;
 import com.my.relink.domain.trade.TradeStatus;
+import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.repository.dto.UserInfoWithCountRepositoryDto;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQuery;

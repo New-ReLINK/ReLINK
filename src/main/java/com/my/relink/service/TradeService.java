@@ -23,8 +23,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 
 @Service
 @RequiredArgsConstructor
@@ -61,6 +66,7 @@ public class TradeService {
     }
 
 
+
     public Trade findByIdOrFail(Long tradeId) {
         return tradeRepository.findById(tradeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
@@ -68,6 +74,11 @@ public class TradeService {
 
     public Trade findByIdWithUsersOrFail(Long tradeId){
         return tradeRepository.findByIdWithUsers(tradeId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
+    }
+
+    public Trade findByIdFetchItemsAndUsersOrFail(Long tradeId){
+        return tradeRepository.findByIdWithItemsAndUser(tradeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
     }
 
@@ -197,6 +208,7 @@ public class TradeService {
         tradeRepository.save(trade);
     }
 
+
     public TradeCompletionRespDto findCompleteTradeInfo(Long tradeId, AuthUser authUser) {
         User currentUser = userRepository.findById(authUser.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
@@ -211,6 +223,18 @@ public class TradeService {
         String partnerImageUrl = imageService.getExchangeItemUrl(partnerExchangeItem);
 
         return TradeCompletionRespDto.from(myExchangeItem, partnerExchangeItem, myImageUrl, partnerImageUrl, partnerExchangeItem.getUser(), trade, dateTimeUtil);
+}
+
+    public Map<Long, Trade> getTradesByItemIds(List<Long> itemIds) {
+        List<Trade> trades = tradeRepository.findByExchangeItemIds(itemIds);
+        return trades.stream()
+                .flatMap(trade -> List.of(
+                        Map.entry(trade.getOwnerExchangeItem().getId(), trade),
+                        Map.entry(trade.getRequesterExchangeItem().getId(), trade)
+                ).stream())
+                .filter(entry -> itemIds.contains(entry.getKey()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
     }
 }
 

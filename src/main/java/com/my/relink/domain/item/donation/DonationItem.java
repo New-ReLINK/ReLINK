@@ -93,4 +93,5 @@ public class DonationItem extends BaseEntity {
         this.rejectedReason = rejectedReason;
         this.disposalType = disposalType;
     }
+
 }
