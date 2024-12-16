@@ -1,6 +1,6 @@
-package com.my.relink.controller.item.donation.dto;
+package com.my.relink.controller.donation.dto.req;
 
-import com.my.relink.controller.item.donation.validation.ValidItemQuality;
+import com.my.relink.controller.donation.validation.ValidItemQuality;
 import com.my.relink.domain.category.Category;
 import com.my.relink.domain.item.donation.DonationItem;
 import com.my.relink.domain.item.donation.ItemQuality;
@@ -30,6 +30,8 @@ public class DonationItemReqDto {
 
     private String description; // 상세 설명 (nullable)
 
+    private String size;
+
     @Size(max = 128, message = "희망 기부처는 최대 128자까지 입니다.")
     private String desiredDestination; // 희망 기부처 (nullable)
 
@@ -38,6 +40,7 @@ public class DonationItemReqDto {
                 .name(name)
                 .description(description)
                 .desiredDestination(desiredDestination)
+                .size(size)
                 .user(user)
                 .category(category)
                 .itemQuality(ItemQuality.valueOf(itemQuality))

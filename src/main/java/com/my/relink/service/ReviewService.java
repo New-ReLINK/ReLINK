@@ -2,11 +2,9 @@ package com.my.relink.service;
 
 import com.my.relink.config.security.AuthUser;
 import com.my.relink.controller.review.dto.request.ReviewReqDto;
-import com.my.relink.controller.review.dto.resp.ReviewDetailsRespDto;
-import com.my.relink.controller.review.dto.resp.ReviewListRespDto;
-import com.my.relink.controller.review.dto.resp.ReviewRespDto;
-import com.my.relink.controller.trade.dto.response.ViewReviewRespDto;
+import com.my.relink.controller.review.dto.resp.*;
 import com.my.relink.domain.item.exchange.ExchangeItem;
+import com.my.relink.domain.item.exchange.repository.ExchangeItemRepository;
 import com.my.relink.domain.review.Review;
 import com.my.relink.domain.review.repository.ReviewRepository;
 import com.my.relink.domain.review.repository.dto.ReviewDetailRepositoryDto;
@@ -18,7 +16,6 @@ import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
-import com.my.relink.util.DateTimeUtil;
 import com.my.relink.util.page.PageResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -30,6 +27,7 @@ import org.springframework.stereotype.Service;
 public class ReviewService {
 
     private final ReviewRepository reviewRepository;
+    private final ExchangeItemRepository exchangeItemRepository;
     private final UserRepository userRepository;
     private final TradeRepository tradeRepository;
 
@@ -43,6 +41,21 @@ public class ReviewService {
         Page<ReviewListRepositoryDto> allReviews = reviewRepository.findAllReviews(userId, pageable);
         Page<ReviewListRespDto> respDtos = allReviews.map(ReviewListRespDto::new);
         return PageResponse.of(respDtos);
+    }
+
+    public ReviewStatisticsRespDto calculateUserStatistics(Long userId) {
+        Double starAvg = reviewRepository.getTotalStarAvg(userId);
+        long totalTradeCount = exchangeItemRepository.countByTradeStatusAndUserId(TradeStatus.EXCHANGED, userId);
+        long totalReviewCount = reviewRepository.countByUserIdAndTradStatus(TradeStatus.EXCHANGED, userId);
+
+        return new ReviewStatisticsRespDto(starAvg, totalTradeCount, totalReviewCount);
+    }
+
+    public PageResponse<ReviewWithExchangeItemListRespDto> getReviewWithExchange(Long userId, Pageable pageable) {
+        Page<ReviewWithExchangeItemListRespDto> reviews = reviewRepository.findMyReviewsWithExchangeItems(userId, pageable)
+                .map(ReviewWithExchangeItemListRespDto::new);
+
+        return PageResponse.of(reviews);
     }
 
     public ReviewRespDto postTradeReview(Long tradeId, ReviewReqDto reqDto, AuthUser authUser) {

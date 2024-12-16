@@ -1,4 +1,4 @@
-package com.my.relink.controller.exchangeItem.dto;
+package com.my.relink.controller.exchangeItem.dto.req;
 
 import com.my.relink.common.validation.EnumValidator;
 import com.my.relink.domain.category.Category;
@@ -35,6 +35,7 @@ public class CreateExchangeItemReqDto {
     private String desiredItem;
     @NotNull(message = "교환시 원하는 보증금액을 입력해주세요.")
     private Integer deposit;
+    private Boolean isDeleted;
 
     public ExchangeItem toEntity(Category category, User user) {
         return ExchangeItem.builder()
@@ -47,6 +48,7 @@ public class CreateExchangeItemReqDto {
                 .brand(this.brand)
                 .desiredItem(this.desiredItem)
                 .deposit(this.deposit)
+                .isDeleted(false)
                 .tradeStatus(TradeStatus.AVAILABLE)
                 .build();
     }

@@ -76,12 +76,19 @@ public class Trade extends BaseEntity {
     @Lob
     private String tradeCancelDescription;
 
+    public ExchangeItem getPartnerItem(Long userId){
+        return userId.equals(getOwner().getId()) ?
+                requesterExchangeItem :
+                ownerExchangeItem;
+    }
+
+
     public User getOwner() {
         return this.getOwnerExchangeItem().getUser();
     }
 
     public boolean isParticipant(Long userId) {
-        return getOwner().getId().equals(userId) || getRequester().getId().equals(userId);
+        return getOwner().getId().equals(userId) || this.requester.getId().equals(userId);
     }
 
     public void validateAccess(Long userId) {
@@ -91,7 +98,7 @@ public class Trade extends BaseEntity {
     }
 
     public User getPartner(Long userId) {
-        return getRequester().getId().equals(userId) ? getOwner() : getRequester();
+        return getRequester().getId().equals(userId) ? getOwner() : this.requester;
     }
 
     public void updateTradeStatus(TradeStatus tradeStatus) {

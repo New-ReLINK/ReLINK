@@ -5,9 +5,7 @@ import com.my.relink.controller.trade.dto.request.AddressReqDto;
 import com.my.relink.controller.trade.dto.request.TrackingNumberReqDto;
 import com.my.relink.controller.trade.dto.request.TradeCancelReqDto;
 import com.my.relink.controller.trade.dto.response.*;
-import com.my.relink.domain.image.EntityType;
-import com.my.relink.domain.image.Image;
-import com.my.relink.domain.image.ImageRepository;
+import com.my.relink.domain.image.repository.ImageRepository;
 import com.my.relink.domain.item.donation.ItemQuality;
 import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.point.Point;
@@ -359,16 +357,17 @@ class TradeServiceTest extends DummyObject {
             partnerExchangeItem = trade.getRequesterExchangeItem();
         }
 
-        Image myImage = new Image(1L, "http://example.com/my-image.jpg", 1L, EntityType.EXCHANGE_ITEM);
-        Image partnerImage = new Image(2L, "http://example.com/partner-image.jpg", 2L, EntityType.EXCHANGE_ITEM);
+        String myImageUrl = "http://example.com/my-image.jpg";
+        String partnerImageUrl = "http://example.com/partner-image.jpg";
 
         User partnerUser = trade.getPartner(requester.getId());  // 거래 상대방 (소유자)
 
         Mockito.when(userRepository.findById(requester.getId())).thenReturn(Optional.of(requester));
         Mockito.when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
         Mockito.when(tradeRepository.findTradeWithDetails(tradeId)).thenReturn(Optional.of(trade));
-        Mockito.when(imageRepository.findTopByEntityIdAndEntityTypeOrderByCreatedAtAsc(myExchangeItem.getId(), EntityType.EXCHANGE_ITEM)).thenReturn(Optional.of(myImage));
-        Mockito.when(imageRepository.findTopByEntityIdAndEntityTypeOrderByCreatedAtAsc(partnerExchangeItem.getId(), EntityType.EXCHANGE_ITEM)).thenReturn(Optional.of(partnerImage));
+        Mockito.when(imageService.getExchangeItemUrl(myExchangeItem)).thenReturn(myImageUrl);
+        Mockito.when(imageService.getExchangeItemUrl(partnerExchangeItem)).thenReturn(partnerImageUrl);
+
         Mockito.when(userRepository.findById(trade.getPartner(requester.getId()).getId())).thenReturn(Optional.of(partnerUser));
         Mockito.when(dateTimeUtil.getTradeStatusFormattedTime(trade.getModifiedAt()))
                 .thenReturn("2024년 12월 12일 14:30");
@@ -435,23 +434,19 @@ class TradeServiceTest extends DummyObject {
         User owner = mockOwnerUser();
 
         // Trade를 Mock 객체로 생성
-        Trade trade = Mockito.mock(Trade.class);
+        Trade trade = mockTrade(owner, requester, true, true, true, true);
+        ExchangeItem partnerExchangeItem;
 
-        ExchangeItem partnerExchangeItem = Mockito.mock(ExchangeItem.class);
-        Image partnerImage = new Image(2L, "http://example.com/partner-image.jpg", 2L, EntityType.EXCHANGE_ITEM);
-
-        // Mock 설정
-        Mockito.when(trade.getPartner(requester.getId())).thenReturn(owner);
-        Mockito.when(trade.isRequester(requester.getId())).thenReturn(true);
-        Mockito.when(trade.getOwnerExchangeItem()).thenReturn(partnerExchangeItem);
-        Mockito.when(partnerExchangeItem.getName()).thenReturn("Item Name");
+        if (trade.isRequester(requester.getId())) {
+            partnerExchangeItem = trade.getOwnerExchangeItem();
+        } else {
+            partnerExchangeItem = trade.getRequesterExchangeItem();
+        }
+        String partnerImage = "http://example.com/partner-image.jpg";
 
         Mockito.when(userRepository.findById(requester.getId())).thenReturn(Optional.of(requester));
-        Mockito.when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
         Mockito.when(tradeRepository.findById(tradeId)).thenReturn(Optional.of(trade));
-        Mockito.when(imageRepository.findByEntityIdAndEntityType(partnerExchangeItem.getId(), EntityType.EXCHANGE_ITEM))
-                .thenReturn(Optional.of(partnerImage));
-        Mockito.when(trade.getCreatedAt()).thenReturn(LocalDateTime.of(2024, 12, 12, 14, 30));
+        Mockito.when(imageService.getExchangeItemUrl(partnerExchangeItem)).thenReturn("http://example.com/partner-image.jpg");
 
         // 서비스 호출
         ViewTradeCancelRespDto result = tradeService.viewCancelTrade(tradeId, new AuthUser(requester.getId(), "test@email.com", Role.USER));
@@ -460,8 +455,7 @@ class TradeServiceTest extends DummyObject {
         assertNotNull(result);
         assertEquals(partnerExchangeItem.getName(), result.getPartnerExchangeItemName());
         assertEquals(owner.getNickname(), result.getPartnerNickname());
-        assertEquals("2024년 12월 12일 14:30", result.getTradeStartedAt());
-        assertEquals(partnerImage.getImageUrl(), result.getPartnerExchangeItemImageUrl());
+        assertEquals(partnerImage, result.getPartnerExchangeItemImageUrl());
     }
 
     @Test

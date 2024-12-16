@@ -11,13 +11,13 @@ import org.springframework.stereotype.Repository;
 
 
 @Repository
-public interface TradeRepository extends JpaRepository<Trade, Long> {
+public interface TradeRepository extends JpaRepository<Trade, Long>, CustomTradeRepository {
 
     @Query("select t from Trade t " +
             "join fetch t.ownerExchangeItem oi " +
             "join fetch t.requesterExchangeItem ri " +
-            "join fetch oi.user " +
-            "join fetch t.requester " +
+            "left join fetch oi.user " +
+            "left join fetch t.requester " +
             "where t.id = :tradeId")
     Optional<Trade> findByIdWithItemsAndUser(@Param("tradeId") Long tradeId);
 

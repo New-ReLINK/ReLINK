@@ -5,6 +5,8 @@ import com.my.relink.controller.review.dto.request.ReviewReqDto;
 import com.my.relink.controller.review.dto.resp.ReviewDetailsRespDto;
 import com.my.relink.controller.review.dto.resp.ReviewListRespDto;
 import com.my.relink.controller.review.dto.resp.ReviewRespDto;
+import com.my.relink.controller.review.dto.resp.ReviewStatisticsRespDto;
+import com.my.relink.controller.review.dto.resp.ReviewWithExchangeItemListRespDto;
 import com.my.relink.service.ReviewService;
 import com.my.relink.util.api.ApiResult;
 import com.my.relink.util.page.PageResponse;
@@ -40,6 +42,25 @@ public class ReviewController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ApiResult.success(reviewService.findAllReviewByWriterUserId(authUser.getId(), pageable)));
+    }
+
+    @GetMapping("/users/reliability")
+    public ResponseEntity<ApiResult<ReviewStatisticsRespDto>> getTrustScore(
+            @AuthenticationPrincipal AuthUser authUser
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResult.success(reviewService.calculateUserStatistics(authUser.getId())));
+    }
+
+    @GetMapping("/users/reliability-reviews")
+    public ResponseEntity<ApiResult<PageResponse<ReviewWithExchangeItemListRespDto>>> getFeetBack(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PageableDefault(page = 0, size = 100) Pageable pageable
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResult.success(reviewService.getReviewWithExchange(authUser.getId(), pageable)));
     }
 
     @PostMapping("/trades/{tradeId}/review")
