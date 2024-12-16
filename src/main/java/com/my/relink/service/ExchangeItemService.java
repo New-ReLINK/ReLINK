@@ -65,9 +65,8 @@ public class ExchangeItemService {
     public GetExchangeItemRespDto getExchangeItemModifyPage(Long itemId, Long userId) {
         ExchangeItem exchangeItem = findByIdOrFail(itemId);
         exchangeItem.validExchangeItemOwner(exchangeItem.getUser().getId(), userId);
-        Category category = exchangeItem.getCategory();
 
-        return GetExchangeItemRespDto.from(exchangeItem, category);
+        return GetExchangeItemRespDto.from(exchangeItem);
     }
 
     // user 가져오기
