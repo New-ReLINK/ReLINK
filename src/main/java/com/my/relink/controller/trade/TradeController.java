@@ -89,7 +89,7 @@ public class TradeController {
     public ResponseEntity<ApiResult<TradeCancelRespDto>> cancelTrade(
             @PathVariable(name = "tradeId") Long tradeId,
             @RequestBody TradeCancelReqDto reqDto,
-            @AuthenticationPrincipal AuthUser authUser){
+            @AuthenticationPrincipal AuthUser authUser) {
         TradeCancelRespDto responseDto = tradeService.cancelTrade(tradeId, reqDto, authUser);
         return new ResponseEntity<>(ApiResult.success(responseDto), HttpStatus.CREATED);
     }
@@ -97,7 +97,7 @@ public class TradeController {
     @GetMapping("/trades/{tradeId}/review")
     public ResponseEntity<ApiResult<ViewReviewRespDto>> getReviewInfo(
             @PathVariable(name = "tradeId") Long tradeId,
-            @AuthenticationPrincipal AuthUser authUser){
+            @AuthenticationPrincipal AuthUser authUser) {
         ViewReviewRespDto responseDto = tradeService.getReviewInfo(tradeId, authUser);
         return new ResponseEntity<>(ApiResult.success(responseDto), HttpStatus.OK);
     }

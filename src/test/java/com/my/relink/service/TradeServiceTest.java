@@ -342,7 +342,7 @@ class TradeServiceTest extends DummyObject {
 
     @Test
     @DisplayName("교환 진행 페이지 : 조회 성공 케이스")
-    void testFindTradeCompletionInfo_success(){
+    void testFindTradeCompletionInfo_success() {
         Long tradeId = 1L;
         User requester = mockRequesterUser();
         User owner = mockOwnerUser();
@@ -506,7 +506,7 @@ class TradeServiceTest extends DummyObject {
 
     @Test
     @DisplayName("교환 취소 : 성공 케이스")
-    void testCancelTrade(){
+    void testCancelTrade() {
         Long tradeId = 1L;
         User requester = mockRequesterUser();
         User owner = mockOwnerUser();
@@ -554,7 +554,7 @@ class TradeServiceTest extends DummyObject {
 
     @Test
     @DisplayName("리뷰 정보 조회 : 성공 케이스")
-    void viewReview_success(){
+    void viewReview_success() {
         Long tradeId = 1L;
         User requester = mockRequesterUser();
         User owner = mockOwnerUser();

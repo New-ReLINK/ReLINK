@@ -15,7 +15,7 @@ public class ViewReviewRespDto {
     private String partnerNickname;
     private String completedAt;
 
-    public static ViewReviewRespDto from(Trade trade, String partnerExchangeItemImage, User partner, ExchangeItem partnerExchangeItem, String completedAt){
+    public static ViewReviewRespDto from(Trade trade, String partnerExchangeItemImage, User partner, ExchangeItem partnerExchangeItem, String completedAt) {
         return new ViewReviewRespDto(
                 trade.getId(),
                 partnerExchangeItemImage,

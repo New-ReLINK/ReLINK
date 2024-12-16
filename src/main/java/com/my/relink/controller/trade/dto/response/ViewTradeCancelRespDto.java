@@ -15,7 +15,7 @@ public class ViewTradeCancelRespDto {
     private String tradeStartedAt;
     private String partnerExchangeItemImageUrl;
 
-    public static ViewTradeCancelRespDto from(User partner, ExchangeItem partnerExchangeItem, String partnerExchangeItemImage, String tradeStartedAt){
+    public static ViewTradeCancelRespDto from(User partner, ExchangeItem partnerExchangeItem, String partnerExchangeItemImage, String tradeStartedAt) {
         return new ViewTradeCancelRespDto(
                 partnerExchangeItem.getName(),
                 partner.getNickname(),

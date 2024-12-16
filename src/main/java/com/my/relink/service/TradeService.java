@@ -70,7 +70,7 @@ public class TradeService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
     }
 
-    public Trade findByIdWithUsersOrFail(Long tradeId){
+    public Trade findByIdWithUsersOrFail(Long tradeId) {
         return tradeRepository.findByIdWithUsers(tradeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
     }
@@ -254,7 +254,7 @@ public class TradeService {
         PointHistory partnerPointHistory = pointHistoryRepository.findFirstByTradeIdAndUserIdByCreatedAtDesc(tradeId, trade.getPartner(currentUser.getId()).getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.POINT_HISTORY_NOT_FOUND));
 
-        if(mypointHistory.isRefunded() || partnerPointHistory.isRefunded()){
+        if (mypointHistory.isRefunded() || partnerPointHistory.isRefunded()) {
             throw new BusinessException(ErrorCode.DEPOSIT_ALREADY_REFUNDED);
         }
 
