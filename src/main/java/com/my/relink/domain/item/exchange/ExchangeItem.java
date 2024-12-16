@@ -1,5 +1,6 @@
 package com.my.relink.domain.item.exchange;
 
+import com.my.relink.controller.exchangeItem.dto.req.ExchangeItemReqDto;
 import com.my.relink.domain.BaseEntity;
 import com.my.relink.domain.category.Category;
 import com.my.relink.domain.item.donation.ItemQuality;
@@ -7,7 +8,6 @@ import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.domain.user.User;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -82,15 +82,15 @@ public class ExchangeItem extends BaseEntity {
         this.isDeleted = isDeleted;
     }
 
-    public void update(String name, String description, Category category, ItemQuality itemQuality, String size, String brand, String desiredItem, Integer deposit) {
-        this.name = name;
-        this.description = description;
+    public void updateFromDto(ExchangeItemReqDto reqDto, Category category) {
+        this.name = reqDto.getName();
+        this.description = reqDto.getDescription();
         this.category = category;
-        this.itemQuality = itemQuality;
-        this.size = size;
-        this.brand = brand;
-        this.desiredItem = desiredItem;
-        this.deposit = deposit;
+        this.itemQuality = reqDto.getItemQuality();
+        this.size = reqDto.getSize();
+        this.brand = reqDto.getBrand();
+        this.desiredItem = reqDto.getDesiredItem();
+        this.deposit = reqDto.getDeposit();
     }
     public void delete(Boolean isDeleted) {
         this.isDeleted = isDeleted;
