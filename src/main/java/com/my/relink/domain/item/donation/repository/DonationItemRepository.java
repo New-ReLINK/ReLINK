@@ -26,4 +26,6 @@ public interface DonationItemRepository extends JpaRepository<DonationItem, Long
             "AND FUNCTION('MONTH', d.modifiedAt) = FUNCTION('MONTH', CURRENT_DATE) " +
             "AND FUNCTION('YEAR', d.modifiedAt) = FUNCTION('YEAR', CURRENT_DATE)")
     long countCompletedDonationsThisMonth();
+
+    Page<DonationItem> findByUserId(Long userId, Pageable pageable);
 }
