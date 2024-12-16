@@ -6,6 +6,8 @@ import com.my.relink.domain.category.Category;
 import com.my.relink.domain.item.donation.ItemQuality;
 import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.domain.user.User;
+import com.my.relink.ex.BusinessException;
+import com.my.relink.ex.ErrorCode;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -80,6 +82,15 @@ public class ExchangeItem extends BaseEntity {
         this.desiredItem = desiredItem;
         this.tradeStatus = tradeStatus;
         this.isDeleted = isDeleted;
+    }
+
+    public void updateStatus(TradeStatus tradeStatus) {
+        this.tradeStatus = tradeStatus;
+    }
+    public void validExchangeItemOwner(Long itemOwnerId, Long userId){
+        if (!itemOwnerId.equals(userId)) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS);
+        }
     }
 
     public void updateFromDto(ExchangeItemReqDto reqDto, Category category) {
