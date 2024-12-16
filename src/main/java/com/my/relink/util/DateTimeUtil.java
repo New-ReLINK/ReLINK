@@ -20,8 +20,17 @@ public class DateTimeUtil {
             DateTimeFormatter.ofPattern("M월 d일 a h:m").withLocale(Locale.KOREA);
     private static final DateTimeFormatter PAST_YEAR_MESSAGE_FORMAT =
         DateTimeFormatter.ofPattern("yyyy년 M월 d일 a h:m").withLocale(Locale.KOREA);
+
     private static final DateTimeFormatter TRADE_STATUS_FORMAT =
             DateTimeFormatter.ofPattern("yyyy년 M월 d일 HH:mm");
+
+    private static final DateTimeFormatter EXCHANGE_START_DATE_FORMAT =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+    public String getExchangeStartFormattedTime(LocalDateTime createdAt){
+        return createdAt != null? createdAt.format(EXCHANGE_START_DATE_FORMAT) : "-";
+    }
+    
 
     public String getMessageFormattedTime(LocalDateTime messageTime){
         LocalDateTime now = LocalDateTime.now(clock);
