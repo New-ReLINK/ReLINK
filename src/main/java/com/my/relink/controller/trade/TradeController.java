@@ -3,6 +3,7 @@ package com.my.relink.controller.trade;
 import com.my.relink.config.security.AuthUser;
 import com.my.relink.controller.trade.dto.request.AddressReqDto;
 import com.my.relink.controller.trade.dto.request.TrackingNumberReqDto;
+import com.my.relink.controller.trade.dto.request.TradeCancelReqDto;
 import com.my.relink.controller.trade.dto.response.*;
 import com.my.relink.service.TradeService;
 import com.my.relink.util.api.ApiResult;
@@ -77,11 +78,20 @@ public class TradeController {
     }
 
     @GetMapping("/trades/{tradeId}/cancel")
-    public ResponseEntity<ApiResult<TradeCancelRespDto>> cancelTrade(
+    public ResponseEntity<ApiResult<ViewTradeCancelRespDto>> viewCancelTrade(
             @PathVariable(name = "tradeId") Long tradeId,
             @AuthenticationPrincipal AuthUser authUser) {
-        TradeCancelRespDto responseDto = tradeService.cancelTrade(tradeId, authUser);
+        ViewTradeCancelRespDto responseDto = tradeService.viewCancelTrade(tradeId, authUser);
         return new ResponseEntity<>(ApiResult.success(responseDto), HttpStatus.OK);
+    }
+
+    @PostMapping("/trades/{tradeId}/cancel")
+    public ResponseEntity<ApiResult<TradeCancelRespDto>> cancelTrade(
+            @PathVariable(name = "tradeId") Long tradeId,
+            @RequestBody TradeCancelReqDto reqDto,
+            @AuthenticationPrincipal AuthUser authUser){
+        TradeCancelRespDto responseDto = tradeService.cancelTrade(tradeId, reqDto, authUser);
+        return new ResponseEntity<>(ApiResult.success(responseDto), HttpStatus.CREATED);
     }
 
 }
