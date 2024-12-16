@@ -270,5 +270,21 @@ public class TradeService {
         return new TradeCancelRespDto(tradeId);
 
     }
+
+    public ViewReviewRespDto getReviewInfo(Long tradeId, AuthUser authUser) {
+        User currentUser = userRepository.findById(authUser.getId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        Trade trade = tradeRepository.findById(tradeId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
+
+        ExchangeItem partnerExchangeItem = trade.getPartnerExchangeItem(currentUser.getId());
+        User partnerUser = partnerExchangeItem.getUser();
+        String partnerImage = imageService.getExchangeItemUrl(partnerExchangeItem);
+        String completedAt = dateTimeUtil.getTradeStatusFormattedTime(trade.getModifiedAt());
+
+        return ViewReviewRespDto.from(trade, partnerImage, partnerUser, partnerExchangeItem, completedAt);
+
+    }
 }
 
