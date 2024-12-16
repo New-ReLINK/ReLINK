@@ -1,5 +1,6 @@
 package com.my.relink.service;
 
+import com.my.relink.chat.service.ChatService;
 import com.my.relink.controller.exchangeItem.dto.req.ExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemRespDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemsRespDto;
@@ -35,7 +36,8 @@ public class ExchangeItemService {
     private final PointRepository pointRepository;
     private final TradeService tradeService;
     private final ImageService imageService;
-
+    private final LikeService likeService;
+    private final ChatService chatService;
 
     @Transactional
     public long createExchangeItem(ExchangeItemReqDto reqDto, Long userId) {
@@ -80,11 +82,20 @@ public class ExchangeItemService {
         return exchangeItem.getId();
     }
 
+    // 삭제는 soft delete
     public Long deleteExchangeItem(Long itemId, Long userId) {
         ExchangeItem exchangeItem = getValidExchangeItem(itemId, userId);
         exchangeItem.delete(true);
-
+        deleteRelatedEntities(exchangeItem);
         return exchangeItem.getId();
+    }
+    // 연관된 image, like, trade, chat 삭제
+    private void deleteRelatedEntities(ExchangeItem exchangeItem) {
+        Long itemId = exchangeItem.getId();
+        imageService.deleteImagesByEntityId(EntityType.EXCHANGE_ITEM, itemId);
+        likeService.deleteLikesByExchangeItemId(itemId);
+        /*tradeService.deleteTradesByExchangeItemId(itemId);
+        chatService.deleteChatsByExchangeItemId(itemId);*/
     }
 
     // user 가져오기

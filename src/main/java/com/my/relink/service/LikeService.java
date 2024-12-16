@@ -19,4 +19,8 @@ public class LikeService {
                 = likeRepository.findUserLikeExchangeItem(userId, pageable);
         return PageResponse.of(likeExchangeItem.map(LikeExchangeItemListRespDto::new));
     }
+
+    public void deleteLikesByExchangeItemId(Long exchangeItemId) {
+        likeRepository.deleteByExchangeItemId(exchangeItemId);
+    }
 }

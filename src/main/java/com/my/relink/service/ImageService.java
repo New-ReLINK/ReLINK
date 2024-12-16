@@ -33,4 +33,7 @@ public class ImageService {
                 .collect(Collectors.toMap(Image::getEntityId, Image::getImageUrl));
     }
 
+    public void deleteImagesByEntityId(EntityType entityType, Long entityId) {
+        imageRepository.deleteByEntityTypeAndEntityId(entityType, entityId);
+    }
 }
