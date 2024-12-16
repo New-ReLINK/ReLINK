@@ -25,10 +25,8 @@ public interface TradeRepository extends JpaRepository<Trade, Long> {
             "LEFT JOIN FETCH t.requester r " +
             "LEFT JOIN FETCH t.requesterExchangeItem rei " +
             "LEFT JOIN FETCH t.ownerExchangeItem oei " +
-            "LEFT JOIN FETCH Image reiImg ON reiImg.entityId = rei.id AND reiImg.entityType = :entityType " +
-            "LEFT JOIN FETCH Image oeiImg ON oeiImg.entityId = oei.id AND oeiImg.entityType = :entityType " +
             "WHERE t.id = :tradeId")
-    Optional<Trade> findTradeWithDetails(@Param("tradeId") Long tradeId, @Param("entityType") EntityType entityType);
+    Optional<Trade> findTradeWithDetails(@Param("tradeId") Long tradeId);
 
     @Query("select t from Trade t " +
             "join fetch t.requester " +

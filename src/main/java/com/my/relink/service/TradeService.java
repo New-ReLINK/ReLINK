@@ -201,19 +201,16 @@ public class TradeService {
         User currentUser = userRepository.findById(authUser.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        Trade trade = tradeRepository.findTradeWithDetails(tradeId,EntityType.EXCHANGE_ITEM)
+        Trade trade = tradeRepository.findTradeWithDetails(tradeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
 
         ExchangeItem myExchangeItem = trade.getMyExchangeItem(currentUser.getId());
         ExchangeItem partnerExchangeItem = trade.getPartnerExchangeItem(currentUser.getId());
 
-        Image myImage = imageRepository.findTopByEntityIdAndEntityTypeOrderByCreatedAtAsc(myExchangeItem.getId(), EntityType.EXCHANGE_ITEM).orElse(null);
-        Image partnerImage = imageRepository.findTopByEntityIdAndEntityTypeOrderByCreatedAtAsc(partnerExchangeItem.getId(), EntityType.EXCHANGE_ITEM).orElse(null);
+        String myImageUrl = imageService.getExchangeItemUrl(myExchangeItem);
+        String partnerImageUrl = imageService.getExchangeItemUrl(partnerExchangeItem);
 
-        User partnerUser = userRepository.findById(trade.getPartner(currentUser.getId()).getId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-
-        return TradeCompletionRespDto.from(myExchangeItem, partnerExchangeItem, myImage, partnerImage, partnerUser, trade, dateTimeUtil);
+        return TradeCompletionRespDto.from(myExchangeItem, partnerExchangeItem, myImageUrl, partnerImageUrl, partnerExchangeItem.getUser(), trade, dateTimeUtil);
     }
 }
 
