@@ -27,7 +27,7 @@ public enum ErrorCode {
     INVALID_REPORT_REASON(HttpStatus.NOT_FOUND.value(), "해당 신고 사유는 존재하지 않습니다"),
     ALREADY_REPORTED_TRADE(HttpStatus.CONFLICT.value(), "이미 신고된 거래입니다"),
     UNAUTHORIZED_ACCESS(HttpStatus.UNAUTHORIZED.value(), "해당 상품의 소유자가 아닙니다"),
-
+    INVALID_SORT_PARAMETER(HttpStatus.BAD_REQUEST.value(), "보증금 정렬 기준 값이 올바르지 않습니다."),
     EXCHANGE_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "해당 교환 상품을 찾을 수 없습니다"),
 
     ;

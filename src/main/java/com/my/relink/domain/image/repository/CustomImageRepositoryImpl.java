@@ -11,16 +11,16 @@ import java.util.List;
 
 @Repository
 @RequiredArgsConstructor
-public class CumtomImageRepositoryImpl implements CustomImageRepository {
+public class CustomImageRepositoryImpl implements CustomImageRepository {
 
     private final JPAQueryFactory queryFactory;
 
-    public List<Image> findImages(EntityType entityType, List<Long> entityIds) {
+    public List<Image> findFirstImages(EntityType entityType, List<Long> entityIds) {
         QImage image = QImage.image;
         return queryFactory.selectFrom(image)
                 .where(image.entityType.eq(entityType)
                         .and(image.entityId.in(entityIds)))
-                .orderBy(image.createdAt.asc())
+                .orderBy(image.entityId.asc(), image.createdAt.asc())
                 .fetch();
     }
 }

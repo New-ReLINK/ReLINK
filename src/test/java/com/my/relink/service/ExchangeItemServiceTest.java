@@ -3,7 +3,6 @@ package com.my.relink.service;
 
 import com.my.relink.controller.exchangeItem.dto.req.ExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemRespDto;
-import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemsRespDto;
 import com.my.relink.domain.BaseEntity;
 import com.my.relink.domain.category.Category;
 import com.my.relink.domain.category.repository.CategoryRepository;
@@ -20,6 +19,7 @@ import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
+import com.my.relink.util.page.PageInfo;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -185,9 +185,9 @@ class ExchangeItemServiceTest {
                 1L, "http://example.com/image1.jpg",
                 2L, "http://example.com/image2.jpg"
         );
-        when(imageService.getImagesByItemIds(EntityType.EXCHANGE_ITEM, List.of(1L, 2L)))
+        when(imageService.getFirstImagesByItemIds(EntityType.EXCHANGE_ITEM, List.of(1L, 2L)))
                 .thenReturn(imageMap);
-        GetExchangeItemsRespDto result = exchangeItemService.getExchangeItemsByUserId(userId1, 1, 10);
+        GetExchangeItemRespDto result = exchangeItemService.getExchangeItemsByUserId(userId1, 1, 10);
 
         assertThat(result).isNotNull();
         assertThat(result.getContent()).isInstanceOf(List.class);
@@ -227,15 +227,15 @@ class ExchangeItemServiceTest {
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(exchangeItemRepository.findByUserId(userId, pageable)).thenReturn(emptyPage);
 
-        GetExchangeItemsRespDto result = exchangeItemService.getExchangeItemsByUserId(userId, 1, 10);
+        GetExchangeItemRespDto result = exchangeItemService.getExchangeItemsByUserId(userId, 1, 10);
         assertThat(result).isNotNull();
         System.out.println("Result: " + result);
 
         List<GetExchangeItemRespDto> content = result.getContent();
         assertThat(content).isEmpty();
 
-        GetExchangeItemsRespDto.PageInfo pageInfo = result.getPageInfo();
-        assertThat(pageInfo.getTotalElements()).isEqualTo(0);
+        PageInfo pageInfo = result.getPageInfo();
+        assertThat(pageInfo.getTotalCount()).isEqualTo(0);
         assertThat(pageInfo.getTotalPages()).isEqualTo(0);
         assertThat(pageInfo.isHasPrevious()).isEqualTo(false);
         assertThat(pageInfo.isHasNext()).isEqualTo(false);

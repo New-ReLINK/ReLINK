@@ -1,8 +1,8 @@
 package com.my.relink.service;
 
 import com.my.relink.controller.exchangeItem.dto.req.ExchangeItemReqDto;
+import com.my.relink.controller.exchangeItem.dto.resp.GetAllExchangeItemsRespDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemRespDto;
-import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemsRespDto;
 import com.my.relink.domain.category.Category;
 import com.my.relink.domain.category.repository.CategoryRepository;
 import com.my.relink.domain.image.EntityType;
@@ -11,6 +11,7 @@ import com.my.relink.domain.item.exchange.repository.ExchangeItemRepository;
 import com.my.relink.domain.point.Point;
 import com.my.relink.domain.point.repository.PointRepository;
 import com.my.relink.domain.trade.Trade;
+import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.BusinessException;
@@ -19,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +35,7 @@ public class ExchangeItemService {
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
     private final PointRepository pointRepository;
+    private final UserTrustScoreService userTrustScoreService;
     private final TradeService tradeService;
     private final ImageService imageService;
 
@@ -46,29 +49,54 @@ public class ExchangeItemService {
         return exchangeItemRepository.save(exchangeItem).getId();
     }
 
-    public GetExchangeItemsRespDto getExchangeItemsByUserId(Long userId, int page, int size) {
+    public GetExchangeItemRespDto getExchangeItemsByUserId(Long userId, int page, int size) {
         User user = getValidUser(userId);
         Pageable pageable = PageRequest.of(page - 1, size);
 
         Page<ExchangeItem> items = exchangeItemRepository.findByUserId(user.getId(), pageable);
         if (items.isEmpty()) {
-            return GetExchangeItemsRespDto.empty(pageable);
+            return GetExchangeItemRespDto.empty(pageable);
         }
 
         List<Long> itemIds = items.getContent().stream().map(ExchangeItem::getId).toList();
         Map<Long, Trade> tradeMap = tradeService.getTradesByItemIds(itemIds);
-        Map<Long, String> imageMap = imageService.getImagesByItemIds(EntityType.EXCHANGE_ITEM, itemIds);
+        Map<Long, String> imageMap = imageService.getFirstImagesByItemIds(EntityType.EXCHANGE_ITEM, itemIds);
 
         Page<GetExchangeItemRespDto> content = items.map(item -> GetExchangeItemRespDto.from(item, tradeMap, imageMap));
 
-        return GetExchangeItemsRespDto.of(content);
+        return GetExchangeItemRespDto.of(content);
     }
 
     public GetExchangeItemRespDto getExchangeItemModifyPage(Long itemId, Long userId) {
         ExchangeItem exchangeItem = getValidExchangeItem(itemId, userId);
         Category category = exchangeItem.getCategory();
-
         return GetExchangeItemRespDto.from(exchangeItem, category);
+    }
+
+    public GetAllExchangeItemsRespDto getAllExchangeItems(String search, String deposit, TradeStatus tradeStatus, Long categoryId, int page, int size) {
+        Category category = getValidCategory(categoryId);
+        Pageable pageable = PageRequest.of(page, size, getSort(deposit));
+
+        Page<ExchangeItem> itemsPage = exchangeItemRepository.findAllByCriteria(search, tradeStatus, category, pageable);
+        List<Long> itemIds = itemsPage.getContent().stream().map(ExchangeItem::getId).toList();
+        Map<Long, String> imageMap = imageService.getFirstImagesByItemIds(EntityType.EXCHANGE_ITEM, itemIds);
+
+        Page<GetAllExchangeItemsRespDto> content = itemsPage.map(item -> {
+            int trustScore = userTrustScoreService.getTrustScore(item.getUser());
+            return GetAllExchangeItemsRespDto.from(item, imageMap, trustScore);
+        });
+
+        return GetAllExchangeItemsRespDto.of(content);
+    }
+    private Sort getSort(String deposit) {
+        if (deposit == null || deposit.isEmpty()) {
+            return Sort.by(Sort.Direction.DESC, "id");
+        }
+        return switch (deposit.toLowerCase()) {
+            case "asc" -> Sort.by(Sort.Direction.ASC, "deposit");
+            case "desc" -> Sort.by(Sort.Direction.DESC, "deposit");
+            default -> throw new BusinessException(ErrorCode.INVALID_SORT_PARAMETER);
+        };
     }
 
     @Transactional
@@ -122,4 +150,6 @@ public class ExchangeItemService {
         return exchangeItemRepository.findById(itemId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EXCHANGE_ITEM_NOT_FOUND));
     }
+
+
 }
