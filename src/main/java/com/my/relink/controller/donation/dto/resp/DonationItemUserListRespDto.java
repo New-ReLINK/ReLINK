@@ -13,10 +13,10 @@ import java.util.stream.Collectors;
 @Getter
 @Builder
 public class DonationItemUserListRespDto {
-    private List<DonationItemUserRespDto> inInspection;
-    private List<DonationItemUserRespDto> inspected;
-    private List<DonationItemUserRespDto> unsuitable;
-    private List<DonationItemUserRespDto> donationCompleted;
+    private List<DonationItemUserRespDto> under_inspection;
+    private List<DonationItemUserRespDto> inspection_complete;
+    private List<DonationItemUserRespDto> inspection_rejected;
+    private List<DonationItemUserRespDto> donation_complete;
     private PagingInfo pagingInfo;
 
     public static DonationItemUserListRespDto of(Page<DonationItem> donationItems, PagingInfo pagingInfo) {
@@ -25,10 +25,10 @@ public class DonationItemUserListRespDto {
                 .toList();
 
         return DonationItemUserListRespDto.builder()
-                .inInspection(filterByStatus(allItems, DonationStatus.UNDER_INSPECTION))
-                .inspected(filterByStatus(allItems, DonationStatus.INSPECTION_COMPLETED))
-                .unsuitable(filterByStatus(allItems, DonationStatus.INSPECTION_REJECTED))
-                .donationCompleted(filterByStatus(allItems, DonationStatus.DONATION_COMPLETED))
+                .under_inspection(filterByStatus(allItems, DonationStatus.UNDER_INSPECTION))
+                .inspection_complete(filterByStatus(allItems, DonationStatus.INSPECTION_COMPLETED))
+                .inspection_rejected(filterByStatus(allItems, DonationStatus.INSPECTION_REJECTED))
+                .donation_complete(filterByStatus(allItems, DonationStatus.DONATION_COMPLETED))
                 .pagingInfo(pagingInfo)
                 .build();
     }
