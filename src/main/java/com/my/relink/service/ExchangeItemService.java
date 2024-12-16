@@ -78,16 +78,7 @@ public class ExchangeItemService {
         ExchangeItem exchangeItem = getValidExchangeItem(itemId, userId);
         Category category = getValidCategory(reqDto.getCategoryId());
         validateDeposit(reqDto.getDeposit(), userId);
-        exchangeItem.update(
-                reqDto.getName(),
-                reqDto.getDescription(),
-                category,
-                reqDto.getItemQuality(),
-                reqDto.getSize(),
-                reqDto.getBrand(),
-                reqDto.getDesiredItem(),
-                reqDto.getDeposit()
-        );
+        exchangeItem.updateFromDto(reqDto, category);
         return exchangeItem.getId();
     }
 

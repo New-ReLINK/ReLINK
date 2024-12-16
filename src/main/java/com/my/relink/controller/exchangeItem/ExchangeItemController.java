@@ -29,7 +29,7 @@ public class ExchangeItemController {
     @GetMapping("/users/items/exchanges")
     public ResponseEntity<ApiResult<GetExchangeItemsRespDto>> getExchangeItemsByUserId(@AuthenticationPrincipal AuthUser authUSer,
                                                                                        @RequestParam(value = "page", required = false, defaultValue = "0") int page,
-                                                                                       @RequestParam(value = "size", required = false, defaultValue = "10") int size) {
+                                                                                       @RequestParam(value = "size", required = false, defaultValue = "100") int size) {
         GetExchangeItemsRespDto exchangeItems = exchangeItemService.getExchangeItemsByUserId(authUSer.getId(), page, size);
         return new ResponseEntity<>(ApiResult.success(exchangeItems), HttpStatus.OK);
     }
