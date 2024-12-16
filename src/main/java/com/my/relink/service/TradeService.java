@@ -198,6 +198,7 @@ public class TradeService {
                         Map.entry(trade.getOwnerExchangeItem().getId(), trade),
                         Map.entry(trade.getRequesterExchangeItem().getId(), trade)
                 ).stream())
+                .filter(entry -> itemIds.contains(entry.getKey()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 }

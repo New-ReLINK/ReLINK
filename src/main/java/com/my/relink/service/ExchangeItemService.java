@@ -11,7 +11,6 @@ import com.my.relink.domain.item.exchange.repository.ExchangeItemRepository;
 import com.my.relink.domain.point.Point;
 import com.my.relink.domain.point.repository.PointRepository;
 import com.my.relink.domain.trade.Trade;
-import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.BusinessException;
@@ -22,7 +21,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -41,7 +39,7 @@ public class ExchangeItemService {
         Category category = getValidCategory(reqDto.getCategoryId());
         User user = getValidUser(userId);
         // 보증금에 대한 유효성 검사
-        validateDeposit(reqDto, userId);
+        validateDeposit(reqDto.getDeposit(), userId);
         ExchangeItem exchangeItem = reqDto.toEntity(category, user);
         return exchangeItemRepository.save(exchangeItem).getId();
     }
@@ -52,30 +50,16 @@ public class ExchangeItemService {
 
         Page<ExchangeItem> items = exchangeItemRepository.findByUserId(user.getId(), pageable);
         if (items.isEmpty()) {
-            return createEmptyResponse();
+            return GetExchangeItemsByUserRespDto.empty(pageable);
         }
 
         List<Long> itemIds = items.getContent().stream().map(ExchangeItem::getId).toList();
         Map<Long, Trade> tradeMap = tradeService.getTradesByItemIds(itemIds);
         Map<Long, String> imageMap = imageService.getImagesByItemIds(EntityType.EXCHANGE_ITEM, itemIds);
 
-        List<GetExchangeItemRespDto> content = items.getContent().stream()
-                .map(item -> mapToResponseDto(item, tradeMap, imageMap))
-                .toList();
+        Page<GetExchangeItemRespDto> content = items.map(item -> GetExchangeItemRespDto.from(item, tradeMap, imageMap));
 
-        return createPagedResponse(content, items);
-    }
-
-    // 교환상대 닉네임 가져오기
-    // trade 에서 해당 등록된 아이템들의 등록자id와 해당 유저의 id를 비교하여 상대방이 등록한 아이템을 통해 상대방의 닉네임을 추출
-    private String getPartnerNickname(Trade trade, Long itemId) {
-        if (trade == null) {
-            return null;
-        }
-        ExchangeItem partnerItem = trade.getOwnerExchangeItem().getId().equals(itemId)
-                ? trade.getRequesterExchangeItem()
-                : trade.getOwnerExchangeItem();
-        return partnerItem.getUser().getNickname();
+        return GetExchangeItemsByUserRespDto.of(content);
     }
 
     // user 가져오기
@@ -93,15 +77,15 @@ public class ExchangeItemService {
     }
 
     // 보증금 유효성 검사
-    public void validateDeposit(CreateExchangeItemReqDto reqDto, Long userId) {
+    public void validateDeposit(Integer deposit, Long userId) {
         // 보증금이 0보다 작은 경우
-        if (reqDto.getDeposit() < 0) {
+        if (deposit < 0) {
             throw new BusinessException(ErrorCode.DEPOSIT_CANNOT_LESS_ZERO);
         }
         // 포인트가 없거나 포인트가 보증금보다 적은 경우
         Point point = pointRepository.findByUserId(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.POINT_NOT_FOUND));
-        if (point.getAmount() < reqDto.getDeposit()) {
+        if (point.getAmount() < deposit) {
             throw new BusinessException(ErrorCode.POINT_SHORTAGE);
         }
     }
@@ -111,57 +95,4 @@ public class ExchangeItemService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.EXCHANGE_ITEM_NOT_FOUND));
     }
 
-    // 빈 페이지 반환
-    private GetExchangeItemsByUserRespDto createEmptyResponse() {
-        return GetExchangeItemsByUserRespDto.builder()
-                .content(List.of())
-                .pageInfo(GetExchangeItemsByUserRespDto.PageInfo.builder()
-                        .totalElements(0)
-                        .totalPages(0)
-                        .hasPrevious(false)
-                        .hasNext(false)
-                        .build())
-                .build();
-    }
-
-    // responseDto
-    private GetExchangeItemRespDto mapToResponseDto(ExchangeItem item, Map<Long, Trade> tradeMap, Map<Long, String> imageMap) {
-        Trade trade = item.getTradeStatus() == TradeStatus.AVAILABLE ? null : tradeMap.get(item.getId());
-        String imageUrl = imageMap.get(item.getId());
-        String partnerNickname = getPartnerNickname(trade, item.getId());
-        LocalDate completedDate = (trade != null && item.getTradeStatus() == TradeStatus.EXCHANGED)
-                ? trade.getModifiedAt().toLocalDate()
-                : null;
-        GetExchangeItemRespDto.GetExchangeItemRespDtoBuilder builder = GetExchangeItemRespDto.builder()
-                .exchangeItemId(item.getId())
-                .exchangeItemName(item.getName())
-                .imageUrl(imageUrl)
-                .tradeStatus(item.getTradeStatus());
-        if (item.getTradeStatus() == TradeStatus.AVAILABLE) {
-            builder.size(item.getSize());
-            builder.desiredItem(item.getDesiredItem());
-        } else if (item.getTradeStatus() == TradeStatus.IN_EXCHANGE) {
-            builder.size(item.getSize());
-            builder.tradePartnerNickname(partnerNickname);
-            builder.tradeId(trade != null ? trade.getId() : null);
-        } else if (item.getTradeStatus() == TradeStatus.EXCHANGED) {
-            builder.tradePartnerNickname(partnerNickname);
-            builder.completedDate(trade != null ? completedDate : null);
-            builder.tradeId(trade != null ? trade.getId() : null);
-        }
-        return builder.build();
-    }
-
-    // paging responseDto
-    private GetExchangeItemsByUserRespDto createPagedResponse(List<GetExchangeItemRespDto> content, Page<ExchangeItem> items) {
-        return GetExchangeItemsByUserRespDto.builder()
-                .content(content)
-                .pageInfo(GetExchangeItemsByUserRespDto.PageInfo.builder()
-                        .totalElements(items.getTotalElements())
-                        .totalPages(items.getTotalPages())
-                        .hasPrevious(items.hasPrevious())
-                        .hasNext(items.hasNext())
-                        .build())
-                .build();
-    }
 }
