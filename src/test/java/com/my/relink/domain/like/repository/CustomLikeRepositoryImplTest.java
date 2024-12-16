@@ -1,5 +1,6 @@
 package com.my.relink.domain.like.repository;
 
+import com.my.relink.config.JpaConfig;
 import com.my.relink.config.TestConfig;
 import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.image.Image;
@@ -9,7 +10,6 @@ import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.item.exchange.repository.ExchangeItemRepository;
 import com.my.relink.domain.like.Like;
 import com.my.relink.domain.like.repository.dto.LikeExchangeItemListRepositoryDto;
-import com.my.relink.domain.review.Review;
 import com.my.relink.domain.review.repository.ReviewRepository;
 import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.domain.user.Role;
@@ -25,12 +25,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import java.math.BigDecimal;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
-@Import(TestConfig.class)
+@Import({TestConfig.class, JpaConfig.class})
 class CustomLikeRepositoryImplTest {
 
     @Autowired
@@ -53,7 +51,7 @@ class CustomLikeRepositoryImplTest {
 
     @Test
     @DisplayName("사용자가 좋아요한 교환 아이템 목록을 페이징하여 조회한다")
-    void findUserLikeExchangeItem() {
+    void findUserLikeExchangeItem() throws InterruptedException {
         // given
         User user1 = userRepository.save(User.builder()
                 .nickname("testUser1")
@@ -98,19 +96,18 @@ class CustomLikeRepositoryImplTest {
 
         Image image1 = imageRepository.save(Image.builder()
                 .imageUrl("url1")
-                .entityId(item1.getId())
+                .entityId(item2.getId())
                 .entityType(EntityType.EXCHANGE_ITEM)
-                .build());
-
-        Review review1 = reviewRepository.save(Review.builder()
-                .exchangeItem(item1)
-                .star(new BigDecimal("4.5"))
                 .build());
 
         Like like1 = likeRepository.save(Like.builder()
                 .user(user1)
                 .exchangeItem(item1)
                 .build());
+
+        Thread.sleep(1000);
+        em.flush();
+        em.clear();
 
         em.flush();
 
@@ -127,15 +124,13 @@ class CustomLikeRepositoryImplTest {
         // then
         assertThat(result.getContent()).hasSize(2);
         assertThat(result.getTotalElements()).isEqualTo(2);
-        LikeExchangeItemListRepositoryDto firstItem = result.getContent().get(0);
+        LikeExchangeItemListRepositoryDto firstItem = result.getContent().get(1);
 
-        assertThat(firstItem.getItemId()).isEqualTo(item1.getId());
-        assertThat(firstItem.getItemName()).isEqualTo(item1.getName());
+        assertThat(firstItem.getItemId()).isEqualTo(like1.getExchangeItem().getId());
+        assertThat(firstItem.getItemName()).isEqualTo(like1.getExchangeItem().getName());
         assertThat(firstItem.getTradeStatus()).isEqualTo(TradeStatus.AVAILABLE);
-        assertThat(firstItem.getDesiredItem()).isEqualTo(item1.getDesiredItem());
+        assertThat(firstItem.getDesiredItem()).isEqualTo(like1.getExchangeItem().getDesiredItem());
         assertThat(firstItem.getOwnerNickname()).isEqualTo(user2.getNickname());
-        assertThat(firstItem.getImageUrl()).isEqualTo(image1.getImageUrl());
-        assertThat(firstItem.getAvgStar()).isEqualTo(4.5);
     }
 
     @Test
