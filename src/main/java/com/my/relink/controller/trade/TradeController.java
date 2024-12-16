@@ -94,4 +94,12 @@ public class TradeController {
         return new ResponseEntity<>(ApiResult.success(responseDto), HttpStatus.CREATED);
     }
 
+    @GetMapping("/trades/{tradeId}/review")
+    public ResponseEntity<ApiResult<ViewReviewRespDto>> getReviewInfo(
+            @PathVariable(name = "tradeId") Long tradeId,
+            @AuthenticationPrincipal AuthUser authUser){
+        ViewReviewRespDto responseDto = tradeService.getReviewInfo(tradeId, authUser);
+        return new ResponseEntity<>(ApiResult.success(responseDto), HttpStatus.OK);
+    }
+
 }
