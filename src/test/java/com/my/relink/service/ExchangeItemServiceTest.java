@@ -1,9 +1,9 @@
-package com.my.relink.ExchangeItem;
+package com.my.relink.service;
+
 
 import com.my.relink.controller.exchangeItem.dto.req.CreateExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemRespDto;
-import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemsByUserRespDto;
-import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemsAndPageByUserRespDto;
+import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemsRespDto;
 import com.my.relink.domain.BaseEntity;
 import com.my.relink.domain.category.Category;
 import com.my.relink.domain.category.repository.CategoryRepository;
@@ -23,7 +23,6 @@ import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
-import com.my.relink.service.ExchangeItemService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -41,6 +40,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -62,9 +62,9 @@ class ExchangeItemServiceTest {
     @Mock
     private PointRepository pointRepository;
     @Mock
-    private TradeRepository tradeRepository;
+    private TradeService tradeService;
     @Mock
-    private ImageRepository imageRepository;
+    private ImageService imageService;
 
     @BeforeEach
     void setUp() {
@@ -127,6 +127,7 @@ class ExchangeItemServiceTest {
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("보증금은 0원보다 작을 수 없습니다.");
     }
+
     @Test
     @DisplayName("내 교환상품 생성하기 실패 - 포인트가 보증금보다 작은 경우")
     void testCreateExchangeItem_Fail_PointLessThenDeposit() {
@@ -182,19 +183,23 @@ class ExchangeItemServiceTest {
             e.printStackTrace();
             throw new RuntimeException("Reflection failed", e);
         }
-        when(tradeRepository.findByExchangeItemIds(List.of(1L, 2L))).thenReturn(List.of(trade1));
-        Image image1 = Image.builder().id(1L).entityId(1L).entityType(EntityType.EXCHANGE_ITEM).imageUrl("http://example.com/image1.jpg").build();
-        Image image2 = Image.builder().id(2L).entityId(2L).entityType(EntityType.EXCHANGE_ITEM).imageUrl("http://example.com/image2.jpg").build();
-        when(imageRepository.findImages(EntityType.EXCHANGE_ITEM, List.of(1L, 2L)))
-                .thenReturn(List.of(image1, image2));
-        GetExchangeItemsAndPageByUserRespDto result = exchangeItemService.getExchangeItemsByUserId(userId1, 1, 10);
+        when(tradeService.getTradesByItemIds(List.of(1L, 2L))).thenReturn(Map.of(2L, trade1));
+        Map<Long, String> imageMap = Map.of(
+                1L, "http://example.com/image1.jpg",
+                2L, "http://example.com/image2.jpg"
+        );
+        when(imageService.getImagesByItemIds(EntityType.EXCHANGE_ITEM, List.of(1L, 2L)))
+                .thenReturn(imageMap);
+        GetExchangeItemsRespDto result = exchangeItemService.getExchangeItemsByUserId(userId1, 1, 10);
 
         assertThat(result).isNotNull();
         assertThat(result.getContent()).isInstanceOf(List.class);
         assertThat(result.getPageInfo()).isNotNull();
-        List<GetExchangeItemsByUserRespDto> content = result.getContent();
+
+        List<GetExchangeItemRespDto> content = result.getContent();
         assertThat(content).hasSize(2);
-        GetExchangeItemsByUserRespDto item1Dto = content.get(0);
+
+        GetExchangeItemRespDto item1Dto = content.get(0);
         assertThat(item1Dto.getExchangeItemId()).isEqualTo(1L);
         assertThat(item1Dto.getExchangeItemName()).isEqualTo("Item1");
         assertThat(item1Dto.getImageUrl()).isEqualTo("http://example.com/image1.jpg");
@@ -203,7 +208,8 @@ class ExchangeItemServiceTest {
         assertThat(item1Dto.getSize()).isNull();
         assertThat(item1Dto.getTradePartnerNickname()).isNull();
         assertThat(item1Dto.getCompletedDate()).isNull();
-        GetExchangeItemsByUserRespDto item2Dto = content.get(1);
+
+        GetExchangeItemRespDto item2Dto = content.get(1);
         assertThat(item2Dto.getExchangeItemId()).isEqualTo(2L);
         assertThat(item2Dto.getExchangeItemName()).isEqualTo("Item2");
         assertThat(item2Dto.getImageUrl()).isEqualTo("http://example.com/image2.jpg");
@@ -224,14 +230,14 @@ class ExchangeItemServiceTest {
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(exchangeItemRepository.findByUserId(userId, pageable)).thenReturn(emptyPage);
 
-        GetExchangeItemsAndPageByUserRespDto result = exchangeItemService.getExchangeItemsByUserId(userId, 1, 10);
+        GetExchangeItemsRespDto result = exchangeItemService.getExchangeItemsByUserId(userId, 1, 10);
         assertThat(result).isNotNull();
         System.out.println("Result: " + result);
 
-        List<GetExchangeItemsByUserRespDto> content = result.getContent();
+        List<GetExchangeItemRespDto> content = result.getContent();
         assertThat(content).isEmpty();
 
-        GetExchangeItemsAndPageByUserRespDto.PageInfo pageInfo = result.getPageInfo();
+        GetExchangeItemsRespDto.PageInfo pageInfo = result.getPageInfo();
         assertThat(pageInfo.getTotalElements()).isEqualTo(0);
         assertThat(pageInfo.getTotalPages()).isEqualTo(0);
         assertThat(pageInfo.isHasPrevious()).isEqualTo(false);
@@ -263,7 +269,7 @@ class ExchangeItemServiceTest {
         GetExchangeItemRespDto result = exchangeItemService.getExchangeItemModifyPage(itemId, userId);
 
         Assertions.assertNotNull(result);
-        Assertions.assertEquals("Test Item", result.getItemName());
+        Assertions.assertEquals("Test Item", result.getExchangeItemName());
         Assertions.assertEquals("Test Description", result.getDescription());
         Assertions.assertEquals("의류", result.getCategory().getName());
         Assertions.assertEquals(ItemQuality.NEW, result.getItemQuality());

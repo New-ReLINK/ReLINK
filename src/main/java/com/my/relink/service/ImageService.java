@@ -8,6 +8,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -21,6 +25,12 @@ public class ImageService {
                         EntityType.EXCHANGE_ITEM)
                 .map(Image::getImageUrl)
                 .orElse(null);
+    }
+
+    public Map<Long, String> getImagesByItemIds(EntityType entityType, List<Long> itemIds) {
+        List<Image> images = imageRepository.findImages(entityType, itemIds);
+        return images.stream()
+                .collect(Collectors.toMap(Image::getEntityId, Image::getImageUrl));
     }
 
 }

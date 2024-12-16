@@ -3,8 +3,7 @@ package com.my.relink.controller.exchangeItem;
 import com.my.relink.config.security.AuthUser;
 import com.my.relink.controller.exchangeItem.dto.req.CreateExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemRespDto;
-import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemsByUserRespDto;
-import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemsAndPageByUserRespDto;
+import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemsRespDto;
 import com.my.relink.service.ExchangeItemService;
 import com.my.relink.util.api.ApiResult;
 import jakarta.validation.Valid;
@@ -28,10 +27,10 @@ public class ExchangeItemController {
     }
 
     @GetMapping("/users/items/exchanges")
-    public ResponseEntity<ApiResult<GetExchangeItemsAndPageByUserRespDto>> getExchangeItemsByUserId(@AuthenticationPrincipal AuthUser authUSer,
-                                                                                                    @RequestParam(value = "page", required = false, defaultValue = "0") int page,
-                                                                                                    @RequestParam(value = "size", required = false, defaultValue = "10") int size) {
-        GetExchangeItemsAndPageByUserRespDto exchangeItems = exchangeItemService.getExchangeItemsByUserId(authUSer.getId(), page, size);
+    public ResponseEntity<ApiResult<GetExchangeItemsRespDto>> getExchangeItemsByUserId(@AuthenticationPrincipal AuthUser authUSer,
+                                                                                       @RequestParam(value = "page", required = false, defaultValue = "0") int page,
+                                                                                       @RequestParam(value = "size", required = false, defaultValue = "10") int size) {
+        GetExchangeItemsRespDto exchangeItems = exchangeItemService.getExchangeItemsByUserId(authUSer.getId(), page, size);
         return new ResponseEntity<>(ApiResult.success(exchangeItems), HttpStatus.OK);
     }
 

@@ -28,6 +28,8 @@ public enum ErrorCode {
     ALREADY_REPORTED_TRADE(HttpStatus.CONFLICT.value(), "이미 신고된 거래입니다"),
     UNAUTHORIZED_ACCESS(HttpStatus.UNAUTHORIZED.value(), "해당 상품의 소유자가 아닙니다"),
 
+    EXCHANGE_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "해당 교환 상품을 찾을 수 없습니다"),
+
     ;
 
     private final int status;
