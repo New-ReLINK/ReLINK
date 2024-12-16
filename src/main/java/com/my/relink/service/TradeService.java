@@ -5,7 +5,6 @@ import com.my.relink.controller.trade.dto.request.AddressReqDto;
 import com.my.relink.controller.trade.dto.request.TrackingNumberReqDto;
 import com.my.relink.controller.trade.dto.request.TradeCancelReqDto;
 import com.my.relink.controller.trade.dto.response.*;
-import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.image.repository.ImageRepository;
 import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.item.exchange.repository.ExchangeItemRepository;
@@ -220,11 +219,11 @@ public class TradeService {
         String partnerImage = imageService.getExchangeItemUrl(partnerExchangeItem);
 
         User partnerUser = partnerExchangeItem.getUser();
-      
+
         return TradeCompletionRespDto.from(myExchangeItem, partnerExchangeItem, myImage, partnerImage, partnerUser, trade, dateTimeUtil);
     }
-  
-      public Map<Long, Trade> getTradesByItemIds(List<Long> itemIds) {
+
+    public Map<Long, Trade> getTradesByItemIds(List<Long> itemIds) {
         List<Trade> trades = tradeRepository.findByExchangeItemIds(itemIds);
         return trades.stream()
                 .flatMap(trade -> List.of(

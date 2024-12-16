@@ -65,7 +65,7 @@ public class ReviewService {
         Trade trade = tradeRepository.findById(tradeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
 
-        if(trade.getTradeStatus()!= TradeStatus.EXCHANGED){
+        if (trade.getTradeStatus() != TradeStatus.EXCHANGED) {
             throw new BusinessException(ErrorCode.TRADE_ACCESS_DENIED);
         }
 
