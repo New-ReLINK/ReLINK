@@ -1,5 +1,6 @@
 package com.my.relink.domain.user.repository;
 
+import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.repository.dto.UserInfoWithCountRepositoryDto;
 
 import java.util.Optional;

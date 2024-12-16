@@ -55,6 +55,7 @@ public class TradeService {
     }
 
 
+
     public Trade findByIdOrFail(Long tradeId) {
         return tradeRepository.findById(tradeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
@@ -62,6 +63,11 @@ public class TradeService {
 
     public Trade findByIdWithUsersOrFail(Long tradeId){
         return tradeRepository.findByIdWithUsers(tradeId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
+    }
+
+    public Trade findByIdFetchItemsAndUsersOrFail(Long tradeId){
+        return tradeRepository.findByIdWithItemsAndUser(tradeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
     }
 
