@@ -207,12 +207,10 @@ public class TradeService {
         ExchangeItem myExchangeItem = trade.getMyExchangeItem(currentUser.getId());
         ExchangeItem partnerExchangeItem = trade.getPartnerExchangeItem(currentUser.getId());
 
-        Image myImage = imageRepository.findTopByEntityIdAndEntityTypeOrderByCreatedAtAsc(myExchangeItem.getId(), EntityType.EXCHANGE_ITEM).orElse(null);
-        Image partnerImage = imageRepository.findTopByEntityIdAndEntityTypeOrderByCreatedAtAsc(partnerExchangeItem.getId(), EntityType.EXCHANGE_ITEM).orElse(null);
+        String myImage = imageService.getExchangeItemUrl(myExchangeItem);
+        String partnerImage = imageService.getExchangeItemUrl(partnerExchangeItem);
 
-        User partnerUser = userRepository.findById(trade.getPartner(currentUser.getId()).getId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-
+        User partnerUser = partnerExchangeItem.getUser();
         return TradeCompletionRespDto.from(myExchangeItem, partnerExchangeItem, myImage, partnerImage, partnerUser, trade, dateTimeUtil);
     }
 
@@ -223,22 +221,14 @@ public class TradeService {
         Trade trade = tradeRepository.findById(tradeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
 
-        User partnerUser = userRepository.findById(trade.getPartner(currentUser.getId()).getId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-
         ExchangeItem partnerExchangeItem = trade.getPartnerExchangeItem(currentUser.getId());
 
-//        if (trade.isRequester(currentUser.getId())) {
-//            partnerExchangeItem = trade.getOwnerExchangeItem();
-//
-//        } else {
-//            partnerExchangeItem = trade.getRequesterExchangeItem();
-//        }
+        User partnerUser = partnerExchangeItem.getUser();
 
-        Image partnerImage = imageRepository.findTopByEntityIdAndEntityTypeOrderByCreatedAtAsc(partnerExchangeItem.getId(), EntityType.EXCHANGE_ITEM).orElse(null);
+        String partnerImageUrl = imageService.getExchangeItemUrl(partnerExchangeItem);
         String tradeStartedAt = dateTimeUtil.getTradeStatusFormattedTime(trade.getCreatedAt());
 
-        return TradeCancelRespDto.from(partnerUser, partnerExchangeItem, partnerImage, tradeStartedAt);
+        return TradeCancelRespDto.from(partnerUser, partnerExchangeItem, partnerImageUrl, tradeStartedAt);
     }
 }
 

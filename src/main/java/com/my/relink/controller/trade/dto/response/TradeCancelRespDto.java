@@ -17,12 +17,12 @@ public class TradeCancelRespDto {
     private String tradeStartedAt;
     private String partnerExchangeItemImageUrl;
 
-    public static TradeCancelRespDto from(User partner, ExchangeItem partnerExchangeItem, Image partnerExchangeItemImage, String tradeStartedAt){
+    public static TradeCancelRespDto from(User partner, ExchangeItem partnerExchangeItem, String partnerExchangeItemImage, String tradeStartedAt){
         return new TradeCancelRespDto(
                 partnerExchangeItem.getName(),
                 partner.getNickname(),
                 tradeStartedAt,
-                partnerExchangeItemImage != null ? partnerExchangeItemImage.getImageUrl() : null
+                partnerExchangeItemImage
         );
     }
 }

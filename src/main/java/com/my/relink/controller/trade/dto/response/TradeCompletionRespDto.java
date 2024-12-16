@@ -54,7 +54,7 @@ public class TradeCompletionRespDto {
 
     // 정적 팩토리 메서드
     public static TradeCompletionRespDto from(ExchangeItem myExchangeItem, ExchangeItem partnerExchangeItem,
-                                              Image myImage, Image partnerImage, User partnerUser,
+                                              String myImage, String partnerImage, User partnerUser,
                                               Trade trade, DateTimeUtil dateTimeUtil) {
 
         // 교환 상품 정보
@@ -62,14 +62,14 @@ public class TradeCompletionRespDto {
                 .itemName(myExchangeItem.getName())
                 .itemQuality(myExchangeItem.getItemQuality())
                 .itemId(myExchangeItem.getId())
-                .itemImageUrl(myImage != null ? myImage.getImageUrl() : null)
+                .itemImageUrl(myImage)
                 .build();
 
         TradeItemInfo partnerItem = TradeItemInfo.builder()
                 .itemName(partnerExchangeItem.getName())
                 .itemQuality(partnerExchangeItem.getItemQuality())
                 .itemId(partnerExchangeItem.getId())
-                .itemImageUrl(partnerImage != null ? partnerImage.getImageUrl() : null)
+                .itemImageUrl(partnerImage)
                 .build();
 
         // 유저 정보
