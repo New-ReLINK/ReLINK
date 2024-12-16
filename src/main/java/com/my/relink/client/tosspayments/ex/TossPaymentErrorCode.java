@@ -1,4 +1,4 @@
-package com.my.relink.client.ex;
+package com.my.relink.client.tosspayments.ex;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

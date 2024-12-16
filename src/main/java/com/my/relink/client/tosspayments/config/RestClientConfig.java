@@ -1,4 +1,4 @@
-package com.my.relink.client.config;
+package com.my.relink.client.tosspayments.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

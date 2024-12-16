@@ -1,6 +1,6 @@
-package com.my.relink.client.dto.response;
+package com.my.relink.client.tosspayments.dto.response;
 
-import com.my.relink.client.ex.TossPaymentErrorCode;
+import com.my.relink.client.tosspayments.ex.TossPaymentErrorCode;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

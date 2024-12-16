@@ -1,8 +1,8 @@
-package com.my.relink.client.ex.notFound;
+package com.my.relink.client.tosspayments.ex.notFound;
 
 
-import com.my.relink.client.ex.TossPaymentErrorCode;
-import com.my.relink.client.ex.TossPaymentException;
+import com.my.relink.client.tosspayments.ex.TossPaymentErrorCode;
+import com.my.relink.client.tosspayments.ex.TossPaymentException;
 
 public class TossPaymentNotFoundException extends TossPaymentException {
 

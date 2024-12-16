@@ -1,4 +1,4 @@
-package com.my.relink.client.dto.request;
+package com.my.relink.client.tosspayments.dto.request;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

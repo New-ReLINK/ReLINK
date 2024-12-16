@@ -1,4 +1,4 @@
-package com.my.relink.client.dto.response;
+package com.my.relink.client.tosspayments.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Getter;

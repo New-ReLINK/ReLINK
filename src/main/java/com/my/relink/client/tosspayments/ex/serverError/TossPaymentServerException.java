@@ -1,8 +1,8 @@
-package com.my.relink.client.ex.serverError;
+package com.my.relink.client.tosspayments.ex.serverError;
 
 
-import com.my.relink.client.ex.TossPaymentErrorCode;
-import com.my.relink.client.ex.TossPaymentException;
+import com.my.relink.client.tosspayments.ex.TossPaymentErrorCode;
+import com.my.relink.client.tosspayments.ex.TossPaymentException;
 
 public class TossPaymentServerException extends TossPaymentException {
     public TossPaymentServerException(TossPaymentErrorCode errorCode, String paymentKey) {
