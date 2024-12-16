@@ -48,7 +48,8 @@ public enum TossPaymentErrorCode {
     UNKNOWN_PAYMENT_ERROR("결제에 실패했어요. 같은 문제가 반복된다면 은행이나 카드사로 문의해주세요"),
 
     //정의되지 않은 오류
-    UNKNOWN_ERROR("알 수 없는 오류가 발생했습니다. 잠시 후 다시 시도해주세요");
+    UNKNOWN_ERROR("알 수 없는 오류가 발생했습니다. 잠시 후 다시 시도해주세요"),
+    NETWORK_ERROR("네트워크 오류가 발생했습니다");
 
     private final String message;
 

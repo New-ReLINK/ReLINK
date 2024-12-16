@@ -8,6 +8,7 @@ import com.my.relink.client.tosspayments.dto.response.TossPaymentRespDto;
 import com.my.relink.client.tosspayments.ex.PaymentFeature;
 import com.my.relink.client.tosspayments.ex.TossPaymentErrorCode;
 import com.my.relink.client.tosspayments.ex.TossPaymentException;
+import com.my.relink.client.tosspayments.ex.TossPaymentNetworkException;
 import com.my.relink.client.tosspayments.ex.badRequest.TossPaymentBadRequestException;
 import com.my.relink.client.tosspayments.ex.forbidden.TossPaymentForbiddenException;
 import com.my.relink.client.tosspayments.ex.notFound.TossPaymentNotFoundException;
@@ -17,6 +18,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Recover;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
@@ -33,14 +37,20 @@ public class TossPaymentClient {
     private static final String SYSTEM_ERROR_LOG_FORMAT = "[토스페이먼츠 %s 중 예상치 못한 예외 발생] paymentKey={}";
 
 
-    public TossPaymentRespDto cancelPayment(String paymentKey, TossPaymentCancelReqDto cancelReqDto){
+
+    @Retryable(
+            retryFor = {TossPaymentNetworkException.class},
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 1000)
+    )
+    public TossPaymentRespDto cancelPayment(String paymentKey, TossPaymentCancelReqDto cancelReqDto, PaymentFeature paymentFeature){
         try {
             TossPaymentRespDto response = restClient.post()
-                    .uri("/v1/payments/{paymentKey}/cancel", paymentKey)
+                    .uri(TossPaymentApiPath.PAYMENT_CANCEL, paymentKey)
                     .body(cancelReqDto)
                     .retrieve()
                     .onStatus(HttpStatusCode::isError, ((request, errorResponse) -> {
-                        TossPaymentErrorRespDto tossPaymentErrorRespDto = bodyTo(errorResponse);
+                        TossPaymentErrorRespDto tossPaymentErrorRespDto = parseErrorResponse(errorResponse);
                         TossPaymentErrorCode errorCode = tossPaymentErrorRespDto.getErrorCode();
                         handleError(paymentKey, errorResponse, errorCode);
                     }))
@@ -51,7 +61,7 @@ public class TossPaymentClient {
                     .map(TossPaymentRespDto.Cancels::getCancelStatus)
                     .orElse("UNKNOWN");
 
-            log.info("check 1: [토스페이먼츠 결제 취소 성공] paymentKey={}, orderId={}, totalAmount={}, status = {} ",
+            log.info("[토스페이먼츠 결제 취소 성공] paymentKey={}, orderId={}, totalAmount={}, status = {} ",
                     response.getPaymentKey(),
                     response.getOrderId(),
                     response.getTotalAmount(),
@@ -59,18 +69,24 @@ public class TossPaymentClient {
             );
             return response;
         } catch (Exception e){
-            handlePaymentException(PaymentFeature.CANCEL, paymentKey, e);
-            throw e;
+            checkAndThrowIfRetryable(e);
+            throw handlePaymentException(paymentFeature, paymentKey, e);
         }
     }
 
-    public TossPaymentRespDto checkPaymentInfo(String paymentKey){
+
+    @Retryable(
+            retryFor = {TossPaymentNetworkException.class},
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 1000)
+    )
+    public TossPaymentRespDto checkPaymentInfo(String paymentKey, PaymentFeature paymentFeature){
         try {
             TossPaymentRespDto response = restClient.get()
-                    .uri("/v1/payments/{paymentKey}", paymentKey)
+                    .uri(TossPaymentApiPath.PAYMENT_INFO, paymentKey)
                     .retrieve()
                     .onStatus(HttpStatusCode::isError, ((request, errorResponse) -> {
-                        TossPaymentErrorRespDto tossPaymentErrorRespDto = bodyTo(errorResponse);
+                        TossPaymentErrorRespDto tossPaymentErrorRespDto = parseErrorResponse(errorResponse);
                         TossPaymentErrorCode errorCode = tossPaymentErrorRespDto.getErrorCode();
                         handleError(paymentKey, errorResponse, errorCode);
                     }))
@@ -82,13 +98,18 @@ public class TossPaymentClient {
             );
             return response;
         } catch (Exception e) {
-            handlePaymentException(PaymentFeature.INQUIRY, paymentKey, e);
-            throw e;
+            checkAndThrowIfRetryable(e);
+            throw handlePaymentException(paymentFeature, paymentKey, e);
         }
     }
 
 
-    public TossPaymentRespDto confirmPayment(TossPaymentReqDto tossPaymentReqDto){
+    @Retryable(
+            retryFor = {TossPaymentNetworkException.class},
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 1000)
+    )
+    public TossPaymentRespDto confirmPayment(TossPaymentReqDto tossPaymentReqDto, PaymentFeature paymentFeature){
         log.info("[토스페이먼츠 결제 승인 요청] paymentKey={}, orderId={}, amount={}",
                 tossPaymentReqDto.getPaymentKey(),
                 tossPaymentReqDto.getOrderId(),
@@ -97,11 +118,11 @@ public class TossPaymentClient {
         try {
             TossPaymentRespDto response = restClient
                     .post()
-                    .uri("/v1/payments/confirm")
+                    .uri(TossPaymentApiPath.PAYMENT_CONFIRM)
                     .body(tossPaymentReqDto)
                     .retrieve()
                     .onStatus(HttpStatusCode::isError, ((request, errorResponse) -> {
-                        TossPaymentErrorRespDto tossPaymentErrorRespDto = bodyTo(errorResponse);
+                        TossPaymentErrorRespDto tossPaymentErrorRespDto = parseErrorResponse(errorResponse);
                         TossPaymentErrorCode errorCode = tossPaymentErrorRespDto.getErrorCode();
                         String paymentKey = tossPaymentErrorRespDto.getPaymentKey();
                         handleError(paymentKey, errorResponse, errorCode);
@@ -115,20 +136,28 @@ public class TossPaymentClient {
             );
             return response;
         } catch (Exception e){
-            handlePaymentException(PaymentFeature.CONFIRM, tossPaymentReqDto.getPaymentKey(), e);
-            throw e;
+            checkAndThrowIfRetryable(e);
+            throw handlePaymentException(paymentFeature, tossPaymentReqDto.getPaymentKey(), e);
         }
     }
 
 
-    private void handlePaymentException(PaymentFeature feature, String paymentKey, Exception e) {
+    private void checkAndThrowIfRetryable(Exception e){
+        if (TossPaymentNetworkException.isRetryableException(e)) {
+            throw new TossPaymentNetworkException("네트워크 통신 오류가 발생했습니다", e);
+        }
+    }
+
+
+    private RuntimeException handlePaymentException(PaymentFeature feature, String paymentKey, Exception e) {
         if (e instanceof TossPaymentException) {
             log.warn(ERROR_LOG_FORMAT.formatted(feature.getDescription()), paymentKey, ((TossPaymentException) e).getErrorCode().getMessage(), e);
-            throw (TossPaymentException) e;
+            return (TossPaymentException) e;
         }
         log.error(SYSTEM_ERROR_LOG_FORMAT.formatted(feature.getDescription()), paymentKey, e);
-        throw new TossPaymentException(TossPaymentErrorCode.UNKNOWN_ERROR, paymentKey, feature.getDescription() + " 중 예상치 못한 오류가 발생했습니다.");
+        return new TossPaymentException(TossPaymentErrorCode.UNKNOWN_ERROR, paymentKey, feature.getDescription() + " 중 예상치 못한 오류가 발생했습니다.");
     }
+
 
     private void handleError(String paymentKey, ClientHttpResponse errorResponse, TossPaymentErrorCode errorCode) throws IOException {
         switch(errorResponse.getStatusCode().value()){
@@ -144,9 +173,46 @@ public class TossPaymentClient {
         }
     }
 
-    private TossPaymentErrorRespDto bodyTo(ClientHttpResponse response) throws IOException {
-        InputStream body = response.getBody();
-        return om.readValue(body, TossPaymentErrorRespDto.class);
+
+    private void logAndThrowRecoveryFailure(String paymentKey, PaymentFeature paymentFeature, TossPaymentNetworkException e) {
+        log.error("[토스페이먼츠 {} 실패] 최대 재시도 횟수 초과. paymentKey={}",
+                paymentFeature.getDescription(),
+                paymentKey,
+                e
+        );
+        throw new TossPaymentException(
+                TossPaymentErrorCode.NETWORK_ERROR,
+                paymentKey,
+                paymentFeature.getDescription() + " 중 네트워크 오류가 발생했습니다"
+        );
+    }
+
+
+    @Recover
+    public TossPaymentRespDto recoverPayment(TossPaymentNetworkException e, String paymentKey, TossPaymentCancelReqDto cancelReqDto, PaymentFeature paymentFeature) {
+        logAndThrowRecoveryFailure(paymentKey, paymentFeature, e);
+        return null;
+    }
+
+
+    @Recover
+    public TossPaymentRespDto recoverPayment(TossPaymentNetworkException e, String paymentKey, PaymentFeature paymentFeature) {
+        logAndThrowRecoveryFailure(paymentKey, paymentFeature, e);
+        return null;
+    }
+
+
+    @Recover
+    public TossPaymentRespDto recoverPayment(TossPaymentNetworkException e, TossPaymentReqDto tossPaymentReqDto, PaymentFeature paymentFeature) {
+        logAndThrowRecoveryFailure(tossPaymentReqDto.getPaymentKey(), paymentFeature, e);
+        return null;
+    }
+
+
+    private TossPaymentErrorRespDto parseErrorResponse(ClientHttpResponse response) throws IOException {
+        try (InputStream body = response.getBody()) {
+            return om.readValue(body, TossPaymentErrorRespDto.class);
+        }
     }
 
 }
