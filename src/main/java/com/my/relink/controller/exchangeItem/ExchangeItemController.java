@@ -36,16 +36,23 @@ public class ExchangeItemController {
 
     @GetMapping("/users/items/exchanges/{itemId}")
     public ResponseEntity<ApiResult<GetExchangeItemRespDto>> getExchangeItemModifyPage(@PathVariable(value = "itemId") Long itemId,
-                                                                                              @AuthenticationPrincipal AuthUser authUser) {
+                                                                                       @AuthenticationPrincipal AuthUser authUser) {
         GetExchangeItemRespDto respDto = exchangeItemService.getExchangeItemModifyPage(itemId, authUser.getId());
         return new ResponseEntity<>(ApiResult.success(respDto), HttpStatus.OK);
     }
 
     @PutMapping("/users/items/exchanges/{itemId}")
     public ResponseEntity<ApiResult<Long>> updateExchangeItem(@PathVariable(value = "itemId") Long itemId,
-                                                                                @Valid @RequestBody ExchangeItemReqDto reqDto,
-                                                                                @AuthenticationPrincipal AuthUser authUser) {
+                                                              @Valid @RequestBody ExchangeItemReqDto reqDto,
+                                                              @AuthenticationPrincipal AuthUser authUser) {
         Long exchangeItemId = exchangeItemService.updateExchangeItem(itemId, reqDto, authUser.getId());
+        return new ResponseEntity<>(ApiResult.success(exchangeItemId), HttpStatus.OK);
+    }
+
+    @DeleteMapping("/users/items/exchanges/{itemId}")
+    public ResponseEntity<ApiResult<Long>> deleteExchangeItem(@PathVariable(value = "itemId") Long itemId,
+                                                              @AuthenticationPrincipal AuthUser authUser) {
+        Long exchangeItemId = exchangeItemService.deleteExchangeItem(itemId, authUser.getId());
         return new ResponseEntity<>(ApiResult.success(exchangeItemId), HttpStatus.OK);
     }
 

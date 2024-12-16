@@ -117,7 +117,7 @@ public class ExchangeItemService {
                         .build())
                 .build();
     }
-
+    @Transactional
     public GetExchangeItemRespDto getExchangeItemModifyPage(Long itemId, Long userId) {
         ExchangeItem exchangeItem = getValidExchangeItem(itemId, userId);
         Category category = exchangeItem.getCategory();
@@ -147,6 +147,13 @@ public class ExchangeItemService {
                 reqDto.getDesiredItem(),
                 reqDto.getDeposit()
         );
+        return exchangeItem.getId();
+    }
+
+    public Long deleteExchangeItem(Long itemId, Long userId) {
+        ExchangeItem exchangeItem = getValidExchangeItem(itemId, userId);
+        exchangeItem.delete(true);
+
         return exchangeItem.getId();
     }
     // 보증금 유효성 검사
@@ -198,4 +205,6 @@ public class ExchangeItemService {
         }
         return exchangeItem;
     }
+
+
 }

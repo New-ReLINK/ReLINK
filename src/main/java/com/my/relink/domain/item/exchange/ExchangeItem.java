@@ -12,7 +12,6 @@ import org.hibernate.annotations.SQLRestriction;
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
-@SQLRestriction("is_deleted = false")
 @ToString
 public class ExchangeItem extends BaseEntity {
 
@@ -92,5 +91,8 @@ public class ExchangeItem extends BaseEntity {
         this.brand = brand;
         this.desiredItem = desiredItem;
         this.deposit = deposit;
+    }
+    public void delete(Boolean isDeleted) {
+        this.isDeleted = isDeleted;
     }
 }
