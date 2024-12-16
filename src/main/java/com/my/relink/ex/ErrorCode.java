@@ -32,6 +32,7 @@ public enum ErrorCode {
     NOTIFICATION_DELIVERY_FAILED(HttpStatus.INTERNAL_SERVER_ERROR.value(), "알림 발송에 실패하였습니다."),
     FILE_SIZE_EXCEEDED(HttpStatus.BAD_REQUEST.value(), "파일 크기를 초과하였습니다."),
     INVALID_FILE_EXTENSION(HttpStatus.BAD_REQUEST.value(), "지원하지 않는 파일 형식입니다."),
+    ALREADY_IMAGE_FILE(HttpStatus.BAD_REQUEST.value(), "프로필 이미지는 하나만 등록할 수 있습니다."),
 
     ;
 
