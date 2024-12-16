@@ -9,7 +9,6 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-@Builder
 public class ViewTradeCancelRespDto {
     private String partnerExchangeItemName;
     private String partnerNickname;
