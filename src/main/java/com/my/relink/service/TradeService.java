@@ -3,10 +3,12 @@ package com.my.relink.service;
 import com.my.relink.config.security.AuthUser;
 import com.my.relink.controller.trade.dto.request.AddressReqDto;
 import com.my.relink.controller.trade.dto.request.TrackingNumberReqDto;
-import com.my.relink.controller.trade.dto.response.AddressRespDto;
-import com.my.relink.controller.trade.dto.response.TradeCompleteRespDto;
-import com.my.relink.controller.trade.dto.response.TradeInquiryDetailRespDto;
-import com.my.relink.controller.trade.dto.response.TradeRequestRespDto;
+import com.my.relink.controller.trade.dto.response.*;
+import com.my.relink.domain.image.EntityType;
+import com.my.relink.domain.image.Image;
+import com.my.relink.domain.image.ImageRepository;
+import com.my.relink.domain.item.exchange.ExchangeItem;
+import com.my.relink.domain.item.exchange.repository.ExchangeItemRepository;
 import com.my.relink.domain.trade.Trade;
 import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.domain.trade.repository.TradeRepository;
@@ -15,13 +17,19 @@ import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
+import com.my.relink.util.DateTimeFormatterUtil;
+import com.my.relink.util.DateTimeUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +41,9 @@ public class TradeService {
     private final ImageService imageService;
     private final UserRepository userRepository;
     private final PointTransactionService pointTransactionService;
+    private final ExchangeItemRepository exchangeItemRepository;
+    private final ImageRepository imageRepository;
+    private final DateTimeUtil dateTimeUtil;
 
     /**
      * [문의하기] -> 해당 채팅방의 거래 정보, 상품 정보, 상대 유저 정보 내리기
@@ -197,6 +208,23 @@ public class TradeService {
         tradeRepository.save(trade);
     }
 
+
+    public TradeCompletionRespDto findCompleteTradeInfo(Long tradeId, AuthUser authUser) {
+        User currentUser = userRepository.findById(authUser.getId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        Trade trade = tradeRepository.findTradeWithDetails(tradeId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
+
+        ExchangeItem myExchangeItem = trade.getMyExchangeItem(currentUser.getId());
+        ExchangeItem partnerExchangeItem = trade.getPartnerExchangeItem(currentUser.getId());
+
+        String myImageUrl = imageService.getExchangeItemUrl(myExchangeItem);
+        String partnerImageUrl = imageService.getExchangeItemUrl(partnerExchangeItem);
+
+        return TradeCompletionRespDto.from(myExchangeItem, partnerExchangeItem, myImageUrl, partnerImageUrl, partnerExchangeItem.getUser(), trade, dateTimeUtil);
+}
+
     public Map<Long, Trade> getTradesByItemIds(List<Long> itemIds) {
         List<Trade> trades = tradeRepository.findByExchangeItemIds(itemIds);
         return trades.stream()
@@ -206,6 +234,7 @@ public class TradeService {
                 ).stream())
                 .filter(entry -> itemIds.contains(entry.getKey()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
     }
 }
 

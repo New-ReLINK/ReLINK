@@ -3,10 +3,7 @@ package com.my.relink.controller.trade;
 import com.my.relink.config.security.AuthUser;
 import com.my.relink.controller.trade.dto.request.AddressReqDto;
 import com.my.relink.controller.trade.dto.request.TrackingNumberReqDto;
-import com.my.relink.controller.trade.dto.response.AddressRespDto;
-import com.my.relink.controller.trade.dto.response.TradeCompleteRespDto;
-import com.my.relink.controller.trade.dto.response.TradeInquiryDetailRespDto;
-import com.my.relink.controller.trade.dto.response.TradeRequestRespDto;
+import com.my.relink.controller.trade.dto.response.*;
 import com.my.relink.service.TradeService;
 import com.my.relink.util.api.ApiResult;
 import jakarta.validation.Valid;
@@ -69,6 +66,14 @@ public class TradeController {
             @AuthenticationPrincipal AuthUser authUser) {
         tradeService.getExchangeItemTrackingNumber(tradeId, reqDto, authUser);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/trades/{tradeId}/completion")
+    public ResponseEntity<ApiResult<TradeCompletionRespDto>> getCompleteTradeInfo(
+            @PathVariable(name = "tradeId") Long tradeId,
+            @AuthenticationPrincipal AuthUser authUser) {
+        TradeCompletionRespDto responseDto = tradeService.findCompleteTradeInfo(tradeId, authUser);
+        return new ResponseEntity<>(ApiResult.success(responseDto), HttpStatus.OK);
     }
 
 }
