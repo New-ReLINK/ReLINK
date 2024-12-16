@@ -366,7 +366,7 @@ class TradeServiceTest extends DummyObject {
 
         Mockito.when(userRepository.findById(requester.getId())).thenReturn(Optional.of(requester));
         Mockito.when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
-        Mockito.when(tradeRepository.findTradeWithDetails(tradeId, EntityType.EXCHANGE_ITEM)).thenReturn(Optional.of(trade));
+        Mockito.when(tradeRepository.findTradeWithDetails(tradeId)).thenReturn(Optional.of(trade));
         Mockito.when(imageRepository.findTopByEntityIdAndEntityTypeOrderByCreatedAtAsc(myExchangeItem.getId(), EntityType.EXCHANGE_ITEM)).thenReturn(Optional.of(myImage));
         Mockito.when(imageRepository.findTopByEntityIdAndEntityTypeOrderByCreatedAtAsc(partnerExchangeItem.getId(), EntityType.EXCHANGE_ITEM)).thenReturn(Optional.of(partnerImage));
         Mockito.when(userRepository.findById(trade.getPartner(requester.getId()).getId())).thenReturn(Optional.of(partnerUser));
