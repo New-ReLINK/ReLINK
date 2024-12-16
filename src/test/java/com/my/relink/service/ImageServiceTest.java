@@ -2,6 +2,7 @@ package com.my.relink.service;
 
 import com.my.relink.config.s3.S3Service;
 import com.my.relink.controller.image.dto.resp.ImageUserProfileCreateRespDto;
+import com.my.relink.controller.image.dto.resp.ImageUserProfileDeleteRespDto;
 import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.image.Image;
 import com.my.relink.domain.image.repository.ImageRepository;
@@ -85,5 +86,67 @@ class ImageServiceTest {
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo(userId);
         assertThat(result.getImageUrl()).isEqualTo(imageUrl);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 사용자 프로필 삭제 시도 시 Exception 발생")
+    void userProfileNotFoundFailTest() {
+        // given
+        Long userId = 1L;
+        Long imageId = 1L;
+
+        when(imageRepository.findById(userId)).thenReturn(Optional.empty());
+
+        // when & then
+        assertThrows(BusinessException.class, () -> imageService.deleteUserProfile(userId, imageId));
+        verify(imageRepository, times(1)).findById(any());
+    }
+
+    @Test
+    @DisplayName("사용자 프로필 이미지 Entity ID 가 일치 하지 않을 때 Exception 발생")
+    void userProfileNotOwnerFailTest() {
+        // given
+        Long userId = 1L;
+        Long imageId = 1L;
+
+        Image image = Image.builder()
+                .id(imageId)
+                .entityId(2L)
+                .entityType(EntityType.USER)
+                .build();
+
+        when(imageRepository.findById(imageId)).thenReturn(Optional.of(image));
+
+        // when & then
+        assertThrows(BusinessException.class, () -> imageService.deleteUserProfile(userId, imageId));
+        verify(imageRepository, times(1)).findById(any());
+    }
+
+    @Test
+    @DisplayName("사용자 프로필 이미지 정상 삭제")
+    void userProfileDeleteSuccessTest() {
+        // given
+        Long userId = 1L;
+        Long imageId = 1L;
+
+        Image image = Image.builder()
+                .id(imageId)
+                .entityId(userId)
+                .entityType(EntityType.USER)
+                .build();
+
+        when(imageRepository.findById(imageId)).thenReturn(Optional.of(image));
+        doNothing().when(imageRepository).delete(image);
+        doNothing().when(s3Service).deleteImage(image.getImageUrl());
+
+        // when
+        ImageUserProfileDeleteRespDto result = imageService.deleteUserProfile(userId, imageId);
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.getImageId()).isEqualTo(imageId);
+        verify(imageRepository, times(1)).findById(any());
+        verify(imageRepository, times(1)).delete(any());
+        verify(s3Service, times(1)).deleteImage(any());
     }
 }
