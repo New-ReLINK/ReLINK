@@ -9,11 +9,16 @@ import com.my.relink.domain.notification.donation.repository.DonationNotificatio
 import com.my.relink.domain.notification.exchange.ExchangeNotification;
 import com.my.relink.domain.notification.exchange.repository.ExchangeNotificationRepository;
 import com.my.relink.domain.trade.TradeStatus;
+import com.my.relink.ex.BusinessException;
+import com.my.relink.ex.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class NotificationPublisherService {
@@ -22,7 +27,7 @@ public class NotificationPublisherService {
     private final DonationNotificationRepository donationNotificationRepository;
     private final ExchangeNotificationRepository exchangeNotificationRepository;
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void createExchangeNotification(Long userId, String exchangeItemName, String requesterNickname, TradeStatus status) {
         ExchangeNotification exchangeNotification = ExchangeNotification.builder()
                 .userId(userId)
@@ -31,11 +36,24 @@ public class NotificationPublisherService {
                 .tradeStatus(status)
                 .build();
 
-        ExchangeNotification savedNotification = exchangeNotificationRepository.save(exchangeNotification);
-        applicationEventPublisher.publishEvent(new NotificationEvent<>(NotificationType.EXCHANGE, savedNotification));
+        ExchangeNotification savedNotification;
+
+        try {
+            savedNotification = exchangeNotificationRepository.save(exchangeNotification);
+        } catch (Exception e) {
+            log.info("알림 저장 실패 : {}", e.getMessage());
+            throw new BusinessException(ErrorCode.NOTIFICATION_CREATE_FAILED);
+        }
+
+        try {
+            applicationEventPublisher.publishEvent(new NotificationEvent<>(NotificationType.EXCHANGE, savedNotification));
+        } catch (Exception e) {
+            log.info("알림 발행 실패 : {}", e.getMessage());
+            throw new BusinessException(ErrorCode.NOTIFICATION_DELIVERY_FAILED);
+        }
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void crateChatNotification(Long userId, String content, String requesterNickname, String exchangeItemName, ChatStatus status) {
         ChatNotification chatNotification = ChatNotification.builder()
                 .userId(userId)
@@ -45,11 +63,24 @@ public class NotificationPublisherService {
                 .chatStatus(status)
                 .build();
 
-        ChatNotification savedNotification = chatNotificationRepository.save(chatNotification);
-        applicationEventPublisher.publishEvent(new NotificationEvent<>(NotificationType.CHAT, savedNotification));
+        ChatNotification savedNotification;
+
+        try {
+            savedNotification = chatNotificationRepository.save(chatNotification);
+        } catch (Exception e) {
+            log.info("알림 저장 실패 : {}", e.getMessage());
+            throw new BusinessException(ErrorCode.NOTIFICATION_CREATE_FAILED);
+        }
+
+        try {
+            applicationEventPublisher.publishEvent(new NotificationEvent<>(NotificationType.CHAT, savedNotification));
+        } catch (Exception e) {
+            log.info("알림 발행 실패 : {}", e.getMessage());
+            throw new BusinessException(ErrorCode.NOTIFICATION_DELIVERY_FAILED);
+        }
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void createDonationNotification(Long userId, String donationItemName, DonationStatus status) {
         DonationNotification donationNotification = DonationNotification.builder()
                 .userId(userId)
@@ -57,7 +88,20 @@ public class NotificationPublisherService {
                 .donationStatus(status)
                 .build();
 
-        DonationNotification savedNotification = donationNotificationRepository.save(donationNotification);
-        applicationEventPublisher.publishEvent(new NotificationEvent<>(NotificationType.DONATION, savedNotification));
+        DonationNotification savedNotification;
+
+        try {
+            savedNotification = donationNotificationRepository.save(donationNotification);
+        } catch (Exception e) {
+            log.info("알림 저장 실패 : {}", e.getMessage());
+            throw new BusinessException(ErrorCode.NOTIFICATION_CREATE_FAILED);
+        }
+
+        try {
+            applicationEventPublisher.publishEvent(new NotificationEvent<>(NotificationType.DONATION, savedNotification));
+        } catch (Exception e) {
+            log.info("알림 발행 실패 : {}", e.getMessage());
+            throw new BusinessException(ErrorCode.NOTIFICATION_DELIVERY_FAILED);
+        }
     }
 }
