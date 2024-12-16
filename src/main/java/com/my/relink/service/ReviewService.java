@@ -72,6 +72,10 @@ public class ReviewService {
         User writer = currentUser;
         ExchangeItem exchangeItem = trade.getPartnerExchangeItem(writer.getId());
 
+        if(reviewRepository.existsByExchangeItemIdAndWriterId(exchangeItem.getId(), writer.getId())){
+            throw new BusinessException(ErrorCode.REVIEW_FORBIDDEN);
+        }
+
         Review review = Review.builder()
                 .star(reqDto.getStar())
                 .description(reqDto.getDescription())
