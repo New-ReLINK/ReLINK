@@ -2,6 +2,7 @@ package com.my.relink.service;
 
 import com.my.relink.config.s3.S3Service;
 import com.my.relink.controller.image.dto.resp.ImageUserProfileCreateRespDto;
+import com.my.relink.controller.image.dto.resp.ImageUserProfileDeleteRespDto;
 import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.image.Image;
 import com.my.relink.domain.image.repository.ImageRepository;
@@ -39,6 +40,7 @@ public class ImageService {
                 .collect(Collectors.toMap(Image::getEntityId, Image::getImageUrl));
     }
 
+    @Transactional
     public ImageUserProfileCreateRespDto addUserProfile(Long userId, MultipartFile file) {
         imageRepository.findTopByEntityIdAndEntityTypeOrderByCreatedAtAsc(userId, EntityType.USER)
                 .ifPresent(image -> {
@@ -55,5 +57,20 @@ public class ImageService {
 
         Image savedImage = imageRepository.save(image);
         return new ImageUserProfileCreateRespDto(savedImage);
+    }
+
+    @Transactional
+    public ImageUserProfileDeleteRespDto deleteUserProfile(Long userId, Long imageId) {
+        Image image = imageRepository.findById(imageId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.IMAGE_NOT_FOUND));
+
+        if (!image.getEntityId().equals(userId)) {
+            throw new BusinessException(ErrorCode.IMAGE_ACCESS_DENIED);
+        }
+
+        s3Service.deleteImage(image.getImageUrl());
+        imageRepository.delete(image);
+
+        return new ImageUserProfileDeleteRespDto(imageId);
     }
 }
