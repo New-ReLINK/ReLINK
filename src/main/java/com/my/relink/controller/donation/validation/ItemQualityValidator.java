@@ -1,4 +1,4 @@
-package com.my.relink.controller.item.donation.validation;
+package com.my.relink.controller.donation.validation;
 
 import com.my.relink.domain.item.donation.ItemQuality;
 import jakarta.validation.ConstraintValidator;
