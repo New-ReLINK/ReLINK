@@ -1,7 +1,6 @@
 package com.my.relink.controller.exchangeItem.dto.resp;
 
 import lombok.Builder;
-import lombok.Data;
 import lombok.Getter;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -10,12 +9,12 @@ import java.util.List;
 
 @Builder
 @Getter
-public class GetExchangeItemsByUserRespDto {
+public class GetExchangeItemsRespDto {
     private List<GetExchangeItemRespDto> content;
     private PageInfo pageInfo;
 
-    public static GetExchangeItemsByUserRespDto empty(Pageable pageable) {
-        return GetExchangeItemsByUserRespDto.builder()
+    public static GetExchangeItemsRespDto empty(Pageable pageable) {
+        return GetExchangeItemsRespDto.builder()
                 .content(List.of())
                 .pageInfo(PageInfo.builder()
                         .totalElements(0)
@@ -26,8 +25,8 @@ public class GetExchangeItemsByUserRespDto {
                 .build();
     }
 
-    public static GetExchangeItemsByUserRespDto of(Page<GetExchangeItemRespDto> page) {
-        return GetExchangeItemsByUserRespDto.builder()
+    public static GetExchangeItemsRespDto of(Page<GetExchangeItemRespDto> page) {
+        return GetExchangeItemsRespDto.builder()
                 .content(page.getContent())
                 .pageInfo(PageInfo.builder()
                         .totalElements(page.getTotalElements())
