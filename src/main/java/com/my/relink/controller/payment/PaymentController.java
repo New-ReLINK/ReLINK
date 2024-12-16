@@ -1,2 +1,4 @@
-package com.my.relink.controller.payment;public class PaymentController {
+package com.my.relink.controller.payment;
+
+public class PaymentController {
 }
