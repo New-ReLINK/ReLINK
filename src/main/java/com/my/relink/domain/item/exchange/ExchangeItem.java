@@ -8,7 +8,6 @@ import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.domain.user.User;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
