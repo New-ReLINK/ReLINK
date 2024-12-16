@@ -51,7 +51,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> {
                     auth
                             .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.ERROR).permitAll()
-                            .requestMatchers("/auth/**", "/chats/**").permitAll()
+                            .requestMatchers("/auth/**", "/chats/**", "/charge-success", "/charge/**", "/charge/users/**", "/charge-form", "/favicon.ico").permitAll()
                             .requestMatchers("/error").permitAll();
                     if (profileType.equals("dev")) {
                         auth.requestMatchers(PathRequest.toH2Console()).permitAll();
