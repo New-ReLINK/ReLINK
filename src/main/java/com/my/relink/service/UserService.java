@@ -4,7 +4,7 @@ import com.my.relink.controller.user.dto.req.*;
 import com.my.relink.controller.user.dto.resp.*;
 import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.image.Image;
-import com.my.relink.domain.image.ImageRepository;
+import com.my.relink.domain.image.repository.ImageRepository;
 import com.my.relink.domain.point.Point;
 import com.my.relink.domain.point.repository.PointRepository;
 import com.my.relink.domain.review.repository.ReviewRepository;

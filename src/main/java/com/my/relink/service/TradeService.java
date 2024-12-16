@@ -19,6 +19,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -191,6 +195,17 @@ public class TradeService {
             trade.updateTradeStatus(TradeStatus.IN_DELIVERY);
         }
         tradeRepository.save(trade);
+    }
+
+    public Map<Long, Trade> getTradesByItemIds(List<Long> itemIds) {
+        List<Trade> trades = tradeRepository.findByExchangeItemIds(itemIds);
+        return trades.stream()
+                .flatMap(trade -> List.of(
+                        Map.entry(trade.getOwnerExchangeItem().getId(), trade),
+                        Map.entry(trade.getRequesterExchangeItem().getId(), trade)
+                ).stream())
+                .filter(entry -> itemIds.contains(entry.getKey()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 }
 
