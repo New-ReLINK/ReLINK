@@ -78,4 +78,17 @@ public class GetExchangeItemRespDto {
                 : trade.getOwnerExchangeItem();
         return partnerItem.getUser().getNickname();
     }
+
+    public static GetExchangeItemRespDto from(ExchangeItem exchangeItem, Category category) {
+        return GetExchangeItemRespDto.builder()
+                .exchangeItemId(exchangeItem.getId())
+                .exchangeItemName(exchangeItem.getName())
+                .description(exchangeItem.getDescription())
+                .category(category)
+                .itemQuality(exchangeItem.getItemQuality())
+                .size(exchangeItem.getSize())
+                .brand(exchangeItem.getBrand())
+                .desiredItem(exchangeItem.getDesiredItem())
+                .build();
+    }
 }

@@ -70,15 +70,7 @@ public class ExchangeItemService {
         }
         Category category = exchangeItem.getCategory();
 
-        return GetExchangeItemRespDto.builder()
-                .exchangeItemName(exchangeItem.getName())
-                .description(exchangeItem.getDescription())
-                .category(category)
-                .itemQuality(exchangeItem.getItemQuality())
-                .size(exchangeItem.getSize())
-                .brand(exchangeItem.getBrand())
-                .desiredItem(exchangeItem.getDesiredItem())
-                .build();
+        return GetExchangeItemRespDto.from(exchangeItem, category);
     }
 
     // user 가져오기
