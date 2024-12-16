@@ -5,8 +5,7 @@ import com.my.relink.controller.trade.dto.request.AddressReqDto;
 import com.my.relink.controller.trade.dto.request.TrackingNumberReqDto;
 import com.my.relink.controller.trade.dto.response.*;
 import com.my.relink.domain.image.EntityType;
-import com.my.relink.domain.image.Image;
-import com.my.relink.domain.image.ImageRepository;
+import com.my.relink.domain.image.repository.ImageRepository;
 import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.item.exchange.repository.ExchangeItemRepository;
 import com.my.relink.domain.trade.Trade;
@@ -17,15 +16,11 @@ import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
-import com.my.relink.util.DateTimeFormatterUtil;
 import com.my.relink.util.DateTimeUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -66,18 +61,17 @@ public class TradeService {
     }
 
 
-
     public Trade findByIdOrFail(Long tradeId) {
         return tradeRepository.findById(tradeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
     }
 
-    public Trade findByIdWithUsersOrFail(Long tradeId){
+    public Trade findByIdWithUsersOrFail(Long tradeId) {
         return tradeRepository.findByIdWithUsers(tradeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
     }
 
-    public Trade findByIdFetchItemsAndUsersOrFail(Long tradeId){
+    public Trade findByIdFetchItemsAndUsersOrFail(Long tradeId) {
         return tradeRepository.findByIdWithItemsAndUser(tradeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
     }
@@ -208,7 +202,6 @@ public class TradeService {
         tradeRepository.save(trade);
     }
 
-
     public TradeCompletionRespDto findCompleteTradeInfo(Long tradeId, AuthUser authUser) {
         User currentUser = userRepository.findById(authUser.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
@@ -219,11 +212,12 @@ public class TradeService {
         ExchangeItem myExchangeItem = trade.getMyExchangeItem(currentUser.getId());
         ExchangeItem partnerExchangeItem = trade.getPartnerExchangeItem(currentUser.getId());
 
-        String myImageUrl = imageService.getExchangeItemUrl(myExchangeItem);
-        String partnerImageUrl = imageService.getExchangeItemUrl(partnerExchangeItem);
+        String myImage = imageService.getExchangeItemUrl(myExchangeItem);
+        String partnerImage = imageService.getExchangeItemUrl(partnerExchangeItem);
 
-        return TradeCompletionRespDto.from(myExchangeItem, partnerExchangeItem, myImageUrl, partnerImageUrl, partnerExchangeItem.getUser(), trade, dateTimeUtil);
-}
+        User partnerUser = partnerExchangeItem.getUser();
+        return TradeCompletionRespDto.from(myExchangeItem, partnerExchangeItem, myImage, partnerImage, partnerUser, trade, dateTimeUtil);
+    }
 
     public Map<Long, Trade> getTradesByItemIds(List<Long> itemIds) {
         List<Trade> trades = tradeRepository.findByExchangeItemIds(itemIds);
@@ -235,6 +229,23 @@ public class TradeService {
                 .filter(entry -> itemIds.contains(entry.getKey()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
+    }
+
+    public TradeCancelRespDto cancelTrade(Long tradeId, AuthUser authUser) {
+        User currentUser = userRepository.findById(authUser.getId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        Trade trade = tradeRepository.findById(tradeId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
+
+        ExchangeItem partnerExchangeItem = trade.getPartnerExchangeItem(currentUser.getId());
+
+        User partnerUser = partnerExchangeItem.getUser();
+
+        String partnerImageUrl = imageService.getExchangeItemUrl(partnerExchangeItem);
+        String tradeStartedAt = dateTimeUtil.getTradeStatusFormattedTime(trade.getCreatedAt());
+
+        return TradeCancelRespDto.from(partnerUser, partnerExchangeItem, partnerImageUrl, tradeStartedAt);
     }
 }
 
