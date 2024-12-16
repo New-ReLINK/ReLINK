@@ -7,19 +7,21 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class DonationItemUserRespDto {
+public class DonationCompleteItemUserRespDto {
     private Long id;
     private String name;
     private String size;
     private DonationStatus donationStatus;
+    private String destination;
     private String statusMessage;
 
-    public static DonationItemUserRespDto fromEntity(DonationItem item) {
-        return DonationItemUserRespDto.builder()
+    public static DonationCompleteItemUserRespDto fromEntity(DonationItem item) {
+        return DonationCompleteItemUserRespDto.builder()
                 .id(item.getId())
                 .name(item.getName())
                 .size(item.getSize())
                 .donationStatus(item.getDonationStatus())
+                .destination(item.getDestination())
                 .statusMessage(getStatusMessage(item.getDonationStatus()))
                 .build();
     }
@@ -34,4 +36,5 @@ public class DonationItemUserRespDto {
             case DONATION_COMPLETED -> "기부 완료";
         };
     }
+
 }
