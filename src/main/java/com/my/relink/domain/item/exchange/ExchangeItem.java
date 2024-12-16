@@ -83,6 +83,10 @@ public class ExchangeItem extends BaseEntity {
         this.tradeStatus = tradeStatus;
         this.isDeleted = isDeleted;
     }
+
+    public void updateStatus(TradeStatus tradeStatus) {
+        this.tradeStatus = tradeStatus;
+    }
     public void validExchangeItemOwner(Long itemOwnerId, Long userId){
         if (!itemOwnerId.equals(userId)) {
             throw new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS);
