@@ -215,7 +215,7 @@ public class TradeService {
         String partnerImage = imageService.getExchangeItemUrl(partnerExchangeItem);
 
         User partnerUser = partnerExchangeItem.getUser();
-
+      
         return TradeCompletionRespDto.from(myExchangeItem, partnerExchangeItem, myImage, partnerImage, partnerUser, trade, dateTimeUtil);
     }
 

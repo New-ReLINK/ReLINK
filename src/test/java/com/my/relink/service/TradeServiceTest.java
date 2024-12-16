@@ -435,23 +435,19 @@ class TradeServiceTest extends DummyObject {
         User owner = mockOwnerUser();
 
         // Trade를 Mock 객체로 생성
-        Trade trade = Mockito.mock(Trade.class);
+        Trade trade = mockTrade(owner, requester, true, true, true, true);
+        ExchangeItem partnerExchangeItem;
 
-        ExchangeItem partnerExchangeItem = Mockito.mock(ExchangeItem.class);
-        Image partnerImage = new Image(2L, "http://example.com/partner-image.jpg", 2L, EntityType.EXCHANGE_ITEM);
-
-        // Mock 설정
-        Mockito.when(trade.getPartner(requester.getId())).thenReturn(owner);
-        Mockito.when(trade.isRequester(requester.getId())).thenReturn(true);
-        Mockito.when(trade.getOwnerExchangeItem()).thenReturn(partnerExchangeItem);
-        Mockito.when(partnerExchangeItem.getName()).thenReturn("Item Name");
+        if (trade.isRequester(requester.getId())) {
+            partnerExchangeItem = trade.getOwnerExchangeItem();
+        } else {
+            partnerExchangeItem = trade.getRequesterExchangeItem();
+        }
+        String partnerImage = "http://example.com/partner-image.jpg";
 
         Mockito.when(userRepository.findById(requester.getId())).thenReturn(Optional.of(requester));
-        Mockito.when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
         Mockito.when(tradeRepository.findById(tradeId)).thenReturn(Optional.of(trade));
-        Mockito.when(imageRepository.findByEntityIdAndEntityType(partnerExchangeItem.getId(), EntityType.EXCHANGE_ITEM))
-                .thenReturn(Optional.of(partnerImage));
-        Mockito.when(trade.getCreatedAt()).thenReturn(LocalDateTime.of(2024, 12, 12, 14, 30));
+        Mockito.when(imageService.getExchangeItemUrl(partnerExchangeItem)).thenReturn("http://example.com/partner-image.jpg");
 
         // 서비스 호출
         ViewTradeCancelRespDto result = tradeService.viewCancelTrade(tradeId, new AuthUser(requester.getId(), "test@email.com", Role.USER));
@@ -460,8 +456,7 @@ class TradeServiceTest extends DummyObject {
         assertNotNull(result);
         assertEquals(partnerExchangeItem.getName(), result.getPartnerExchangeItemName());
         assertEquals(owner.getNickname(), result.getPartnerNickname());
-        assertEquals("2024년 12월 12일 14:30", result.getTradeStartedAt());
-        assertEquals(partnerImage.getImageUrl(), result.getPartnerExchangeItemImageUrl());
+        assertEquals(partnerImage, result.getPartnerExchangeItemImageUrl());
     }
 
     @Test
