@@ -143,7 +143,7 @@ public class TossPaymentClient {
     }
 
 
-    private RuntimeException handlePaymentException(PaymentFeature feature, String paymentKey, Exception e) {
+    private TossPaymentException handlePaymentException(PaymentFeature feature, String paymentKey, Exception e) {
         if (e instanceof TossPaymentException) {
             log.warn(ERROR_LOG_FORMAT.formatted(feature.getDescription()), paymentKey, ((TossPaymentException) e).getErrorCode().getMessage(), e);
             return (TossPaymentException) e;
