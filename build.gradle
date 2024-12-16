@@ -53,6 +53,9 @@ dependencies {
     // spring retry
     implementation 'org.springframework.retry:spring-retry'
 
+    // env
+    implementation 'me.paulschwarz:spring-dotenv:4.0.0'
+
 }
 
 tasks.named('test') {

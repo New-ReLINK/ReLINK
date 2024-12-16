@@ -21,6 +21,9 @@ public class DateTimeUtil {
     private static final DateTimeFormatter PAST_YEAR_MESSAGE_FORMAT =
         DateTimeFormatter.ofPattern("yyyy년 M월 d일 a h:m").withLocale(Locale.KOREA);
 
+    private static final DateTimeFormatter TRADE_STATUS_FORMAT =
+            DateTimeFormatter.ofPattern("yyyy년 M월 d일 HH:mm");
+
     private static final DateTimeFormatter EXCHANGE_START_DATE_FORMAT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
@@ -38,5 +41,9 @@ public class DateTimeUtil {
         } else {
             return messageTime.format(PAST_YEAR_MESSAGE_FORMAT);
         }
+    }
+
+    public String getTradeStatusFormattedTime(LocalDateTime modifiedAt) {
+        return modifiedAt != null ? modifiedAt.format(TRADE_STATUS_FORMAT) : "N/A";
     }
 }
