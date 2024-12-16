@@ -31,7 +31,7 @@ public class DonationController {
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String search,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "100") int size) {
 
         DonationItemListRespDto response = donationItemService.getDonationItems(category, search, page, size);
         return ResponseEntity.ok(ApiResult.success(response));
@@ -41,7 +41,7 @@ public class DonationController {
     public ResponseEntity<ApiResult<DonationItemUserListRespDto>> getUserDonationItems(
             @AuthenticationPrincipal AuthUser authUser,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "100") int size) {
 
         DonationItemUserListRespDto response = donationItemService.getUserDonationItems(authUser, page, size);
 
