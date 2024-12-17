@@ -4,10 +4,7 @@ import com.my.relink.domain.BaseEntity;
 import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.user.User;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -15,7 +12,8 @@ import lombok.NoArgsConstructor;
 @Table(name = "likes")
 public class Like extends BaseEntity {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)

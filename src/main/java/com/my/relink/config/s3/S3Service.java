@@ -12,6 +12,8 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 
@@ -55,7 +57,14 @@ public class S3Service {
 
     public void deleteImage(String fileUrl) {
         try {
-            String fileName = fileUrl.substring(fileUrl.lastIndexOf("/") + 1);
+            if (fileUrl == null || fileUrl.trim().isEmpty()) {
+                throw new BusinessException(ErrorCode.INVALID_FILE_URL);
+            }
+
+            String fileName = URLDecoder.decode(
+                    fileUrl.substring(fileUrl.lastIndexOf("/") + 1),
+                    StandardCharsets.UTF_8
+            );
             amazonS3.deleteObject(bucket, fileName);
         } catch (Exception e) {
             log.info("이미지 삭제 실패 : {}", e.getMessage());
