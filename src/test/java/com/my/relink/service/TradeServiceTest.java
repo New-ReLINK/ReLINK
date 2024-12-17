@@ -39,12 +39,9 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import javax.swing.text.html.Option;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.Optional;
 
-import static com.my.relink.domain.trade.QTrade.trade;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -61,11 +58,7 @@ class TradeServiceTest extends DummyObject {
     @Mock
     private PointHistoryRepository pointHistoryRepository;
     @Mock
-    private PointRepository pointRepository;
-    @Mock
     private PointTransactionService pointTransactionService;
-    @Mock
-    private ImageRepository imageRepository;
     @Mock
     private DateTimeUtil dateTimeUtil;
     @Mock
@@ -167,7 +160,6 @@ class TradeServiceTest extends DummyObject {
         // then
         assertNotNull(result);
         verify(pointTransactionService).deductPoints(tradeId, currentUser);
-        //verify(tradeRepository).save(trade);
     }
 
     @Test
@@ -631,16 +623,14 @@ class TradeServiceTest extends DummyObject {
         }
 
         Mockito.when(userRepository.findById(requester.getId())).thenReturn(Optional.of(requester));
-        Mockito.when(tradeRepository.findById(tradeId)).thenReturn(Optional.of(trade));
+        Mockito.when(tradeRepository.findByIdWithExchangeItem(tradeId)).thenReturn(Optional.of(trade));
         Mockito.when(reviewRepository.existsByExchangeItemIdAndWriterId(partnerExchangeItem.getId(), requester.getId()))
                 .thenReturn(false);
 
         ReviewRespDto result = reviewService.postTradeReview(tradeId, reqDto, new AuthUser(requester.getId(), "test@email.com", Role.USER));
 
-
         assertNotNull(result);
 
-        verify(tradeRepository).findById(tradeId);
         verify(reviewRepository).existsByExchangeItemIdAndWriterId(partnerExchangeItem.getId(), requester.getId());
         verify(reviewRepository).save(any(Review.class));
     }
@@ -660,16 +650,15 @@ class TradeServiceTest extends DummyObject {
         AuthUser authUser = new AuthUser(requester.getId(), "test@example.com", Role.USER);
 
         Mockito.when(userRepository.findById(authUser.getId())).thenReturn(Optional.of(requester));
-        Mockito.when(tradeRepository.findById(tradeId)).thenReturn(Optional.of(trade));
+        Mockito.when(tradeRepository.findByIdWithExchangeItem(tradeId)).thenReturn(Optional.of(trade));
 
         BusinessException exception = assertThrows(BusinessException.class, () -> {
             reviewService.postTradeReview(tradeId, reqDto, authUser);
         });
 
-        assertEquals(ErrorCode.TRADE_ACCESS_DENIED, exception.getErrorCode());
+        assertEquals(ErrorCode.TRADE_NOT_COMPLETE, exception.getErrorCode());
 
         verify(userRepository).findById(authUser.getId());
-        verify(tradeRepository).findById(tradeId);
     }
 
 }
