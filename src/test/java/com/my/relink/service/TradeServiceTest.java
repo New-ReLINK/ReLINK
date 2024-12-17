@@ -365,12 +365,12 @@ class TradeServiceTest extends DummyObject {
         User partnerUser = trade.getPartner(requester.getId());  // 거래 상대방 (소유자)
 
         Mockito.when(userRepository.findById(requester.getId())).thenReturn(Optional.of(requester));
-        Mockito.when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
+//        Mockito.when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
         Mockito.when(tradeRepository.findTradeWithDetails(tradeId)).thenReturn(Optional.of(trade));
         Mockito.when(imageService.getExchangeItemUrl(myExchangeItem)).thenReturn(myImageUrl);
         Mockito.when(imageService.getExchangeItemUrl(partnerExchangeItem)).thenReturn(partnerImageUrl);
 
-        Mockito.when(userRepository.findById(trade.getPartner(requester.getId()).getId())).thenReturn(Optional.of(partnerUser));
+//        Mockito.when(userRepository.findById(trade.getPartner(requester.getId()).getId())).thenReturn(Optional.of(partnerUser));
         Mockito.when(dateTimeUtil.getTradeStatusFormattedTime(trade.getModifiedAt()))
                 .thenReturn("2024년 12월 12일 14:30");
 
@@ -417,7 +417,7 @@ class TradeServiceTest extends DummyObject {
 
 
         Mockito.when(userRepository.findById(requester.getId())).thenReturn(Optional.of(requester));
-        Mockito.when(tradeRepository.findById(tradeId)).thenReturn(Optional.empty());  // 거래가 없음
+        Mockito.when(tradeRepository.findTradeWithDetails(tradeId)).thenReturn(Optional.empty());  // 거래가 없음
 
         BusinessException exception = assertThrows(
                 BusinessException.class,
