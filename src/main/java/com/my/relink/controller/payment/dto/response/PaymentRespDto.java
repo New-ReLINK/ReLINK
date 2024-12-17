@@ -1,4 +1,10 @@
 package com.my.relink.controller.payment.dto.response;
 
-public class PaymenrRespDto {
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@NoArgsConstructor
+@Getter
+public class PaymentRespDto {
+    private Long userId;
 }
