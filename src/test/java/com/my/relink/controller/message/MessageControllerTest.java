@@ -13,19 +13,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 import java.time.Clock;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -38,7 +36,7 @@ class MessageControllerTest {
     @Autowired
     MockMvc mvc;
 
-    @MockBean
+    @MockitoBean
     MessageService messageService;
 
     @Nested
@@ -49,7 +47,7 @@ class MessageControllerTest {
 
         private final LocalDateTime FIXED_NOW = LocalDateTime.of(2024, 12, 10, 15, 0);
         private final Clock fixedClock = Clock.fixed(FIXED_NOW.toInstant(ZoneOffset.UTC), ZoneOffset.UTC);
-        @MockBean
+        @MockitoBean
         private DateTimeUtil dateTimeUtil;
 
         private final LocalDateTime TODAY_MESSAGE = FIXED_NOW.minusHours(2);
