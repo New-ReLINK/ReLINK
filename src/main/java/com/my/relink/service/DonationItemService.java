@@ -78,8 +78,7 @@ public class DonationItemService {
         DonationItem donationItem = donationItemRepository.findByIdWithCategory(itemId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.DONATION_ITEM_NOT_FOUND));
 
-        Map<Long, String> imageMap = imageService.getImagesByItemIds(EntityType.DONATION_ITEM, List.of(itemId));
-        String imageUrl = imageMap.get(itemId);
+        String imageUrl = imageService.getImageByItemId(EntityType.DONATION_ITEM, itemId);
 
         RejectedReason rejectedReason = donationItem.getRejectedReason();
 

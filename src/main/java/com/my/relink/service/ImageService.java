@@ -33,4 +33,9 @@ public class ImageService {
                 .collect(Collectors.toMap(Image::getEntityId, Image::getImageUrl));
     }
 
+    public String getImageByItemId(EntityType entityType, Long itemId) {
+        return getImagesByItemIds(entityType, List.of(itemId))
+                .getOrDefault(itemId, null);
+    }
+
 }
