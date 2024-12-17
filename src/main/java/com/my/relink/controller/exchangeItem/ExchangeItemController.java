@@ -3,7 +3,6 @@ package com.my.relink.controller.exchangeItem;
 import com.my.relink.config.security.AuthUser;
 import com.my.relink.controller.exchangeItem.dto.req.CreateExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.req.UpdateExchangeItemReqDto;
-import com.my.relink.controller.exchangeItem.dto.req.ExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetAllExchangeItemsRespDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemRespDto;
 import com.my.relink.domain.trade.TradeStatus;

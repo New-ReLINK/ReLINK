@@ -3,6 +3,7 @@ package com.my.relink.service;
 
 import com.my.relink.controller.exchangeItem.dto.req.CreateExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.req.UpdateExchangeItemReqDto;
+import com.my.relink.controller.exchangeItem.dto.resp.GetAllExchangeItemsRespDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemRespDto;
 import com.my.relink.domain.BaseEntity;
 import com.my.relink.domain.category.Category;
@@ -29,10 +30,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.lang.reflect.Field;
@@ -43,7 +41,9 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 
@@ -63,6 +63,8 @@ class ExchangeItemServiceTest {
     private TradeService tradeService;
     @Mock
     private ImageService imageService;
+    @Mock
+    private UserTrustScoreService userTrustScoreService;
 
     @BeforeEach
     void setUp() {
@@ -298,7 +300,7 @@ class ExchangeItemServiceTest {
                 .isDeleted(false)
                 .build();
         Mockito.when(exchangeItemRepository.findById(itemId)).thenReturn(Optional.of(exchangeItem));
-        BusinessException exception = Assertions.assertThrows(BusinessException.class, () -> {
+        BusinessException exception = assertThrows(BusinessException.class, () -> {
             exchangeItemService.getExchangeItemModifyPage(itemId, userId);
         });
         Assertions.assertEquals(ErrorCode.UNAUTHORIZED_ACCESS, exception.getErrorCode());
@@ -310,7 +312,7 @@ class ExchangeItemServiceTest {
         Long userId = 1L;
         Long itemId = 2L;
         Mockito.when(exchangeItemRepository.findById(itemId)).thenReturn(Optional.empty());
-        BusinessException exception = Assertions.assertThrows(BusinessException.class, () -> {
+        BusinessException exception = assertThrows(BusinessException.class, () -> {
             exchangeItemService.getExchangeItemModifyPage(itemId, userId);
         });
         Assertions.assertEquals(ErrorCode.ITEM_NOT_FOUND, exception.getErrorCode());
@@ -448,4 +450,52 @@ class ExchangeItemServiceTest {
                 .hasMessageContaining("포인트가 부족합니다");
     }
 
+    @Test
+    @DisplayName("교환상품 전체목록 조회 성공")
+    void testGetAllExchangeItems_Success() {
+        String search = "shoes";
+        String deposit = "desc";
+        TradeStatus tradeStatus = TradeStatus.AVAILABLE;
+        Long categoryId = 1L;
+        int page = 0;
+        int size = 10;
+        Category category = mock(Category.class);
+        ExchangeItem exchangeItem = mock(ExchangeItem.class);
+        Page<ExchangeItem> exchangeItemsPage = new PageImpl<>(List.of(exchangeItem));
+
+        when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(category));
+        when(exchangeItemRepository.findAllByCriteria(search, tradeStatus, category, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "deposit"))))
+                .thenReturn(exchangeItemsPage);
+        when(exchangeItem.getId()).thenReturn(100L);
+        when(exchangeItem.getName()).thenReturn("Nike Air Max");
+        when(exchangeItem.getUser()).thenReturn(User.builder().id(1L).nickname("JohnDoe").build());
+        when(imageService.getFirstImagesByItemIds(any(), any())).thenReturn(Map.of(100L, "http://example.com/image1.jpg"));
+        when(userTrustScoreService.getTrustScore(any())).thenReturn(85);
+
+        GetAllExchangeItemsRespDto result = exchangeItemService.getAllExchangeItems(search, deposit, tradeStatus, categoryId, page, size);
+
+        assertThat(result.getContent()).isNotEmpty();
+        assertThat(result.getContent().get(0).getExchangeItemId()).isEqualTo(100L);
+        assertThat(result.getContent().get(0).getExchangeItemName()).isEqualTo("Nike Air Max");
+        assertThat(result.getContent().get(0).getImageUrl()).isEqualTo("http://example.com/image1.jpg");
+        assertThat(result.getContent().get(0).getOwnerNickname()).isEqualTo("JohnDoe");
+        assertThat(result.getContent().get(0).getOwnerTrustScore()).isEqualTo(85);
+    }
+
+    @Test
+    @DisplayName("교환상품 전체목록 조회 실패 - 보증금 기준 정렬 옵션에 해당되지 않은 값이 들어온 경우")
+    void testGetAllExchangeItems_Fail_INVALID_SORT_PARAMETER () {
+        String search = "shoes";
+        String invalidDeposit = "adesc";
+        TradeStatus tradeStatus = TradeStatus.AVAILABLE;
+        Long categoryId = 1L;
+        int page = 0;
+        int size = 10;
+
+        when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(mock(Category.class)));
+        BusinessException exception = assertThrows(BusinessException.class, () ->
+                exchangeItemService.getAllExchangeItems(search, invalidDeposit, tradeStatus, categoryId, page, size));
+
+        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_SORT_PARAMETER);
+    }
 }

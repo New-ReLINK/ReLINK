@@ -2,7 +2,6 @@ package com.my.relink.service;
 
 import com.my.relink.controller.exchangeItem.dto.req.CreateExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.req.UpdateExchangeItemReqDto;
-import com.my.relink.controller.exchangeItem.dto.req.ExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetAllExchangeItemsRespDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemRespDto;
 import com.my.relink.domain.category.Category;
@@ -91,6 +90,7 @@ public class ExchangeItemService {
 
         return GetAllExchangeItemsRespDto.of(content);
     }
+
     private Sort getSort(String deposit) {
         if (deposit == null || deposit.isEmpty()) {
             return Sort.by(Sort.Direction.DESC, "id");
