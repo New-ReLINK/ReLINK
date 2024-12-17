@@ -103,7 +103,7 @@ public class ExchangeItem extends BaseEntity {
         this.desiredItem = desiredItem;
         this.deposit = deposit;
     }
-    public void delete(Boolean isDeleted) {
-        this.isDeleted = isDeleted;
+    public void delete() {
+        this.isDeleted = true;
     }
 }

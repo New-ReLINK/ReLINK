@@ -100,7 +100,7 @@ public class ExchangeItemService {
         ExchangeItem exchangeItem = findByIdOrFail(itemId);
         exchangeItem.validExchangeItemOwner(exchangeItem.getUser().getId(), userId);
         validDeleteExchangeItemTradeStatus(exchangeItem.getTradeStatus());
-        exchangeItem.delete(true);
+        exchangeItem.delete();
         deleteRelatedEntities(exchangeItem.getId());
         return exchangeItem.getId();
     }

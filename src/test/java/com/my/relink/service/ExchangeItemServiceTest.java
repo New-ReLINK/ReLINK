@@ -469,7 +469,7 @@ class ExchangeItemServiceTest {
 
         assertThat(deletedItemId).isEqualTo(itemId);
         verify(exchangeItem).validExchangeItemOwner(userId, userId);
-        verify(exchangeItem).delete(true);
+        verify(exchangeItem).delete();
         verify(imageService, times(1)).deleteImagesByEntityId(EntityType.EXCHANGE_ITEM, itemId);
         verify(likeService, times(1)).deleteLikesByExchangeItemId(itemId);
         verify(chatService, times(1)).deleteChatsByTradeId(tradeId);
@@ -493,7 +493,7 @@ class ExchangeItemServiceTest {
 
         assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.UNAUTHORIZED_ACCESS);
         verify(exchangeItem).validExchangeItemOwner(userId, invalidUserId);
-        verify(exchangeItem, never()).delete(anyBoolean());
+        verify(exchangeItem, never()).delete();
         verify(imageService, never()).deleteImagesByEntityId(any(), anyLong());
         verify(likeService, never()).deleteLikesByExchangeItemId(anyLong());
         verify(chatService, never()).deleteChatsByTradeId(anyLong());
@@ -514,7 +514,7 @@ class ExchangeItemServiceTest {
                 () -> exchangeItemService.deleteExchangeItem(itemId, userId));
 
         assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.ITEM_IN_EXCHANGE);
-        verify(exchangeItem, never()).delete(anyBoolean());
+        verify(exchangeItem, never()).delete();
         verify(imageService, never()).deleteImagesByEntityId(any(), anyLong());
         verify(likeService, never()).deleteLikesByExchangeItemId(anyLong());
         verify(chatService, never()).deleteChatsByTradeId(anyLong());
