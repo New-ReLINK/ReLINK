@@ -3,6 +3,7 @@ package com.my.relink.controller.trade;
 import com.my.relink.config.security.AuthUser;
 import com.my.relink.controller.trade.dto.request.AddressReqDto;
 import com.my.relink.controller.trade.dto.request.TrackingNumberReqDto;
+import com.my.relink.controller.trade.dto.request.TradeCancelReqDto;
 import com.my.relink.controller.trade.dto.response.*;
 import com.my.relink.service.TradeService;
 import com.my.relink.util.api.ApiResult;
@@ -73,6 +74,31 @@ public class TradeController {
             @PathVariable(name = "tradeId") Long tradeId,
             @AuthenticationPrincipal AuthUser authUser) {
         TradeCompletionRespDto responseDto = tradeService.findCompleteTradeInfo(tradeId, authUser);
+        return new ResponseEntity<>(ApiResult.success(responseDto), HttpStatus.OK);
+    }
+
+    @GetMapping("/trades/{tradeId}/cancel")
+    public ResponseEntity<ApiResult<ViewTradeCancelRespDto>> viewCancelTrade(
+            @PathVariable(name = "tradeId") Long tradeId,
+            @AuthenticationPrincipal AuthUser authUser) {
+        ViewTradeCancelRespDto responseDto = tradeService.viewCancelTrade(tradeId, authUser);
+        return new ResponseEntity<>(ApiResult.success(responseDto), HttpStatus.OK);
+    }
+
+    @PostMapping("/trades/{tradeId}/cancel")
+    public ResponseEntity<ApiResult<TradeCancelRespDto>> cancelTrade(
+            @PathVariable(name = "tradeId") Long tradeId,
+            @RequestBody TradeCancelReqDto reqDto,
+            @AuthenticationPrincipal AuthUser authUser) {
+        TradeCancelRespDto responseDto = tradeService.cancelTrade(tradeId, reqDto, authUser);
+        return new ResponseEntity<>(ApiResult.success(responseDto), HttpStatus.CREATED);
+    }
+
+    @GetMapping("/trades/{tradeId}/review")
+    public ResponseEntity<ApiResult<ViewReviewRespDto>> getReviewInfo(
+            @PathVariable(name = "tradeId") Long tradeId,
+            @AuthenticationPrincipal AuthUser authUser) {
+        ViewReviewRespDto responseDto = tradeService.getReviewInfo(tradeId, authUser);
         return new ResponseEntity<>(ApiResult.success(responseDto), HttpStatus.OK);
     }
 

@@ -2,7 +2,7 @@ package com.my.relink.service;
 
 import com.my.relink.controller.exchangeItem.dto.req.CreateExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemRespDto;
-import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemsByUserRespDto;
+import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemsRespDto;
 import com.my.relink.domain.category.Category;
 import com.my.relink.domain.category.repository.CategoryRepository;
 import com.my.relink.domain.image.EntityType;
@@ -44,13 +44,13 @@ public class ExchangeItemService {
         return exchangeItemRepository.save(exchangeItem).getId();
     }
 
-    public GetExchangeItemsByUserRespDto getExchangeItemsByUserId(Long userId, int page, int size) {
+    public GetExchangeItemsRespDto getExchangeItemsByUserId(Long userId, int page, int size) {
         User user = getValidUser(userId);
         Pageable pageable = PageRequest.of(page - 1, size);
 
         Page<ExchangeItem> items = exchangeItemRepository.findByUserId(user.getId(), pageable);
         if (items.isEmpty()) {
-            return GetExchangeItemsByUserRespDto.empty(pageable);
+            return GetExchangeItemsRespDto.empty(pageable);
         }
 
         List<Long> itemIds = items.getContent().stream().map(ExchangeItem::getId).toList();
@@ -59,21 +59,26 @@ public class ExchangeItemService {
 
         Page<GetExchangeItemRespDto> content = items.map(item -> GetExchangeItemRespDto.from(item, tradeMap, imageMap));
 
-        return GetExchangeItemsByUserRespDto.of(content);
+        return GetExchangeItemsRespDto.of(content);
+    }
+
+    public GetExchangeItemRespDto getExchangeItemModifyPage(Long itemId, Long userId) {
+        ExchangeItem exchangeItem = findByIdOrFail(itemId);
+        exchangeItem.validExchangeItemOwner(exchangeItem.getUser().getId(), userId);
+
+        return GetExchangeItemRespDto.from(exchangeItem);
     }
 
     // user 가져오기
     public User getValidUser(Long userId) {
-        User user = userRepository.findById(userId)
+        return userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-        return user;
     }
 
     // category 가져오기
     public Category getValidCategory(Long categoryId) {
-        Category category = categoryRepository.findById(categoryId)
+        return categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
-        return category;
     }
 
     // 보증금 유효성 검사
@@ -94,5 +99,4 @@ public class ExchangeItemService {
         return exchangeItemRepository.findById(itemId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EXCHANGE_ITEM_NOT_FOUND));
     }
-
 }

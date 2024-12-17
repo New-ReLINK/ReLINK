@@ -1,6 +1,5 @@
 package com.my.relink.controller.trade.dto.response;
 
-import com.my.relink.domain.image.Image;
 import com.my.relink.domain.item.donation.ItemQuality;
 import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.trade.Trade;
@@ -54,7 +53,7 @@ public class TradeCompletionRespDto {
 
     // 정적 팩토리 메서드
     public static TradeCompletionRespDto from(ExchangeItem myExchangeItem, ExchangeItem partnerExchangeItem,
-                                              String myImageUrl, String partnerImageUrl, User partnerUser,
+                                              String myImage, String partnerImage, User partnerUser,
                                               Trade trade, DateTimeUtil dateTimeUtil) {
 
         // 교환 상품 정보
@@ -62,14 +61,14 @@ public class TradeCompletionRespDto {
                 .itemName(myExchangeItem.getName())
                 .itemQuality(myExchangeItem.getItemQuality())
                 .itemId(myExchangeItem.getId())
-                .itemImageUrl(myImageUrl)
+                .itemImageUrl(myImage)
                 .build();
 
         TradeItemInfo partnerItem = TradeItemInfo.builder()
                 .itemName(partnerExchangeItem.getName())
                 .itemQuality(partnerExchangeItem.getItemQuality())
                 .itemId(partnerExchangeItem.getId())
-                .itemImageUrl(partnerImageUrl)
+                .itemImageUrl(partnerImage)
                 .build();
 
         // 유저 정보
