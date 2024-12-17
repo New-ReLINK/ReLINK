@@ -5,6 +5,8 @@ import com.my.relink.domain.category.Category;
 import com.my.relink.domain.item.donation.ItemQuality;
 import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.domain.user.User;
+import com.my.relink.ex.BusinessException;
+import com.my.relink.ex.ErrorCode;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.SQLRestriction;
@@ -84,5 +86,10 @@ public class ExchangeItem extends BaseEntity {
 
     public void updateStatus(TradeStatus tradeStatus) {
         this.tradeStatus = tradeStatus;
+    }
+    public void validExchangeItemOwner(Long itemOwnerId, Long userId){
+        if (!itemOwnerId.equals(userId)) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS);
+        }
     }
 }
