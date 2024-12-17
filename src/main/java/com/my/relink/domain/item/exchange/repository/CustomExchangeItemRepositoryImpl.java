@@ -67,7 +67,7 @@ public class CustomExchangeItemRepositoryImpl implements CustomExchangeItemRepos
                 }
             }
         }
-        return exchangeItem.id.desc();
+        return exchangeItem.createdAt.desc();
     }
 }
 
