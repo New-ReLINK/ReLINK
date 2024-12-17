@@ -51,6 +51,13 @@ public class ExchangeItemController {
         return new ResponseEntity<>(ApiResult.success(exchangeItemId), HttpStatus.OK);
     }
 
+    @DeleteMapping("/users/items/exchanges/{itemId}")
+    public ResponseEntity<ApiResult<Long>> deleteExchangeItem(@PathVariable(value = "itemId") Long itemId,
+                                                              @AuthenticationPrincipal AuthUser authUser) {
+        Long exchangeItemId = exchangeItemService.deleteExchangeItem(itemId, authUser.getId());
+        return new ResponseEntity<>(ApiResult.success(exchangeItemId), HttpStatus.OK);
+    }
+
     @GetMapping("/items/exchanges")
     public ResponseEntity<ApiResult<GetAllExchangeItemsRespDto>> getAllExchangeItems(@RequestParam(value = "search", required = false) String search,
                                                                                      @RequestParam(value = "deposit", required = false) String deposit,
