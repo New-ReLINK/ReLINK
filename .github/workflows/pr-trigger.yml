@@ -12,8 +12,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-        with:
-          repo-token: "${{ secrets.TOKEN }}"
 
       - name: Set up JDK
         uses: actions/setup-java@v3
