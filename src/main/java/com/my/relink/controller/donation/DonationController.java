@@ -47,6 +47,15 @@ public class DonationController {
         return ResponseEntity.ok(ApiResult.success(response));
     }
 
+    @GetMapping("/users/items/donations/{itemId}")
+    public ResponseEntity<ApiResult<DonationItemDetailRespDto>> getDonationItem(
+            @PathVariable Long itemId,
+            @AuthenticationPrincipal AuthUser authUser) {
+
+        DonationItemDetailRespDto response = donationItemService.getDonationItem(itemId, authUser.getId());
+
+        return ResponseEntity.ok(ApiResult.success(response));
+    }
     @GetMapping("/donations/{donationItemId}/rejection")
     public ResponseEntity<ApiResult<DonationItemRejectionRespDto>> getRejectionItem (
             @AuthenticationPrincipal AuthUser authUser,

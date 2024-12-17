@@ -1,11 +1,8 @@
 package com.my.relink.controller.user;
 
 import com.my.relink.config.security.AuthUser;
-import com.my.relink.controller.user.dto.req.UserCreateReqDto;
+import com.my.relink.controller.user.dto.req.*;
 import com.my.relink.controller.user.dto.resp.*;
-import com.my.relink.controller.user.dto.req.UserInfoEditReqDto;
-import com.my.relink.controller.user.dto.req.UserValidEmailReqDto;
-import com.my.relink.controller.user.dto.req.UserValidNicknameRepDto;
 import com.my.relink.service.UserService;
 import com.my.relink.util.api.ApiResult;
 import jakarta.validation.Valid;
@@ -61,7 +58,11 @@ public class UserController {
     }
 
     @DeleteMapping("/users")
-    public ResponseEntity<ApiResult<Void>> signOut() {
+    public ResponseEntity<ApiResult<Void>> signOut(
+            @AuthenticationPrincipal AuthUser authUser,
+            @Valid @RequestBody UserDeleteReqDto dto
+    ) {
+        userService.deleteUser(authUser.getId(), dto);
         return ResponseEntity.status(HttpStatus.OK).body(ApiResult.success(null));
     }
 

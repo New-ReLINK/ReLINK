@@ -3,6 +3,7 @@ package com.my.relink.service;
 import com.my.relink.config.security.AuthUser;
 import com.my.relink.controller.donation.dto.PagingInfo;
 import com.my.relink.controller.donation.dto.req.DonationItemReqDto;
+import com.my.relink.controller.donation.dto.resp.DonationItemDetailRespDto;
 import com.my.relink.controller.donation.dto.resp.DonationItemListRespDto;
 import com.my.relink.controller.donation.dto.resp.DonationItemIdRespDto;
 import com.my.relink.controller.donation.dto.resp.DonationItemRejectionRespDto;
@@ -69,6 +70,18 @@ public class DonationItemService {
         PagingInfo pagingInfo = PagingInfo.fromPage(donationItems);
 
         return DonationItemUserListRespDto.of(donationItems, pagingInfo);
+    }
+
+    public DonationItemDetailRespDto getDonationItem(Long itemId, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        DonationItem donationItem = donationItemRepository.findByIdWithCategory(itemId)
+                .orElseThrow(()->new BusinessException(ErrorCode.DONATION_ITEM_NOT_FOUND));
+
+        Map<Long, String> imageMap = imageService.getImagesByItemIds(EntityType.DONATION_ITEM, List.of(itemId));
+
+        return DonationItemDetailRespDto.fromEntity(donationItem, imageMap);
     }
 
     public DonationItemRejectionRespDto getRejectionItem(Long itemId, Long userId) {
