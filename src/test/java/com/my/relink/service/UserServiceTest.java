@@ -248,14 +248,15 @@ class UserServiceTest extends DummyObject {
     @DisplayName("회원 탈퇴 시 유저정보를 찾을 수 없는 경우 USER_NOT_FOUND Exception 이 발생한다.")
     void notFoundUserFailTest() {
         // given
+        Long userId = 1L;
         UserDeleteReqDto reqDto = UserDeleteReqDto.builder()
                 .email("test@example.com")
                 .password("password1234")
                 .build();
 
-        when(userRepository.findByEmail(reqDto.getEmail())).thenReturn(Optional.empty());
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
         // when & then
-        assertThrows(BusinessException.class, () -> userService.deleteUser(reqDto));
+        assertThrows(BusinessException.class, () -> userService.deleteUser(userId, reqDto));
         verify(userRepository, times(1)).findByEmail(any());
     }
 
@@ -263,6 +264,8 @@ class UserServiceTest extends DummyObject {
     @DisplayName("회원 탈퇴 시 비밀번호가 맞지 않는 경우 MISS_MATCH_PASSWORD Exception 이 발생한다.")
     void missMatchPasswordFailTest() {
         // given
+        Long userId = 1L;
+
         UserDeleteReqDto reqDto = UserDeleteReqDto.builder()
                 .email("test@example.com")
                 .password("password1234")
@@ -274,10 +277,10 @@ class UserServiceTest extends DummyObject {
                 .nickname("testNickname")
                 .build();
 
-        when(userRepository.findByEmail(reqDto.getEmail())).thenReturn(Optional.of(user));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
         // when & then
-        assertThrows(BusinessException.class, () -> userService.deleteUser(reqDto));
+        assertThrows(BusinessException.class, () -> userService.deleteUser(userId, reqDto));
         verify(userRepository, times(1)).findByEmail(any());
     }
 
@@ -285,6 +288,8 @@ class UserServiceTest extends DummyObject {
     @DisplayName("회원 탈퇴 시 비밀번호와 이메일이 일치하는 경우 isDeleted 가 True 가 된다.")
     void signOutSuccessTest() {
         // given
+        Long userId = 1L;
+
         UserDeleteReqDto reqDto = UserDeleteReqDto.builder()
                 .email("test@example.com")
                 .password("password1234")
@@ -295,11 +300,11 @@ class UserServiceTest extends DummyObject {
                 .password("password1234")
                 .build();
 
-        when(userRepository.findByEmail(reqDto.getEmail())).thenReturn(Optional.of(user));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(passwordEncoder.matches(any(), any())).thenReturn(true);
 
         // when
-        userService.deleteUser(reqDto);
+        userService.deleteUser(userId, reqDto);
 
         // then
         verify(userRepository, times(1)).findByEmail(any());
