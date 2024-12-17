@@ -13,4 +13,7 @@ public interface ImageRepository extends JpaRepository<Image, Long>, CustomImage
 
     Optional<Image> findByEntityIdAndEntityType(Long entityId, EntityType entityType);
 
+    Optional<Image> findByIdAndEntityIdAndEntityType(Long id, Long entityId, EntityType type);
+
+    void deleteByEntityTypeAndEntityId(EntityType entityType, Long entityId);
 }
