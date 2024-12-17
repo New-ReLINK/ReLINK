@@ -29,7 +29,8 @@ public enum ErrorCode {
 
     EXCHANGE_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "해당 교환 상품을 찾을 수 없습니다"),
     NOTIFICATION_CREATE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR.value(), "알람 저장이 실패하였습니다."),
-    NOTIFICATION_DELIVERY_FAILED(HttpStatus.INTERNAL_SERVER_ERROR.value(), "알림 발송에 실패하였습니다.")
+    NOTIFICATION_DELIVERY_FAILED(HttpStatus.INTERNAL_SERVER_ERROR.value(), "알림 발송에 실패하였습니다."),
+    DONATION_ITEM_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR.value(), "해당 기부 상품을 찾을 수 없습니다.")
 
     ;
 
