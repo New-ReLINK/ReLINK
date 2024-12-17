@@ -62,24 +62,23 @@ public class ReviewService {
         User currentUser = userRepository.findById(authUser.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        Trade trade = tradeRepository.findById(tradeId)
+        Trade trade = tradeRepository.findByIdWithExchangeItem(tradeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
 
         if (trade.getTradeStatus() != TradeStatus.EXCHANGED) {
-            throw new BusinessException(ErrorCode.TRADE_ACCESS_DENIED);
+            throw new BusinessException(ErrorCode.TRADE_NOT_COMPLETE);
         }
 
-        User writer = currentUser;
-        ExchangeItem exchangeItem = trade.getPartnerExchangeItem(writer.getId());
+        ExchangeItem exchangeItem = trade.getPartnerExchangeItem(currentUser.getId());
 
-        if(reviewRepository.existsByExchangeItemIdAndWriterId(exchangeItem.getId(), writer.getId())){
+        if(reviewRepository.existsByExchangeItemIdAndWriterId(exchangeItem.getId(), currentUser.getId())){
             throw new BusinessException(ErrorCode.REVIEW_FORBIDDEN);
         }
 
         Review review = Review.builder()
                 .star(reqDto.getStar())
                 .description(reqDto.getDescription())
-                .writer(writer)
+                .writer(currentUser)
                 .exchangeItem(exchangeItem)
                 .build();
 
