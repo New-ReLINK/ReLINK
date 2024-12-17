@@ -33,6 +33,7 @@ public enum ErrorCode {
     NOTIFICATION_CREATE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR.value(), "알람 저장이 실패하였습니다."),
     NOTIFICATION_DELIVERY_FAILED(HttpStatus.INTERNAL_SERVER_ERROR.value(), "알림 발송에 실패하였습니다."),
 
+
     POINT_INFO_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "포인트 정보를 찾을 수 없습니다. 고객센터에 문의해주세요"),
     FAIL_TO_POINT_CHARGE(HttpStatus.INTERNAL_SERVER_ERROR.value(), "포인트 충전에 실패했습니다. 잠시 후 다시 시도해주세요"),
     FAIL_TO_UPDATE_PAYMENT_STATUS(HttpStatus.INTERNAL_SERVER_ERROR.value(), "결제 상태 업데이트에 실패했습니다"),
@@ -45,6 +46,15 @@ public enum ErrorCode {
     UNEXPECTED_FAIL_TO_PAYMENT_CONFIRM(HttpStatus.INTERNAL_SERVER_ERROR.value(), "결제 승인 요청에 실패했습니다. 잠시 후 다시 시도해주세요"),
     CRITICAL_POINT_CHARGE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR.value(), "포인트 충전 중 심각한 오류가 발생했습니다. 고객센터에 문의해주세요"),
     CRITICAL_PAYMENT_PROCESS_ERROR(HttpStatus.INTERNAL_SERVER_ERROR.value(), "결제 처리 프로세스 중 심각한 오류가 발생했습니다. 고객센터에 문의해주세요"),
+
+
+    FILE_SIZE_EXCEEDED(HttpStatus.BAD_REQUEST.value(), "파일 크기를 초과하였습니다."),
+    INVALID_FILE_EXTENSION(HttpStatus.BAD_REQUEST.value(), "지원하지 않는 파일 형식입니다."),
+    ALREADY_IMAGE_FILE(HttpStatus.BAD_REQUEST.value(), "프로필 이미지는 하나만 등록할 수 있습니다."),
+    IMAGE_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "이미지를 찾을 수 없습니다."),
+    IMAGE_ACCESS_DENIED(HttpStatus.BAD_REQUEST.value(), "해당 이미지의 소유자와 다릅니다."),
+    INVALID_FILE_URL(HttpStatus.BAD_REQUEST.value(), "파일 URL 이 비어있습니다."),
+    ITEM_IN_EXCHANGE(HttpStatus.BAD_REQUEST.value(), "해당 상품이 거래중입니다.")
 
 
     ;
