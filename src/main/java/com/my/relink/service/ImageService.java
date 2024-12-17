@@ -75,8 +75,9 @@ public class ImageService {
     }
 
     public String getImageByItemId(EntityType entityType, Long itemId) {
-        return getImagesByItemIds(entityType, List.of(itemId))
-                .getOrDefault(itemId, null);
+        return imageRepository.findTopByEntityIdAndEntityTypeOrderByCreatedAtAsc(itemId, entityType)
+                .map(Image::getImageUrl)
+                .orElse(null);
     }
 
 }
