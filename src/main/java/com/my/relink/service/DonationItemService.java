@@ -5,10 +5,13 @@ import com.my.relink.controller.donation.dto.PagingInfo;
 import com.my.relink.controller.donation.dto.req.DonationItemReqDto;
 import com.my.relink.controller.donation.dto.resp.DonationItemListRespDto;
 import com.my.relink.controller.donation.dto.resp.DonationItemIdRespDto;
+import com.my.relink.controller.donation.dto.resp.DonationItemRejectionRespDto;
 import com.my.relink.controller.donation.dto.resp.DonationItemUserListRespDto;
 import com.my.relink.domain.category.Category;
 import com.my.relink.domain.category.repository.CategoryRepository;
+import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.item.donation.DonationItem;
+import com.my.relink.domain.item.donation.RejectedReason;
 import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.BusinessException;
@@ -20,6 +23,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Map;
+
 @Service
 @RequiredArgsConstructor
 public class DonationItemService {
@@ -27,6 +33,7 @@ public class DonationItemService {
     private final DonationItemRepository donationItemRepository;
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
+    private final ImageService imageService;
 
     public DonationItemIdRespDto createDonationItem(DonationItemReqDto request, AuthUser authUser) {
         User user = userRepository.findById(authUser.getId())
@@ -64,4 +71,18 @@ public class DonationItemService {
         return DonationItemUserListRespDto.of(donationItems, pagingInfo);
     }
 
+    public DonationItemRejectionRespDto getRejectionItem(Long itemId, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        DonationItem donationItem = donationItemRepository.findByIdWithCategory(itemId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.DONATION_ITEM_NOT_FOUND));
+
+        Map<Long, String> imageMap = imageService.getImagesByItemIds(EntityType.DONATION_ITEM, List.of(itemId));
+        String imageUrl = imageMap.get(itemId);
+
+        RejectedReason rejectedReason = donationItem.getRejectedReason();
+
+        return DonationItemRejectionRespDto.fromEntity(donationItem, imageUrl, rejectedReason);
+    }
 }
