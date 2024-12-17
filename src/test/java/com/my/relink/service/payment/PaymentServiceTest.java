@@ -122,7 +122,6 @@ class PaymentServiceTest {
             when(mockRespDto.getStatus()).thenReturn(PaymentStatus.CANCELED.toString());
             when(mockCancels.getCancelStatus()).thenReturn(PaymentStatus.DONE.toString());
             when(mockRespDto.getCancels()).thenReturn(List.of(mockCancels));
-            when(mockCancels.getCanceledAt()).thenReturn(canceledAt);
 
 
             assertThatThrownBy(() -> paymentService.chargePointWithHistory(user, payment, paymentReqDto))
@@ -157,7 +156,6 @@ class PaymentServiceTest {
             when(payment.getAmount()).thenReturn(amount);
             when(pointHistoryRepository.save(any())).thenThrow(new RuntimeException("저장 실패"));
             when(point.getAmount()).thenReturn(amount);
-            when(mockCancels.getCanceledAt()).thenReturn(canceledAt);
 
             when(paymentReqDto.getPaymentKey()).thenReturn(paymentKey);
             when(tossPaymentClient.cancelPayment(
@@ -240,9 +238,6 @@ class PaymentServiceTest {
             String paymentKey = "paymentKey";
             point = mock(Point.class);
             Integer amount = 1000;
-            String canceledAt = "2024-12-17T10:00:00+09:00";
-            when(mockCancels.getCanceledAt()).thenReturn(canceledAt);
-
 
             when(pointService.findByIdOrFail(user))
                     .thenReturn(point);
