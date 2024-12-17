@@ -8,6 +8,8 @@ import com.my.relink.domain.image.repository.ImageRepository;
 import com.my.relink.domain.point.Point;
 import com.my.relink.domain.point.repository.PointRepository;
 import com.my.relink.domain.review.repository.ReviewRepository;
+import com.my.relink.domain.trade.TradeStatus;
+import com.my.relink.domain.trade.repository.TradeRepository;
 import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.domain.user.repository.dto.UserInfoWithCountRepositoryDto;
@@ -26,8 +28,9 @@ public class UserService {
     private final ImageRepository imageRepository;
     private final PointRepository pointRepository;
     private final ReviewRepository reviewRepository;
+    private final TradeRepository tradeRepository;
 
-    public User findByIdOrFail(Long userId){
+    public User findByIdOrFail(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
     }
@@ -81,6 +84,8 @@ public class UserService {
         User user = userRepository.findByEmail(dto.getEmail())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
+        delayDeleteUser(dto.getEmail());
+
         if (!passwordEncoder.matches(dto.getPassword(), user.getPassword())) {
             throw new BusinessException(ErrorCode.MISS_MATCHER_PASSWORD);
         }
@@ -104,5 +109,17 @@ public class UserService {
         Double avgStar = reviewRepository.getTotalStarAvg(userId);
 
         return new UserProfileRespDto(avgStar, repositoryDto);
+    }
+
+    public void delayDeleteUser(String email) {
+        boolean hasActiveTrades = tradeRepository.existsByRequesterEmailAndTradeStatus(email, TradeStatus.IN_EXCHANGE) ||
+                        tradeRepository.existsByOwnerEmailAndTradeStatus(email, TradeStatus.IN_EXCHANGE) ||
+                        tradeRepository.existsByRequesterEmailAndTradeStatus(email, TradeStatus.IN_DELIVERY) ||
+                        tradeRepository.existsByOwnerEmailAndTradeStatus(email, TradeStatus.IN_DELIVERY) ||
+                        tradeRepository.existsByRequesterEmailAndTradeStatus(email, TradeStatus.EXCHANGED) ||
+                        tradeRepository.existsByOwnerEmailAndTradeStatus(email, TradeStatus.EXCHANGED);
+        if (hasActiveTrades) {
+            throw new BusinessException(ErrorCode.ACTIVE_TRADE_EXISTS);
+        }
     }
 }

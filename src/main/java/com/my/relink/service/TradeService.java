@@ -265,6 +265,7 @@ public class TradeService {
 
         Trade trade = tradeRepository.findById(tradeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
+
         //거래 상태 확인, 요청자 확인
         //보증금 환급 처리
         if (!trade.isTradeInExchange(trade) || !trade.isParticipant(currentUser.getId())) {

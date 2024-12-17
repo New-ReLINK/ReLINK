@@ -31,6 +31,7 @@ public enum ErrorCode {
     INVALID_REPORT_REASON(HttpStatus.NOT_FOUND.value(), "해당 신고 사유는 존재하지 않습니다"),
     ALREADY_REPORTED_TRADE(HttpStatus.CONFLICT.value(), "이미 신고된 거래입니다"),
     UNAUTHORIZED_ACCESS(HttpStatus.UNAUTHORIZED.value(), "해당 상품의 소유자가 아닙니다"),
+    ACTIVE_TRADE_EXISTS(HttpStatus.BAD_REQUEST.value(), "진행 중인 거래가 존재합니다. 교환을 취소한 후에 탈퇴가 가능합니다."),
 
     EXCHANGE_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "해당 교환 상품을 찾을 수 없습니다"),
     NOTIFICATION_CREATE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR.value(), "알람 저장이 실패하였습니다."),

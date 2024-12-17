@@ -2,6 +2,7 @@ package com.my.relink.domain.trade.repository;
 
 import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.trade.Trade;
+import com.my.relink.domain.trade.TradeStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -34,5 +35,9 @@ public interface TradeRepository extends JpaRepository<Trade, Long>, CustomTrade
             "join fetch oi.user " +
             "where t.id = :tradeId")
     Optional<Trade> findByIdWithUsers(@Param("tradeId") Long tradeId);
+
+    boolean existsByRequesterEmailAndTradeStatus(String email, TradeStatus tradeStatus);
+
+    boolean existsByOwnerEmailAndTradeStatus(String email, TradeStatus tradeStatus);
 
 }
