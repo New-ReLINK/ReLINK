@@ -73,4 +73,8 @@ public class ImageService {
     public void deleteImagesByEntityId(EntityType entityType, Long entityId) {
         imageRepository.deleteByEntityTypeAndEntityId(entityType, entityId);
     }
+
+    public List<String> getImageUrlsByItemId(EntityType entityType, Long itemId) {
+        return imageRepository.findImageUrlsByItemId(entityType, itemId);
+    }
 }

@@ -8,6 +8,7 @@ import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemRespDto;
 import com.my.relink.domain.category.Category;
 import com.my.relink.domain.category.repository.CategoryRepository;
 import com.my.relink.domain.image.EntityType;
+import com.my.relink.domain.image.Image;
 import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.item.exchange.repository.ExchangeItemRepository;
 import com.my.relink.domain.point.Point;
@@ -90,10 +91,18 @@ public class ExchangeItemService {
 
         Page<GetAllExchangeItemsRespDto> content = itemsPage.map(item -> {
             int trustScore = userTrustScoreService.getTrustScore(item.getUser());
-            return GetAllExchangeItemsRespDto.from(item, imageMap, trustScore);
+            return GetAllExchangeItemsRespDto.fromAllItems(item, imageMap, trustScore);
         });
 
         return GetAllExchangeItemsRespDto.of(content);
+    }
+
+    public GetAllExchangeItemsRespDto getExchangeItemFromOwner(Long itemId, Long userId) {
+        ExchangeItem exchangeItem = findByIdOrFail(itemId);
+        int trustScore = userTrustScoreService.getTrustScore(exchangeItem.getUser());
+        List<String> imageUrls = imageService.getImageUrlsByItemId(EntityType.EXCHANGE_ITEM, itemId);
+        Boolean like = likeService.existsItemLike(itemId, userId);
+        return GetAllExchangeItemsRespDto.fromItem(exchangeItem, imageUrls, trustScore, like);
     }
 
     @Transactional
