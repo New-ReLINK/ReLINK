@@ -3,6 +3,8 @@ package com.my.relink.controller.exchangeItem.dto.resp;
 import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.trade.Trade;
 import com.my.relink.domain.trade.TradeStatus;
+import com.my.relink.domain.category.Category;
+import com.my.relink.domain.item.donation.ItemQuality;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
@@ -28,6 +30,11 @@ public class GetExchangeItemRespDto {
     private Long tradeId;
     // 교환 완료 EXCHANGED
     private LocalDate completedDate;
+    // 단건 조회 시
+    private String description;
+    private Category category;
+    private ItemQuality itemQuality;
+    private String brand;
 
     public static GetExchangeItemRespDto from(ExchangeItem item, Map<Long, Trade> tradeMap, Map<Long, String> imageMap) {
         Trade trade = item.getTradeStatus() == TradeStatus.AVAILABLE ? null : tradeMap.get(item.getId());
@@ -70,5 +77,18 @@ public class GetExchangeItemRespDto {
                 ? trade.getRequesterExchangeItem()
                 : trade.getOwnerExchangeItem();
         return partnerItem.getUser().getNickname();
+    }
+
+    public static GetExchangeItemRespDto from(ExchangeItem exchangeItem) {
+        return GetExchangeItemRespDto.builder()
+                .exchangeItemId(exchangeItem.getId())
+                .exchangeItemName(exchangeItem.getName())
+                .description(exchangeItem.getDescription())
+                .category(exchangeItem.getCategory())
+                .itemQuality(exchangeItem.getItemQuality())
+                .size(exchangeItem.getSize())
+                .brand(exchangeItem.getBrand())
+                .desiredItem(exchangeItem.getDesiredItem())
+                .build();
     }
 }

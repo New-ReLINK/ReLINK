@@ -50,4 +50,8 @@ public class PointHistory extends BaseEntity {
         pointHistory.trade = trade;
         return pointHistory;
     }
+
+    public boolean isRefunded(){
+        return this.pointTransactionType == PointTransactionType.RETURN;
+    }
 }
