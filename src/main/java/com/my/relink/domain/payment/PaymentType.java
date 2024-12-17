@@ -1,4 +1,4 @@
-package com.my.tosspaymenttest.web.domain.payment;
+package com.my.relink.domain.payment;
 
 import lombok.Getter;
 
