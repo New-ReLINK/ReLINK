@@ -1,10 +1,10 @@
 package com.my.relink.controller.exchangeItem.dto.resp;
 
+import com.my.relink.domain.category.Category;
+import com.my.relink.domain.item.donation.ItemQuality;
 import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.trade.Trade;
 import com.my.relink.domain.trade.TradeStatus;
-import com.my.relink.domain.category.Category;
-import com.my.relink.domain.item.donation.ItemQuality;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
