@@ -27,7 +27,7 @@ public class UserService {
     private final PointRepository pointRepository;
     private final ReviewRepository reviewRepository;
 
-    public User findByIdOrFail(Long userId){
+    public User findByIdOrFail(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
     }
@@ -77,8 +77,8 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public void deleteUser(UserDeleteReqDto dto) {
-        User user = userRepository.findByEmail(dto.getEmail())
+    public void deleteUser(Long userId, UserDeleteReqDto dto) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         if (!passwordEncoder.matches(dto.getPassword(), user.getPassword())) {
