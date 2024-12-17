@@ -99,6 +99,7 @@ public class ExchangeItemService {
     public Long deleteExchangeItem(Long itemId, Long userId) {
         ExchangeItem exchangeItem = findByIdOrFail(itemId);
         exchangeItem.validExchangeItemOwner(exchangeItem.getUser().getId(), userId);
+        validExchangeItemTradeStatus(exchangeItem.getTradeStatus());
         exchangeItem.delete(true);
         deleteRelatedEntities(exchangeItem.getId());
         return exchangeItem.getId();
