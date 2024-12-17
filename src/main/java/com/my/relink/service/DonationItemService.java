@@ -70,8 +70,8 @@ public class DonationItemService {
         return DonationItemUserListRespDto.of(donationItems, pagingInfo);
     }
 
-    public DonationItemDetailRespDto getDonationItem(Long itemId, AuthUser authUser) {
-        User user = userRepository.findById(authUser.getId())
+    public DonationItemDetailRespDto getDonationItem(Long itemId, Long userId) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         DonationItem donationItem = donationItemRepository.findById(itemId)
