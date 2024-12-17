@@ -9,6 +9,7 @@ import com.my.relink.controller.payment.dto.request.PaymentReqDto;
 import com.my.relink.controller.payment.dto.response.PaymentRespDto;
 import com.my.relink.domain.payment.Payment;
 import com.my.relink.domain.payment.PaymentCancelReason;
+import com.my.relink.domain.point.pointHistory.PointHistory;
 import com.my.relink.domain.user.User;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
@@ -30,8 +31,8 @@ public class PaymentProcessService {
         try{
             TossPaymentRespDto tossPaymentRespDto = paymentService.confirmPayment(paymentReqDto);
             Payment payment = paymentService.savePaymentInfo(paymentReqDto, tossPaymentRespDto, user);
-            paymentService.chargePointWithHistory(user, payment, paymentReqDto);
-            return new PaymentRespDto(user);
+            PointHistory pointHistory = paymentService.chargePointWithHistory(user, payment, paymentReqDto);
+            return new PaymentRespDto(pointHistory);
         } catch (TossPaymentException | BusinessException e){
             throw e;
         } catch (Exception e){

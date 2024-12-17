@@ -4,9 +4,7 @@ import com.my.relink.client.tosspayments.dto.response.TossPaymentRespDto;
 import com.my.relink.domain.payment.Payment;
 import com.my.relink.domain.payment.PaymentType;
 import com.my.relink.domain.user.User;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -14,6 +12,8 @@ import java.time.format.DateTimeFormatter;
 @NoArgsConstructor
 @Getter
 @ToString
+@AllArgsConstructor
+@Builder
 public class PaymentReqDto {
 
 

@@ -41,9 +41,8 @@ public class Payment extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private PaymentType paymentType;
 
-    public void updateFailInfo(String failReason, String status, LocalDateTime paidAt){
+    public void updateFailInfo(String failReason, String status){
         this.failReason = failReason;
         this.status = status;
-        this.paidAt = paidAt;
     }
 }
