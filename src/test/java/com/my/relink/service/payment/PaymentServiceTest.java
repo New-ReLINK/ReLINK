@@ -137,8 +137,7 @@ class PaymentServiceTest {
             );
             verify(payment).updateFailInfo(
                     eq(PaymentCancelReason.SERVER_ERROR_FAIL_TO_UPDATE_POINT.getMessage()),
-                    eq(PaymentStatus.CANCELED.toString()),
-                    eq(LocalDateTime.parse(canceledAt, DateTimeFormatter.ISO_DATE_TIME))
+                    eq(PaymentStatus.CANCELED.toString())
 
             );
         }
@@ -172,8 +171,7 @@ class PaymentServiceTest {
             when(mockRespDto.getCancels()).thenReturn(List.of(mockCancels));
             doNothing().when(payment).updateFailInfo(
                     anyString(),
-                    anyString(),
-                    any(LocalDateTime.class)
+                    anyString()
             );
 
             assertThatThrownBy(() -> paymentService.chargePointWithHistory(user, payment, paymentReqDto))
@@ -187,8 +185,7 @@ class PaymentServiceTest {
                 verifyNoMoreInteractions(point);
                 verify(payment).updateFailInfo(
                         eq(PaymentCancelReason.SERVER_ERROR_FAIL_TO_UPDATE_POINT.getMessage()),
-                        eq(PaymentStatus.CANCELED.toString()),
-                        eq(LocalDateTime.parse(canceledAt, DateTimeFormatter.ISO_DATE_TIME))
+                        eq(PaymentStatus.CANCELED.toString())
                 );
             });
         }
@@ -230,8 +227,7 @@ class PaymentServiceTest {
             );
             verify(payment, never()).updateFailInfo(
                     eq(PaymentCancelReason.SERVER_ERROR_FAIL_TO_UPDATE_POINT.getMessage()),
-                    eq(PaymentStatus.CANCELED.toString()),
-                    eq(LocalDateTime.parse(canceledAt, DateTimeFormatter.ISO_DATE_TIME))
+                    eq(PaymentStatus.CANCELED.toString())
             );
         }
 
@@ -266,8 +262,7 @@ class PaymentServiceTest {
                     .when(payment)
                     .updateFailInfo(
                             any(String.class),
-                            any(String.class),
-                            any(LocalDateTime.class)
+                            any(String.class)
                     );
 
 
@@ -282,8 +277,7 @@ class PaymentServiceTest {
             );
             verify(payment).updateFailInfo(
                     eq(PaymentCancelReason.SERVER_ERROR_FAIL_TO_UPDATE_POINT.getMessage()),
-                    eq(PaymentStatus.CANCELED.toString()),
-                    eq(LocalDateTime.parse(canceledAt, DateTimeFormatter.ISO_DATE_TIME))
+                    eq(PaymentStatus.CANCELED.toString())
             );
         }
     }
