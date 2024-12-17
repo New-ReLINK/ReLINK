@@ -21,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -58,6 +59,7 @@ public class ReviewService {
         return PageResponse.of(reviews);
     }
 
+    @Transactional
     public ReviewRespDto postTradeReview(Long tradeId, ReviewReqDto reqDto, AuthUser authUser) {
         User currentUser = userRepository.findById(authUser.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
@@ -65,16 +67,16 @@ public class ReviewService {
         Trade trade = tradeRepository.findByIdWithExchangeItem(tradeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
 
-//        //거래 상대방이 탈퇴했을 떄
-//        if(!userRepository.existsByIdAndIsDeletedFalse(trade.getPartner(currentUser.getId()).getId())) {
-//            throw new BusinessException(ErrorCode.USER_SECESSION);
-//        }
-
         if (trade.getTradeStatus() != TradeStatus.EXCHANGED) {
             throw new BusinessException(ErrorCode.TRADE_NOT_COMPLETE);
         }
 
         ExchangeItem exchangeItem = trade.getPartnerExchangeItem(currentUser.getId());
+         //거래 상대방이 탈퇴했을 떄
+        User partnerUser = trade.getPartner(currentUser.getId());
+        if(partnerUser.isDeleted()){
+            throw new BusinessException(ErrorCode.USER_SECESSION);
+        }
 
         if(reviewRepository.existsByExchangeItemIdAndWriterId(exchangeItem.getId(), currentUser.getId())){
             throw new BusinessException(ErrorCode.REVIEW_FORBIDDEN);
