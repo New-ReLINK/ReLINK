@@ -1,6 +1,7 @@
 package com.my.relink.service;
 
-import com.my.relink.controller.exchangeItem.dto.req.ExchangeItemReqDto;
+import com.my.relink.controller.exchangeItem.dto.req.CreateExchangeItemReqDto;
+import com.my.relink.controller.exchangeItem.dto.req.UpdateExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemRespDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemsRespDto;
 import com.my.relink.domain.category.Category;
@@ -11,6 +12,7 @@ import com.my.relink.domain.item.exchange.repository.ExchangeItemRepository;
 import com.my.relink.domain.point.Point;
 import com.my.relink.domain.point.repository.PointRepository;
 import com.my.relink.domain.trade.Trade;
+import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.BusinessException;
@@ -38,7 +40,7 @@ public class ExchangeItemService {
 
 
     @Transactional
-    public long createExchangeItem(ExchangeItemReqDto reqDto, Long userId) {
+    public long createExchangeItem(CreateExchangeItemReqDto reqDto, Long userId) {
         Category category = getValidCategory(reqDto.getCategoryId());
         User user = getValidUser(userId);
         validateDeposit(reqDto.getDeposit(), userId);
@@ -72,12 +74,29 @@ public class ExchangeItemService {
     }
 
     @Transactional
-    public Long updateExchangeItem(Long itemId, ExchangeItemReqDto reqDto, Long userId) {
+    public Long updateExchangeItem(Long itemId, UpdateExchangeItemReqDto reqDto, Long userId) {
         ExchangeItem exchangeItem = findByIdOrFail(itemId);
+        validExchangeItemTradeStatus(exchangeItem.getTradeStatus());
         Category category = getValidCategory(reqDto.getCategoryId());
         validateDeposit(reqDto.getDeposit(), userId);
-        exchangeItem.updateFromDto(reqDto, category);
+        exchangeItem.update(
+                reqDto.getName(),
+                reqDto.getDescription(),
+                category,
+                reqDto.getItemQuality(),
+                reqDto.getSize(),
+                reqDto.getBrand(),
+                reqDto.getDesiredItem(),
+                reqDto.getDeposit()
+        );
         return exchangeItem.getId();
+    }
+
+    // 상품의 상태 확인
+    public void validExchangeItemTradeStatus(TradeStatus tradeStatus) {
+        if (tradeStatus != TradeStatus.AVAILABLE) {
+            throw new BusinessException(ErrorCode.ITEM_NOT_AVAILABLE);
+        }
     }
 
     // user 가져오기
