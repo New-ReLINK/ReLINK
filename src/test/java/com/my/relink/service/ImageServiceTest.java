@@ -95,11 +95,11 @@ class ImageServiceTest {
         Long userId = 1L;
         Long imageId = 1L;
 
-        when(imageRepository.findById(userId)).thenReturn(Optional.empty());
+        when(imageRepository.findByIdAndEntityIdAndEntityType(userId, imageId, EntityType.USER)).thenReturn(Optional.empty());
 
         // when & then
         assertThrows(BusinessException.class, () -> imageService.deleteUserProfile(userId, imageId));
-        verify(imageRepository, times(1)).findById(any());
+        verify(imageRepository, times(1)).findByIdAndEntityIdAndEntityType(any(), any(), any());
     }
 
     @Test
@@ -115,11 +115,11 @@ class ImageServiceTest {
                 .entityType(EntityType.USER)
                 .build();
 
-        when(imageRepository.findById(imageId)).thenReturn(Optional.of(image));
+        when(imageRepository.findByIdAndEntityIdAndEntityType(imageId, userId, EntityType.USER)).thenReturn(Optional.empty());
 
         // when & then
         assertThrows(BusinessException.class, () -> imageService.deleteUserProfile(userId, imageId));
-        verify(imageRepository, times(1)).findById(any());
+        verify(imageRepository, times(1)).findByIdAndEntityIdAndEntityType(any(), any(), any());
     }
 
     @Test
@@ -135,7 +135,7 @@ class ImageServiceTest {
                 .entityType(EntityType.USER)
                 .build();
 
-        when(imageRepository.findById(imageId)).thenReturn(Optional.of(image));
+        when(imageRepository.findByIdAndEntityIdAndEntityType(imageId, userId, EntityType.USER)).thenReturn(Optional.of(image));
         doNothing().when(imageRepository).delete(image);
         doNothing().when(s3Service).deleteImage(image.getImageUrl());
 
@@ -145,7 +145,7 @@ class ImageServiceTest {
         // then
         assertThat(result).isNotNull();
         assertThat(result.getImageId()).isEqualTo(imageId);
-        verify(imageRepository, times(1)).findById(any());
+        verify(imageRepository, times(1)).findByIdAndEntityIdAndEntityType(any(), any(), any());
         verify(imageRepository, times(1)).delete(any());
         verify(s3Service, times(1)).deleteImage(any());
     }
