@@ -9,7 +9,6 @@ import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -91,5 +90,17 @@ public class ExchangeItem extends BaseEntity {
         if (!itemOwnerId.equals(userId)) {
             throw new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS);
         }
+    }
+
+    public void update(String name, String description, Category category,
+                       ItemQuality itemQuality, String size, String brand, String desiredItem, Integer deposit) {
+        this.name = name;
+        this.description = description;
+        this.category = category;
+        this.itemQuality = itemQuality;
+        this.size = size;
+        this.brand = brand;
+        this.desiredItem = desiredItem;
+        this.deposit = deposit;
     }
 }
