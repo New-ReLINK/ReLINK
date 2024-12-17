@@ -53,9 +53,9 @@ public class PaymentService {
         try {
             return tossPaymentClient.confirmPayment(
                     new TossPaymentReqDto(
-                            paymentReqDto.getPaymentKey(),
+                            paymentReqDto.getOrderId(),
                             paymentReqDto.getAmount(),
-                            paymentReqDto.getOrderId()
+                            paymentReqDto.getPaymentKey()
                     ),
                     PaymentFeature.PAYMENT_CONFIRM);
         } catch (TossPaymentException e){
