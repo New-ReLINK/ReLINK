@@ -54,7 +54,7 @@ public class DonationController {
             @PathVariable Long itemId,
             @AuthenticationPrincipal AuthUser authUser) {
 
-        DonationItemDetailRespDto response = donationItemService.getDonationItem(itemId,authUser);
+        DonationItemDetailRespDto response = donationItemService.getDonationItem(itemId, authUser);
 
         return ResponseEntity.ok(ApiResult.success(response));
     }

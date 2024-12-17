@@ -22,6 +22,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -76,7 +77,7 @@ public class DonationItemService {
         DonationItem donationItem = donationItemRepository.findById(itemId)
                 .orElseThrow(()->new BusinessException(ErrorCode.DONATION_ITEM_NOT_FOUND));
 
-        Map<Long, String> imageMap = imageService.getImagesByItemIds(EntityType.DONATION_ITEM, itemId);
+        Map<Long, String> imageMap = imageService.getImagesByItemIds(EntityType.DONATION_ITEM, List.of(itemId));
 
         return DonationItemDetailRespDto.fromEntity(donationItem, imageMap);
     }
