@@ -30,18 +30,18 @@ jobs:
       - name: Run tests
         run: ./gradlew test
 
-      - name: Add PR Comment
-        uses: actions/github-script@v6
-        if: always()
-        with:
-          script: |
-            const output = `#### Build Test Results 🚀
-            - Build Status: ${process.env.BUILD_STATUS}
-            - Test Results: ${process.env.TEST_STATUS}`;
-            
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: output
-            })
+#      - name: Add PR Comment
+#        uses: actions/github-script@v6
+#        if: always()
+#        with:
+#          script: |
+#            const output = `#### Build Test Results 🚀
+#            - Build Status: ${process.env.BUILD_STATUS}
+#            - Test Results: ${process.env.TEST_STATUS}`;
+#
+#            github.rest.issues.createComment({
+#              issue_number: context.issue.number,
+#              owner: context.repo.owner,
+#              repo: context.repo.repo,
+#              body: output
+#            })
