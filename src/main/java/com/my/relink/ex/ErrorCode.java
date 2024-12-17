@@ -42,6 +42,9 @@ public enum ErrorCode {
     PAYMENT_CANCEL_INCOMPLETE(HttpStatus.INTERNAL_SERVER_ERROR.value(), "결제 취소가 정상적으로 처리되지 않았습니다"),
     PAYMENT_CANCEL_STATUS_INVALID(HttpStatus.VARIANT_ALSO_NEGOTIATES.value(), "결제 취소 상태가 유효하지 않습니다"),
     PAYMENT_INFO_MISMATCH(HttpStatus.INTERNAL_SERVER_ERROR.value(), "결제 정보가 일치하지 않습니다"),
+    UNEXPECTED_FAIL_TO_PAYMENT_CONFIRM(HttpStatus.INTERNAL_SERVER_ERROR.value(), "결제 승인 요청에 실패했습니다. 잠시 후 다시 시도해주세요"),
+    CRITICAL_POINT_CHARGE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR.value(), "포인트 충전 중 심각한 오류가 발생했습니다. 고객센터에 문의해주세요"),
+    CRITICAL_PAYMENT_PROCESS_ERROR(HttpStatus.INTERNAL_SERVER_ERROR.value(), "결제 처리 프로세스 중 심각한 오류가 발생했습니다. 고객센터에 문의해주세요"),
 
 
     ;
