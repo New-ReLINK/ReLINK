@@ -194,7 +194,7 @@ class PaymentServiceTest {
 
             assertThatThrownBy(() -> paymentService.savePaymentInfo(paymentReqDto, tossPaymentRespDto, user))
                     .isInstanceOf(BusinessException.class)
-                    .hasFieldOrPropertyWithValue("errorCode", ErrorCode.CRITICAL_PAYMENT_SAVE_ERROR);
+                    .hasFieldOrPropertyWithValue("errorCode", ErrorCode.PAYMENT_CANCEL_INCOMPLETE);
 
             verify(tossPaymentClient).cancelPayment(any(), any(), any());
         }

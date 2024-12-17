@@ -78,32 +78,52 @@ public class PaymentService {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Payment savePaymentInfo(PaymentReqDto paymentReqDto, TossPaymentRespDto tossPaymentRespDto, User user){
         try {
-            Payment payment = paymentRepository.save(paymentReqDto.toEntity(
-                    tossPaymentRespDto,
-                    user,
-                    PaymentType.POINT_CHARGE));
-            log.info("[결제 내역 저장 완료] userId = {}, paymentId = {}", user.getId(), payment.getId());
-            return payment;
+            return savePayment(paymentReqDto, tossPaymentRespDto, user);
         }catch(Exception e){
             log.error("[결제 내역 저장 중 오류 발생] cause = {}, userId = {}", e.getMessage(), user.getId());
-            try {
-                log.info("[결제 취소 프로세스 시작] userId = {}", user.getId());
-                cancelPaymentAndThrowWhenFailToSavePayment(paymentReqDto, user, e);
-                log.info("[결제 취소 프로세스 완료] 토스 결제 취소 및 상태 업데이트 성공. userId = {}", user.getId());
-                throw new BusinessException(ErrorCode.FAIL_TO_SAVE_PAYMENT);
-            } catch (PaymentCancelFailException pe){
-                log.error("[결제 취소 실패] cause = {}, userId = {}", pe.getMessage(), user.getId());
-                sendPaymentCancelFailureAlert(paymentReqDto, user, e, pe);
-                throw new BusinessException(ErrorCode.CRITICAL_PAYMENT_SAVE_ERROR);
-            } catch (BusinessException be){
-                throw be;
-            } catch (Exception cancelException) {
-                log.error("[결제 취소 실패] cause = 예기치 못한 오류({}}), userId = {}",
-                        cancelException.getMessage(), user.getId());
-                sendPaymentCancelFailureAlert(paymentReqDto, user, e, cancelException);
-                throw new BusinessException(ErrorCode.CRITICAL_PAYMENT_SAVE_ERROR);
-            }
+            handlePaymentSaveFailure(paymentReqDto, user, e);
+            throw new BusinessException(ErrorCode.FAIL_TO_SAVE_PAYMENT);
         }
+    }
+
+    private void handlePaymentSaveFailure(PaymentReqDto paymentReqDto, User user, Exception originalError){
+        log.info("[결제 취소 프로세스 시작] userId = {}", user.getId());
+        try{
+            processCancelPayment(
+                    paymentReqDto,
+                    user,
+                    PaymentCancelReason.SERVER_ERROR_FAIL_TO_SAVE_PAYMENT);
+            log.info("[결제 취소 프로세스 완료] 토스 결제 취소 및 상태 업데이트 성공. userId = {}", user.getId());
+        } catch (PaymentCancelFailException e){
+           throw new BusinessException(e.getErrorCode());
+        } catch (Exception e){
+            handlePaymentCancelFailure(paymentReqDto, user, originalError, e);
+            throw new BusinessException(ErrorCode.CRITICAL_PAYMENT_SAVE_ERROR);
+        }
+    }
+
+    private void processCancelPayment(PaymentReqDto paymentReqDto, User user, PaymentCancelReason cancelReason) {
+        TossPaymentRespDto canceledPaymentInfo = cancelPaymentWithReason(
+                paymentReqDto,
+                cancelReason);
+        validateCanceledPayment(user, canceledPaymentInfo);
+    }
+
+
+    private void handlePaymentCancelFailure(PaymentReqDto paymentReqDto, User user,
+                                            Exception originalError, Exception cancelError) {
+        log.error("[결제 취소 실패] cause = {}, userId = {}", cancelError.getMessage(), user.getId());
+        sendPaymentCancelFailureAlert(paymentReqDto, user, originalError, cancelError);
+    }
+
+
+    private Payment savePayment(PaymentReqDto paymentReqDto, TossPaymentRespDto tossPaymentRespDto, User user) {
+        Payment payment = paymentRepository.save(paymentReqDto.toEntity(
+                tossPaymentRespDto,
+                user,
+                PaymentType.POINT_CHARGE));
+        log.info("[결제 내역 저장 완료] userId = {}, paymentId = {}", user.getId(), payment.getId());
+        return payment;
     }
 
 
@@ -131,23 +151,6 @@ public class PaymentService {
     }
 
 
-    public TossPaymentRespDto cancelPaymentAndThrowWhenFailToUpdatePoint(PaymentReqDto paymentReqDto, User user, Exception e){
-        //토스페이먼츠 결제 취소 요청
-        TossPaymentRespDto canceledPaymentInfo = cancelPaymentWithReason(paymentReqDto, PaymentCancelReason.SERVER_ERROR_FAIL_TO_UPDATE_POINT);
-
-        //결제 취소 상태 다시 확인 -> DONE 이면 결제 취소 정상 수행
-        doubleCheckWhenPaymentCanceled(user, e, canceledPaymentInfo);
-        return canceledPaymentInfo;
-    }
-
-    private void cancelPaymentAndThrowWhenFailToSavePayment(PaymentReqDto paymentReqDto, User user, Exception e){
-        //토스페이먼츠 결제 취소 요청
-        TossPaymentRespDto canceledPaymentInfo = cancelPaymentWithReason(paymentReqDto, PaymentCancelReason.SERVER_ERROR_FAIL_TO_SAVE_PAYMENT);
-
-        //결제 취소 상태 다시 확인 -> DONE 이면 결제 취소 정상 수행
-        doubleCheckWhenPaymentCanceled(user, e, canceledPaymentInfo);
-    }
-
 
     public User validateUserAndPayment(PaymentReqDto paymentReqDto){
         User user = userService.findByIdOrFail(paymentReqDto.getUserId());
@@ -170,10 +173,9 @@ public class PaymentService {
      * status == CANCELD여야 한다
      * cancelStatus == DONE이여야 한다
      * @param user
-     * @param e
      * @param canceledPaymentInfo
      */
-    private void doubleCheckWhenPaymentCanceled(User user, Exception e, TossPaymentRespDto canceledPaymentInfo) {
+    private void validateCanceledPayment(User user, TossPaymentRespDto canceledPaymentInfo) {
 
         if(!canceledPaymentInfo.getStatus().equals(PaymentStatus.CANCELED.toString())){
             log.error("[결제 취소 실패] 결제 상태가 CANCELED가 아님. userId = {}, status = {}", user.getId(), canceledPaymentInfo.getStatus());
