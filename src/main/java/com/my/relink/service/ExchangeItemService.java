@@ -87,15 +87,15 @@ public class ExchangeItemService {
     public Long deleteExchangeItem(Long itemId, Long userId) {
         ExchangeItem exchangeItem = getValidExchangeItem(itemId, userId);
         exchangeItem.delete(true);
-        deleteRelatedEntities(exchangeItem);
+        deleteRelatedEntities(exchangeItem.getId());
         return exchangeItem.getId();
     }
     // 연관된 image, like, chat 삭제
-    private void deleteRelatedEntities(ExchangeItem exchangeItem) {
-        Long itemId = exchangeItem.getId();
+    private void deleteRelatedEntities(Long itemId) {
         imageService.deleteImagesByEntityId(EntityType.EXCHANGE_ITEM, itemId);
         likeService.deleteLikesByExchangeItemId(itemId);
-        chatService.deleteChatsByExchangeItemId(itemId);
+        Long tradeId = tradeService.getTradeIdByItemId(itemId);
+        chatService.deleteChatsByTradeId(tradeId);
     }
 
     // user 가져오기

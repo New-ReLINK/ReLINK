@@ -207,5 +207,9 @@ public class TradeService {
                 .filter(entry -> itemIds.contains(entry.getKey()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
+    public Long getTradeIdByItemId (Long itemId) {
+        return tradeRepository.findTradeIdByExchangeItemId(itemId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
+    }
 }
 

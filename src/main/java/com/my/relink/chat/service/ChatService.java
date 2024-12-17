@@ -29,7 +29,7 @@ public class ChatService {
         return new ChatMessageRespDto(message);
     }
 
-    public void deleteChatsByExchangeItemId(Long exchangeItemId) {
-        messageRepository.deleteByExchangeItemId(exchangeItemId);
+    public void deleteChatsByTradeId(Long tradeId) {
+        messageRepository.deleteByTradeId(tradeId);
     }
 }

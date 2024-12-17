@@ -19,6 +19,6 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
     List<Message> findMessagesBeforeCursor(@Param("tradeId")Long tradeId, @Param("cursor") Long cursor, Pageable pageable);
 
     @Modifying
-    @Query("DELETE FROM Message m WHERE m.trade.ownerExchangeItem.id = :exchangeItemId OR m.trade.requesterExchangeItem.id = :exchangeItemId")
-    void deleteByExchangeItemId(@Param("exchangeItemId") Long exchangeItemId);
+    @Query("DELETE FROM Message m WHERE m.trade.id = :tradeId")
+    void deleteByTradeId(@Param("tradeId") Long tradeId);
 }
