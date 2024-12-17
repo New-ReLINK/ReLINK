@@ -13,8 +13,8 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class ReviewReqDto {
 
-    @Digits(integer = 1, fraction = 2)
-    @NotNull(message = "별점은 소수점 1자리까지 허용됩니다.")
+    @Digits(integer = 1, fraction = 2, message = "별점은 소수점 1자리까지 허용됩니다.")
+    @NotNull(message = "별점을 입력해주세요.")
     private BigDecimal star;
     @NotNull(message = "거래에 대한 후기를 작성하세요.")
     private TradeReview tradeReview;
