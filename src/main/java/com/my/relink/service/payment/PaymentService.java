@@ -46,6 +46,16 @@ public class PaymentService {
     private final PointService pointService;
     // TODO 구현 예정.  private final AlertService alertService;
 
+
+    /**
+     * 포인트 충전 및 이력을 생성하는 메서드
+     * 실패 시 모든 변경사항이 롤백됩니다
+     *
+     * @param user 포인트를 충전할 사용자
+     * @param payment 충전할 결제 정보
+     * @return 생성된 포인트 충전 이력
+     * @throws BusinessException 포인트 충전 실패 시
+     */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public PointHistory chargePointWithHistory(User user, Payment payment){
         try {
@@ -61,7 +71,14 @@ public class PaymentService {
         }
     }
 
-    //payment 상태를 취소로 바꾸고 취소 사유를 기재한다
+
+    /**
+     * 결제 정보의 상태를 취소로 변경하고 취소 사유를 업데이트
+     *
+     * @param payment 취소할 결제 정보
+     * @param canceledPaymentInfo 토스페이먼츠의 취소된 결제 응답 정보
+     * @throws BusinessException 결제 상태 업데이트 실패 시
+     */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void updatePaymentStatusToCanceled(Payment payment, TossPaymentRespDto canceledPaymentInfo) {
         try {
@@ -75,6 +92,16 @@ public class PaymentService {
     }
 
 
+    /**
+     * 결제 정보를 저장하는 메서드
+     * 저장 실패 시 자동으로 결제 취소 프로세스를 진행합니다
+     *
+     * @param paymentReqDto 결제 요청 정보
+     * @param tossPaymentRespDto 토스페이먼츠 결제 응답 정보
+     * @param user 결제 사용자 정보
+     * @return 저장된 결제 정보
+     * @throws BusinessException 결제 정보 저장 실패 시
+     */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Payment savePaymentInfo(PaymentReqDto paymentReqDto, TossPaymentRespDto tossPaymentRespDto, User user){
         try {
@@ -86,6 +113,16 @@ public class PaymentService {
         }
     }
 
+
+    /**
+     * 결제 저장 실패 시 결제 취소 프로세스를 처리
+     * 취소 실패 시 알림 발송 및 예외를 발생시킵니다
+     *
+     * @param paymentReqDto 결제 요청 정보
+     * @param user 사용자 정보
+     * @param originalError 원본 예외
+     * @throws BusinessException 결제 취소 실패 시
+     */
     private void handlePaymentSaveFailure(PaymentReqDto paymentReqDto, User user, Exception originalError){
         log.info("[결제 취소 프로세스 시작] userId = {}", user.getId());
         try{
@@ -102,6 +139,16 @@ public class PaymentService {
         }
     }
 
+
+    /**
+     * 결제 취소 요청 및 취소 상태 검증을 수행
+     *
+     * @param paymentReqDto 결제 요청 정보
+     * @param user 사용자 정보
+     * @param cancelReason 결제 취소 사유
+     * @throws PaymentCancelFailException 결제 취소 실패 시
+     * @throws BusinessException 결제 취소 상태 검증 실패 시
+     */
     private void processCancelPayment(PaymentReqDto paymentReqDto, User user, PaymentCancelReason cancelReason) {
         TossPaymentRespDto canceledPaymentInfo = cancelPaymentWithReason(
                 paymentReqDto,
@@ -110,6 +157,14 @@ public class PaymentService {
     }
 
 
+    /**
+     * 결제 취소 실패 시 알림 처리를 담당
+     *
+     * @param paymentReqDto 결제 요청 정보
+     * @param user 사용자 정보
+     * @param originalError 원본 예외
+     * @param cancelError 취소 시 발생한 예외
+     */
     private void handlePaymentCancelFailure(PaymentReqDto paymentReqDto, User user,
                                             Exception originalError, Exception cancelError) {
         log.error("[결제 취소 실패] cause = {}, userId = {}", cancelError.getMessage(), user.getId());
@@ -117,6 +172,14 @@ public class PaymentService {
     }
 
 
+    /**
+     * 결제 정보를 저장
+     *
+     * @param paymentReqDto 결제 요청 정보
+     * @param tossPaymentRespDto 토스페이먼츠 결제 응답 정보
+     * @param user 사용자 정보
+     * @return 저장된 결제 정보
+     */
     private Payment savePayment(PaymentReqDto paymentReqDto, TossPaymentRespDto tossPaymentRespDto, User user) {
         Payment payment = paymentRepository.save(paymentReqDto.toEntity(
                 tossPaymentRespDto,
@@ -127,6 +190,15 @@ public class PaymentService {
     }
 
 
+    /**
+     * TODO 구현 예정
+     * 결제 취소 실패 시 관리자 알림을 발송
+     *
+     * @param paymentReqDto 결제 요청 정보
+     * @param user 사용자 정보
+     * @param originalError 원본 예외
+     * @param cancelError 취소 시 발생한 예외
+     */
     private void sendPaymentCancelFailureAlert(PaymentReqDto paymentReqDto, User user, Exception originalError, Exception cancelError) {
         String title = String.format("[결제 취소 실패] - merchantUid: %s", paymentReqDto.getOrderId());
         String detailedLog = String.format("""
@@ -151,7 +223,13 @@ public class PaymentService {
     }
 
 
-
+    /**
+     * 사용자 정보 조회 및 결제 정보 검증
+     *
+     * @param paymentReqDto 결제 요청 정보
+     * @return 검증된 사용자 정보
+     * @throws BusinessException 사용자 조회 실패 또는 결제 정보 검증 실패 시
+     */
     public User validateUserAndPayment(PaymentReqDto paymentReqDto){
         User user = userService.findByIdOrFail(paymentReqDto.getUserId());
         validatePaymentInfo(paymentReqDto);
@@ -159,7 +237,13 @@ public class PaymentService {
     }
 
 
-
+    /**
+     * 토스페이먼츠에 결제 취소 요청
+     *
+     * @param paymentReqDto 결제 요청 정보
+     * @param cancelReason 취소 사유
+     * @return 토스페이먼츠의 결제 취소 응답 정보
+     */
     private TossPaymentRespDto cancelPaymentWithReason(PaymentReqDto paymentReqDto, PaymentCancelReason cancelReason){
         return tossPaymentClient.cancelPayment(
                 paymentReqDto.getPaymentKey(),
@@ -169,11 +253,14 @@ public class PaymentService {
 
 
     /**
-     * 취소된 결제 건에 대한 응답 상태 검증
-     * status == CANCELD여야 한다
-     * cancelStatus == DONE이여야 한다
-     * @param user
-     * @param canceledPaymentInfo
+     * 취소된 결제 건에 대한 응답 상태를 검증
+     * - status가 CANCELED 상태여야 함
+     * - cancelStatus가 DONE 상태여야 함
+     *
+     * @param user 사용자 정보
+     * @param canceledPaymentInfo 취소된 결제 정보
+     * @throws PaymentCancelFailException 결제 취소 상태가 유효하지 않을 경우
+     * @throws BusinessException 결제 취소 상태 정보를 찾을 수 없는 경우
      */
     private void validateCanceledPayment(User user, TossPaymentRespDto canceledPaymentInfo) {
 
@@ -193,6 +280,13 @@ public class PaymentService {
     }
 
 
+    /**
+     * 결제 요청 정보와 토스페이먼츠의 결제 정보를 검증
+     * amount, paymentKey, orderId 일치 여부를 확인
+     *
+     * @param paymentReqDto 결제 요청 정보
+     * @throws BusinessException 결제 정보가 일치하지 않는 경우
+     */
     private void validatePaymentInfo(PaymentReqDto paymentReqDto){
         TossPaymentRespDto shouldBeCheck = tossPaymentClient.checkPaymentInfo(
                 paymentReqDto.getPaymentKey(),
