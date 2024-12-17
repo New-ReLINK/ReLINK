@@ -20,6 +20,7 @@ import com.my.relink.ex.ErrorCode;
 import com.my.relink.service.PointService;
 import com.my.relink.service.UserService;
 import com.my.relink.service.payment.dto.PaymentValidation;
+import com.my.relink.service.payment.ex.PaymentCancelFailException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -76,9 +77,8 @@ public class PaymentService {
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Payment savePaymentInfo(PaymentReqDto paymentReqDto, TossPaymentRespDto tossPaymentRespDto, User user){
-        Payment payment = null;
         try {
-            payment = paymentRepository.save(paymentReqDto.toEntity(
+            Payment payment = paymentRepository.save(paymentReqDto.toEntity(
                     tossPaymentRespDto,
                     user,
                     PaymentType.POINT_CHARGE));
@@ -89,18 +89,26 @@ public class PaymentService {
             try {
                 log.info("[결제 취소 프로세스 시작] userId = {}", user.getId());
                 cancelPaymentAndThrowWhenFailToSavePayment(paymentReqDto, user, e);
-                log.info("[결제 취소 프로세스 완료] 토스 결제 취소 및 상태 업데이트 성공. userId = {}, paymentId = {}", user.getId(), payment.getId());
+                log.info("[결제 취소 프로세스 완료] 토스 결제 취소 및 상태 업데이트 성공. userId = {}", user.getId());
                 throw new BusinessException(ErrorCode.FAIL_TO_SAVE_PAYMENT);
+            } catch (PaymentCancelFailException pe){
+                log.error("[결제 취소 실패] cause = {}, userId = {}", pe.getMessage(), user.getId());
+                sendPaymentCancelFailureAlert(paymentReqDto, user, e, pe);
+                throw new BusinessException(ErrorCode.CRITICAL_PAYMENT_SAVE_ERROR);
+            } catch (BusinessException be){
+                throw be;
             } catch (Exception cancelException) {
-                log.error("[심각] 결제 취소 실패 - 수동 개입 필요. 원인: {}", cancelException.getMessage());
+                log.error("[결제 취소 실패] cause = 예기치 못한 오류({}}), userId = {}",
+                        cancelException.getMessage(), user.getId());
                 sendPaymentCancelFailureAlert(paymentReqDto, user, e, cancelException);
                 throw new BusinessException(ErrorCode.CRITICAL_PAYMENT_SAVE_ERROR);
             }
         }
     }
 
+
     private void sendPaymentCancelFailureAlert(PaymentReqDto paymentReqDto, User user, Exception originalError, Exception cancelError) {
-        String title = String.format("[긴급] 결제 취소 실패 - merchantUid: %s", paymentReqDto.getOrderId());
+        String title = String.format("[결제 취소 실패] - merchantUid: %s", paymentReqDto.getOrderId());
         String detailedLog = String.format("""
                     결제취소실패 - 수동 개입 필요
                     시간: %s
@@ -169,7 +177,7 @@ public class PaymentService {
 
         if(!canceledPaymentInfo.getStatus().equals(PaymentStatus.CANCELED.toString())){
             log.error("[결제 취소 실패] 결제 상태가 CANCELED가 아님. userId = {}, status = {}", user.getId(), canceledPaymentInfo.getStatus());
-            throw new BusinessException(ErrorCode.PAYMENT_CANCEL_INCOMPLETE);
+            throw new PaymentCancelFailException(ErrorCode.PAYMENT_CANCEL_INCOMPLETE);
         }
 
         String cancelStatus = canceledPaymentInfo.getCancels().stream()
@@ -178,7 +186,7 @@ public class PaymentService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.TOSS_PAYMENT_CANCEL_STATUS_NOT_FOUND));
         if(!cancelStatus.equals(PaymentStatus.DONE.toString())){
             log.error("[결제 취소 실패] 결제 취소 상태가 DONE이 아님. userId = {}, cancelStatus = {}", user.getId(), cancelStatus);
-            throw new BusinessException(ErrorCode.PAYMENT_CANCEL_STATUS_INVALID);
+            throw new PaymentCancelFailException(ErrorCode.PAYMENT_CANCEL_STATUS_INVALID);
         }
     }
 
