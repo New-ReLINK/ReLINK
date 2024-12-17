@@ -22,7 +22,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -79,9 +78,9 @@ public class ExchangeItemService {
 
     public GetAllExchangeItemsRespDto getAllExchangeItems(String search, String deposit, TradeStatus tradeStatus, Long categoryId, int page, int size) {
         Category category = getValidCategory(categoryId);
-        Pageable pageable = PageRequest.of(page, size, getSort(deposit));
+        Pageable pageable = PageRequest.of(page, size);
 
-        Page<ExchangeItem> itemsPage = exchangeItemRepository.findAllByCriteria(search, tradeStatus, category, pageable);
+        Page<ExchangeItem> itemsPage = exchangeItemRepository.findAllByCriteria(search, tradeStatus, category, deposit, pageable);
         List<Long> itemIds = itemsPage.getContent().stream().map(ExchangeItem::getId).toList();
         Map<Long, String> imageMap = imageService.getFirstImagesByItemIds(EntityType.EXCHANGE_ITEM, itemIds);
 
@@ -91,17 +90,6 @@ public class ExchangeItemService {
         });
 
         return GetAllExchangeItemsRespDto.of(content);
-    }
-
-    private Sort getSort(String deposit) {
-        if (deposit == null || deposit.isEmpty()) {
-            return Sort.by(Sort.Direction.DESC, "id");
-        }
-        return switch (deposit.toLowerCase()) {
-            case "asc" -> Sort.by(Sort.Direction.ASC, "deposit");
-            case "desc" -> Sort.by(Sort.Direction.DESC, "deposit");
-            default -> throw new BusinessException(ErrorCode.INVALID_SORT_PARAMETER);
-        };
     }
 
     @Transactional
@@ -148,6 +136,7 @@ public class ExchangeItemService {
             throw new BusinessException(ErrorCode.ITEM_NOT_AVAILABLE);
         }
     }
+
     // 상품의 거래 상태 확인(삭제 시)
     public void validDeleteExchangeItemTradeStatus(TradeStatus tradeStatus) {
         if (tradeStatus == TradeStatus.IN_EXCHANGE) {
