@@ -33,7 +33,6 @@ public enum ErrorCode {
     NOTIFICATION_CREATE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR.value(), "알람 저장이 실패하였습니다."),
     NOTIFICATION_DELIVERY_FAILED(HttpStatus.INTERNAL_SERVER_ERROR.value(), "알림 발송에 실패하였습니다."),
 
-
     POINT_INFO_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "포인트 정보를 찾을 수 없습니다. 고객센터에 문의해주세요"),
     FAIL_TO_POINT_CHARGE(HttpStatus.INTERNAL_SERVER_ERROR.value(), "포인트 충전에 실패했습니다. 잠시 후 다시 시도해주세요"),
     FAIL_TO_UPDATE_PAYMENT_STATUS(HttpStatus.INTERNAL_SERVER_ERROR.value(), "결제 상태 업데이트에 실패했습니다"),
