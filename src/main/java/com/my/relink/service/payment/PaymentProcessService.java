@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
-public class PaymentServiceFacade {
+public class PaymentProcessService {
 
     private final PaymentService paymentService;
 
