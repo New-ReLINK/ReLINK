@@ -316,7 +316,7 @@ class ExchangeItemServiceTest {
         BusinessException exception = assertThrows(BusinessException.class, () -> {
             exchangeItemService.getExchangeItemModifyPage(itemId, userId);
         });
-        Assertions.assertEquals(ErrorCode.ITEM_NOT_FOUND, exception.getErrorCode());
+        Assertions.assertEquals(ErrorCode.EXCHANGE_ITEM_NOT_FOUND, exception.getErrorCode());
     }
 
     @Test
