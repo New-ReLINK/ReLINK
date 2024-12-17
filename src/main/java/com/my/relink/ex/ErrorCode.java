@@ -32,6 +32,7 @@ public enum ErrorCode {
     NOTIFICATION_DELIVERY_FAILED(HttpStatus.INTERNAL_SERVER_ERROR.value(), "알림 발송에 실패하였습니다."),
     FILE_SIZE_EXCEEDED(HttpStatus.BAD_REQUEST.value(), "파일 크기를 초과하였습니다."),
     INVALID_FILE_EXTENSION(HttpStatus.BAD_REQUEST.value(), "지원하지 않는 파일 형식입니다."),
+    INVALID_FILE_URL(HttpStatus.BAD_REQUEST.value(), "파일 URL 이 비어있습니다."),
 
     ;
 

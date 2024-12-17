@@ -57,6 +57,10 @@ public class S3Service {
 
     public void deleteImage(String fileUrl) {
         try {
+            if (fileUrl == null || fileUrl.trim().isEmpty()) {
+                throw new BusinessException(ErrorCode.INVALID_FILE_URL);
+            }
+
             String fileName = URLDecoder.decode(
                     fileUrl.substring(fileUrl.lastIndexOf("/") + 1),
                     StandardCharsets.UTF_8
