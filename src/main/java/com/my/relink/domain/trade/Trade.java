@@ -1,6 +1,5 @@
 package com.my.relink.domain.trade;
 
-import com.my.relink.controller.trade.dto.request.TrackingNumberReqDto;
 import com.my.relink.domain.BaseEntity;
 import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.user.Address;
@@ -8,7 +7,10 @@ import com.my.relink.domain.user.User;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -71,11 +73,15 @@ public class Trade extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private TradeCancelReason cancelReason;
 
+    @Lob
+    private String tradeCancelDescription;
+
     public ExchangeItem getPartnerItem(Long userId){
         return userId.equals(getOwner().getId()) ?
                 requesterExchangeItem :
                 ownerExchangeItem;
     }
+
 
     public User getOwner() {
         return this.getOwnerExchangeItem().getUser();
@@ -135,6 +141,26 @@ public class Trade extends BaseEntity {
         return this.requester.getId().equals(userId);
     }
 
+    public boolean isTradeInExchange(Trade trade){
+        return trade.getTradeStatus() == TradeStatus.IN_EXCHANGE;
+    }
+
+    public ExchangeItem getMyExchangeItem(Long myUserId) {
+        if (isRequester(myUserId)) {
+            return requesterExchangeItem;
+        } else {
+            return ownerExchangeItem;
+        }
+    }
+
+    public ExchangeItem getPartnerExchangeItem(Long myUserId) {
+        if (isRequester(myUserId)) {
+            return ownerExchangeItem;
+        } else {
+            return requesterExchangeItem;
+        }
+    }
+
     @Builder
     public Trade(
             Long id,
@@ -166,5 +192,10 @@ public class Trade extends BaseEntity {
         this.hasOwnerRequested = hasOwnerRequested;
         this.hasRequesterRequested = hasRequesterRequested;
         this.cancelReason = cancelReason;
+    }
+
+    public void updateTradeCancelReason(TradeCancelReason tradeCancelReason, String tradeCancelDescription) {
+        this.cancelReason = tradeCancelReason;
+        this.tradeCancelDescription = tradeCancelDescription;
     }
 }
