@@ -99,7 +99,7 @@ public class ExchangeItemService {
     public Long deleteExchangeItem(Long itemId, Long userId) {
         ExchangeItem exchangeItem = findByIdOrFail(itemId);
         exchangeItem.validExchangeItemOwner(exchangeItem.getUser().getId(), userId);
-        validExchangeItemTradeStatus(exchangeItem.getTradeStatus());
+        validDeleteExchangeItemTradeStatus(exchangeItem.getTradeStatus());
         exchangeItem.delete(true);
         deleteRelatedEntities(exchangeItem.getId());
         return exchangeItem.getId();
@@ -113,10 +113,16 @@ public class ExchangeItemService {
         chatService.deleteChatsByTradeId(tradeId);
     }
 
-    // 상품의 상태 확인
+    // 상품의 거래 상태 확인(수정 시)
     public void validExchangeItemTradeStatus(TradeStatus tradeStatus) {
         if (tradeStatus != TradeStatus.AVAILABLE) {
             throw new BusinessException(ErrorCode.ITEM_NOT_AVAILABLE);
+        }
+    }
+    // 상품의 거래 상태 확인(삭제 시)
+    public void validDeleteExchangeItemTradeStatus(TradeStatus tradeStatus) {
+        if (tradeStatus == TradeStatus.IN_EXCHANGE) {
+            throw new BusinessException(ErrorCode.ITEM_IN_EXCHANGE);
         }
     }
 

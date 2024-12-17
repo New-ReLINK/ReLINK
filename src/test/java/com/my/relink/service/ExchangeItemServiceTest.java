@@ -500,20 +500,20 @@ class ExchangeItemServiceTest {
     }
 
     @Test
-    @DisplayName("내 교환 상품 삭제하기 실패 - 상품의 거래상태가 AVAILABLE이 아닌 경우")
-    void testDeleteExchangeItem_Fail_NotAvailable() {
+    @DisplayName("내 교환 상품 삭제하기 실패 - 상품의 IN_EXCHANGE인 경우")
+    void testDeleteExchangeItem_Fail_InExchange() {
         Long userId = 1L;
         Long itemId = 100L;
         ExchangeItem exchangeItem = mock(ExchangeItem.class);
         User user = User.builder().id(userId).build();
 
         when(exchangeItemRepository.findById(itemId)).thenReturn(Optional.of(exchangeItem));
-        when(exchangeItem.getTradeStatus()).thenReturn(TradeStatus.IN_EXCHANGE); // 거래 상태가 AVAILABLE이 아닌 경우
+        when(exchangeItem.getTradeStatus()).thenReturn(TradeStatus.IN_EXCHANGE); // 거래 상태가 IN_EXCHANGE
         when(exchangeItem.getUser()).thenReturn(user);
         BusinessException exception = assertThrows(BusinessException.class,
                 () -> exchangeItemService.deleteExchangeItem(itemId, userId));
 
-        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.ITEM_NOT_AVAILABLE);
+        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.ITEM_IN_EXCHANGE);
         verify(exchangeItem, never()).delete(anyBoolean());
         verify(imageService, never()).deleteImagesByEntityId(any(), anyLong());
         verify(likeService, never()).deleteLikesByExchangeItemId(anyLong());
