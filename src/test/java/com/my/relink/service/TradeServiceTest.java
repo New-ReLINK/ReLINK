@@ -5,6 +5,8 @@ import com.my.relink.controller.trade.dto.request.AddressReqDto;
 import com.my.relink.controller.trade.dto.request.TrackingNumberReqDto;
 import com.my.relink.controller.trade.dto.request.TradeCancelReqDto;
 import com.my.relink.controller.trade.dto.response.*;
+import com.my.relink.domain.image.EntityType;
+import com.my.relink.domain.image.Image;
 import com.my.relink.domain.image.repository.ImageRepository;
 import com.my.relink.domain.item.donation.ItemQuality;
 import com.my.relink.domain.item.exchange.ExchangeItem;
@@ -340,7 +342,7 @@ class TradeServiceTest extends DummyObject {
 
     @Test
     @DisplayName("교환 진행 페이지 : 조회 성공 케이스")
-    void testFindTradeCompletionInfo_success(){
+    void testFindTradeCompletionInfo_success() {
         Long tradeId = 1L;
         User requester = mockRequesterUser();
         User owner = mockOwnerUser();
@@ -500,7 +502,7 @@ class TradeServiceTest extends DummyObject {
 
     @Test
     @DisplayName("교환 취소 : 성공 케이스")
-    void testCancelTrade(){
+    void testCancelTrade() {
         Long tradeId = 1L;
         User requester = mockRequesterUser();
         User owner = mockOwnerUser();
@@ -545,4 +547,64 @@ class TradeServiceTest extends DummyObject {
 
         assertEquals(ErrorCode.TRADE_ACCESS_DENIED, exception.getErrorCode());
     }
+
+    @Test
+    @DisplayName("리뷰 정보 조회 : 성공 케이스")
+    void viewReview_success() {
+        Long tradeId = 1L;
+        User requester = mockRequesterUser();
+        User owner = mockOwnerUser();
+        Trade trade = mockTrade(owner, requester, true, true, true, true);
+
+        ExchangeItem partnerExchangeItem;
+
+        if (trade.isRequester(requester.getId())) {
+            partnerExchangeItem = trade.getOwnerExchangeItem();
+        } else {
+            partnerExchangeItem = trade.getRequesterExchangeItem();
+        }
+        String partnerImage = "http://example.com/partner-image.jpg";
+
+        User partnerUser = trade.getPartner(requester.getId());  // 거래 상대방 (소유자)
+
+        Mockito.when(userRepository.findById(requester.getId())).thenReturn(Optional.of(requester));
+        Mockito.when(tradeRepository.findById(tradeId)).thenReturn(Optional.of(trade));
+        Mockito.when(imageService.getExchangeItemUrl(partnerExchangeItem)).thenReturn(partnerImage);
+        Mockito.when(dateTimeUtil.getTradeStatusFormattedTime(trade.getModifiedAt()))
+                .thenReturn("2024년 12월 12일 14:30");
+
+        ViewReviewRespDto result = tradeService.getReviewInfo(tradeId, new AuthUser(requester.getId(), "test@email.com", Role.USER));
+
+        assertNotNull(result);
+
+        assertEquals(partnerImage, result.getPartnerExchangeItemImage());
+        assertEquals(partnerExchangeItem.getName(), result.getPartnerExchangeItemName());
+        assertEquals(partnerUser.getNickname(), result.getPartnerNickname());
+        assertEquals("2024년 12월 12일 14:30", result.getCompletedAt());
+
+        verify(tradeRepository).findById(tradeId);
+        verify(imageService).getExchangeItemUrl(partnerExchangeItem);
+        verify(dateTimeUtil).getTradeStatusFormattedTime(trade.getModifiedAt());
+
+    }
+
+    @Test
+    @DisplayName("리뷰 정보 조회 : user_not_found 실패 케이스")
+    void getReviewInfo_userNotFound_throwsException() {
+        // Arrange
+        Long tradeId = 100L;
+        AuthUser authUser = new AuthUser(1L, "test@email.com", Role.USER);
+
+        when(userRepository.findById(authUser.getId())).thenReturn(java.util.Optional.empty());
+
+        // Act & Assert
+        BusinessException exception = assertThrows(BusinessException.class, () ->
+                tradeService.getReviewInfo(tradeId, authUser)
+        );
+        assertEquals(ErrorCode.USER_NOT_FOUND, exception.getErrorCode());
+
+        verify(userRepository).findById(authUser.getId());
+        verifyNoInteractions(tradeRepository, imageService, dateTimeUtil);
+    }
+
 }
