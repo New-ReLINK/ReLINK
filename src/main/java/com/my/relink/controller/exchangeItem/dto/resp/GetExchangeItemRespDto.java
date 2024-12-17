@@ -85,12 +85,12 @@ public class GetExchangeItemRespDto {
         return partnerItem.getUser().getNickname();
     }
 
-    public static GetExchangeItemRespDto from(ExchangeItem exchangeItem, Category category) {
+    public static GetExchangeItemRespDto from(ExchangeItem exchangeItem) {
         return GetExchangeItemRespDto.builder()
                 .exchangeItemId(exchangeItem.getId())
                 .exchangeItemName(exchangeItem.getName())
                 .description(exchangeItem.getDescription())
-                .category(category)
+                .category(exchangeItem.getCategory())
                 .itemQuality(exchangeItem.getItemQuality())
                 .size(exchangeItem.getSize())
                 .brand(exchangeItem.getBrand())

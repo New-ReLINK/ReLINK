@@ -1,5 +1,7 @@
 package com.my.relink.service;
 
+import com.my.relink.controller.exchangeItem.dto.req.CreateExchangeItemReqDto;
+import com.my.relink.controller.exchangeItem.dto.req.UpdateExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.req.ExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetAllExchangeItemsRespDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemRespDto;
@@ -41,7 +43,7 @@ public class ExchangeItemService {
 
 
     @Transactional
-    public long createExchangeItem(ExchangeItemReqDto reqDto, Long userId) {
+    public long createExchangeItem(CreateExchangeItemReqDto reqDto, Long userId) {
         Category category = getValidCategory(reqDto.getCategoryId());
         User user = getValidUser(userId);
         validateDeposit(reqDto.getDeposit(), userId);
@@ -68,9 +70,10 @@ public class ExchangeItemService {
     }
 
     public GetExchangeItemRespDto getExchangeItemModifyPage(Long itemId, Long userId) {
-        ExchangeItem exchangeItem = getValidExchangeItem(itemId, userId);
-        Category category = exchangeItem.getCategory();
-        return GetExchangeItemRespDto.from(exchangeItem, category);
+        ExchangeItem exchangeItem = findByIdOrFail(itemId);
+        exchangeItem.validExchangeItemOwner(exchangeItem.getUser().getId(), userId);
+
+        return GetExchangeItemRespDto.from(exchangeItem);
     }
 
     public GetAllExchangeItemsRespDto getAllExchangeItems(String search, String deposit, TradeStatus tradeStatus, Long categoryId, int page, int size) {
@@ -100,36 +103,41 @@ public class ExchangeItemService {
     }
 
     @Transactional
-    public Long updateExchangeItem(Long itemId, ExchangeItemReqDto reqDto, Long userId) {
-        ExchangeItem exchangeItem = getValidExchangeItem(itemId, userId);
+    public Long updateExchangeItem(Long itemId, UpdateExchangeItemReqDto reqDto, Long userId) {
+        ExchangeItem exchangeItem = findByIdOrFail(itemId);
+        validExchangeItemTradeStatus(exchangeItem.getTradeStatus());
         Category category = getValidCategory(reqDto.getCategoryId());
         validateDeposit(reqDto.getDeposit(), userId);
-        exchangeItem.updateFromDto(reqDto, category);
+        exchangeItem.update(
+                reqDto.getName(),
+                reqDto.getDescription(),
+                category,
+                reqDto.getItemQuality(),
+                reqDto.getSize(),
+                reqDto.getBrand(),
+                reqDto.getDesiredItem(),
+                reqDto.getDeposit()
+        );
         return exchangeItem.getId();
+    }
+
+    // 상품의 상태 확인
+    public void validExchangeItemTradeStatus(TradeStatus tradeStatus) {
+        if (tradeStatus != TradeStatus.AVAILABLE) {
+            throw new BusinessException(ErrorCode.ITEM_NOT_AVAILABLE);
+        }
     }
 
     // user 가져오기
     public User getValidUser(Long userId) {
-        User user = userRepository.findById(userId)
+        return userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-        return user;
     }
 
     // category 가져오기
     public Category getValidCategory(Long categoryId) {
-        Category category = categoryRepository.findById(categoryId)
+        return categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
-        return category;
-    }
-
-    // Item 가져오기
-    public ExchangeItem getValidExchangeItem(Long itemId, Long userId) {
-        ExchangeItem exchangeItem = exchangeItemRepository.findById(itemId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.ITEM_NOT_FOUND));
-        if (!exchangeItem.getUser().getId().equals(userId)) {
-            throw new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS);
-        }
-        return exchangeItem;
     }
 
     // 보증금 유효성 검사
@@ -150,6 +158,4 @@ public class ExchangeItemService {
         return exchangeItemRepository.findById(itemId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EXCHANGE_ITEM_NOT_FOUND));
     }
-
-
 }

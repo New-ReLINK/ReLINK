@@ -49,6 +49,17 @@ dependencies {
     annotationProcessor 'com.querydsl:querydsl-apt:5.0.0:jakarta'
     annotationProcessor 'jakarta.annotation:jakarta.annotation-api'
     annotationProcessor 'jakarta.persistence:jakarta.persistence-api'
+
+    // spring retry
+    implementation 'org.springframework.retry:spring-retry'
+
+    // env
+    implementation 'me.paulschwarz:spring-dotenv:4.0.0'
+
+    //thymeleaf
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+
+
 }
 
 tasks.named('test') {

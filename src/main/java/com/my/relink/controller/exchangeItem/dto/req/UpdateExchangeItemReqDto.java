@@ -16,7 +16,7 @@ import org.hibernate.validator.constraints.Length;
 @Getter
 @Builder
 @AllArgsConstructor
-public class ExchangeItemReqDto {
+public class UpdateExchangeItemReqDto {
     @NotBlank(message = "상품명을 입력해주세요.")
     @Length(max = 30, message = "상품명은 30자 이내로 입력해주세요.")
     private String name;
@@ -35,21 +35,5 @@ public class ExchangeItemReqDto {
     private String desiredItem;
     @NotNull(message = "교환시 원하는 보증금액을 입력해주세요.")
     private Integer deposit;
-    private Boolean isDeleted;
 
-    public ExchangeItem toEntity(Category category, User user) {
-        return ExchangeItem.builder()
-                .name(this.name)
-                .description(this.description)
-                .category(category)
-                .user(user)
-                .itemQuality(this.itemQuality)
-                .size(this.size)
-                .brand(this.brand)
-                .desiredItem(this.desiredItem)
-                .deposit(this.deposit)
-                .isDeleted(false)
-                .tradeStatus(TradeStatus.AVAILABLE)
-                .build();
-    }
 }

@@ -1,7 +1,8 @@
 package com.my.relink.service;
 
 
-import com.my.relink.controller.exchangeItem.dto.req.ExchangeItemReqDto;
+import com.my.relink.controller.exchangeItem.dto.req.CreateExchangeItemReqDto;
+import com.my.relink.controller.exchangeItem.dto.req.UpdateExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemRespDto;
 import com.my.relink.domain.BaseEntity;
 import com.my.relink.domain.category.Category;
@@ -72,7 +73,7 @@ class ExchangeItemServiceTest {
     @DisplayName("내 교환상품 생성하기 성공")
     void testCreateExchangeItem_Success() {
         Long userId = 1L;
-        ExchangeItemReqDto reqDto = new ExchangeItemReqDto(
+        CreateExchangeItemReqDto reqDto = new CreateExchangeItemReqDto(
                 "Item Name",
                 "Description",
                 1L,
@@ -105,7 +106,7 @@ class ExchangeItemServiceTest {
     @DisplayName("내 교환상품 생성하기 실패 - 보증금 0 미만 입력된 경우")
     void testCreateExchangeItem_Fail_DepositLessZero() {
         Long userId = 1L;
-        ExchangeItemReqDto reqDto = new ExchangeItemReqDto(
+        CreateExchangeItemReqDto reqDto = new CreateExchangeItemReqDto(
                 "Item Name",
                 "Description",
                 1L,
@@ -129,7 +130,7 @@ class ExchangeItemServiceTest {
     @DisplayName("내 교환상품 생성하기 실패 - 포인트가 보증금보다 작은 경우")
     void testCreateExchangeItem_Fail_PointLessThenDeposit() {
         Long userId = 1L;
-        ExchangeItemReqDto reqDto = new ExchangeItemReqDto(
+        CreateExchangeItemReqDto reqDto = new CreateExchangeItemReqDto(
                 "Item Name",
                 "Description",
                 1L,
@@ -337,7 +338,7 @@ class ExchangeItemServiceTest {
                 .tradeStatus(TradeStatus.AVAILABLE)
                 .isDeleted(false)
                 .build();
-        ExchangeItemReqDto reqDto = new ExchangeItemReqDto(
+        UpdateExchangeItemReqDto reqDto = new UpdateExchangeItemReqDto(
                 "New Item Name",
                 "New Description",
                 1L,
@@ -345,8 +346,7 @@ class ExchangeItemServiceTest {
                 "M",
                 "New Brand",
                 "New Desired Item",
-                10000,
-                false
+                10000
         );
         when(exchangeItemRepository.findById(itemId)).thenReturn(Optional.of(exchangeItem));
         when(categoryRepository.findById(reqDto.getCategoryId())).thenReturn(Optional.of(category));
@@ -388,7 +388,7 @@ class ExchangeItemServiceTest {
                 .tradeStatus(TradeStatus.AVAILABLE)
                 .isDeleted(false)
                 .build();
-        ExchangeItemReqDto reqDto = new ExchangeItemReqDto(
+        UpdateExchangeItemReqDto reqDto = new UpdateExchangeItemReqDto(
                 "New Item Name",
                 "New Description",
                 1L,
@@ -396,8 +396,8 @@ class ExchangeItemServiceTest {
                 "M",
                 "New Brand",
                 "New Desired Item",
-                -1, // 보증금이 0 미만
-                false
+                -1 // 보증금이 0 미만
+
         );
         when(exchangeItemRepository.findById(itemId)).thenReturn(Optional.of(exchangeItem));
         when(categoryRepository.findById(reqDto.getCategoryId())).thenReturn(Optional.of(category));
@@ -429,7 +429,7 @@ class ExchangeItemServiceTest {
                 .tradeStatus(TradeStatus.AVAILABLE)
                 .isDeleted(false)
                 .build();
-        ExchangeItemReqDto reqDto = new ExchangeItemReqDto(
+        UpdateExchangeItemReqDto reqDto = new UpdateExchangeItemReqDto(
                 "New Item Name",
                 "New Description",
                 1L,
@@ -437,8 +437,7 @@ class ExchangeItemServiceTest {
                 "M",
                 "New Brand",
                 "New Desired Item",
-                10000, // 요구 보증금이 보유 포인트보다 큼
-                false
+                10000 // 요구 보증금이 보유 포인트보다 큼
         );
         when(exchangeItemRepository.findById(itemId)).thenReturn(Optional.of(exchangeItem));
         when(categoryRepository.findById(reqDto.getCategoryId())).thenReturn(Optional.of(category));

@@ -1,6 +1,8 @@
 package com.my.relink.controller.exchangeItem;
 
 import com.my.relink.config.security.AuthUser;
+import com.my.relink.controller.exchangeItem.dto.req.CreateExchangeItemReqDto;
+import com.my.relink.controller.exchangeItem.dto.req.UpdateExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.req.ExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetAllExchangeItemsRespDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemRespDto;
@@ -21,7 +23,7 @@ public class ExchangeItemController {
     private final ExchangeItemService exchangeItemService;
 
     @PostMapping("/item/exchange")
-    public ResponseEntity<ApiResult<Long>> createExchangeItem(@Valid @RequestBody ExchangeItemReqDto reqDto,
+    public ResponseEntity<ApiResult<Long>> createExchangeItem(@Valid @RequestBody CreateExchangeItemReqDto reqDto,
                                                               @AuthenticationPrincipal AuthUser authUser) {
         Long exchangeItemId = exchangeItemService.createExchangeItem(reqDto, authUser.getId());
         return new ResponseEntity<>(ApiResult.success(exchangeItemId), HttpStatus.OK);
@@ -44,7 +46,7 @@ public class ExchangeItemController {
 
     @PutMapping("/users/items/exchanges/{itemId}")
     public ResponseEntity<ApiResult<Long>> updateExchangeItem(@PathVariable(value = "itemId") Long itemId,
-                                                              @Valid @RequestBody ExchangeItemReqDto reqDto,
+                                                              @Valid @RequestBody UpdateExchangeItemReqDto reqDto,
                                                               @AuthenticationPrincipal AuthUser authUser) {
         Long exchangeItemId = exchangeItemService.updateExchangeItem(itemId, reqDto, authUser.getId());
         return new ResponseEntity<>(ApiResult.success(exchangeItemId), HttpStatus.OK);
