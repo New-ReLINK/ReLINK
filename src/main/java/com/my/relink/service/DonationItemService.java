@@ -74,7 +74,7 @@ public class DonationItemService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        DonationItem donationItem = donationItemRepository.findById(itemId)
+        DonationItem donationItem = donationItemRepository.findByIdWithCategory(itemId)
                 .orElseThrow(()->new BusinessException(ErrorCode.DONATION_ITEM_NOT_FOUND));
 
         Map<Long, String> imageMap = imageService.getImagesByItemIds(EntityType.DONATION_ITEM, List.of(itemId));
