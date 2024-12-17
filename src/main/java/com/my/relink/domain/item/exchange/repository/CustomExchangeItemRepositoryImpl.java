@@ -59,11 +59,9 @@ public class CustomExchangeItemRepositoryImpl implements CustomExchangeItemRepos
         if (deposit == null || deposit.isEmpty()) {
             return exchangeItem.createdAt.desc();
         }
-        return switch (deposit.toLowerCase()) {
-            case "asc" -> exchangeItem.deposit.asc();
-            case "desc" -> exchangeItem.deposit.desc();
-            default -> throw new BusinessException(ErrorCode.INVALID_SORT_PARAMETER);
-        };
+        return deposit.equalsIgnoreCase("asc")
+                ? exchangeItem.deposit.asc()
+                : exchangeItem.deposit.desc();
     }
 }
 

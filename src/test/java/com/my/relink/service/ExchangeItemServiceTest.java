@@ -536,7 +536,7 @@ class ExchangeItemServiceTest {
         Page<ExchangeItem> exchangeItemsPage = new PageImpl<>(List.of(exchangeItem));
 
         when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(category));
-        when(exchangeItemRepository.findAllByCriteria(search, tradeStatus, category, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "deposit"))))
+        when(exchangeItemRepository.findAllByCriteria(search, tradeStatus, category, deposit, PageRequest.of(page, size)))
                 .thenReturn(exchangeItemsPage);
         when(exchangeItem.getId()).thenReturn(100L);
         when(exchangeItem.getName()).thenReturn("Nike Air Max");
@@ -552,13 +552,18 @@ class ExchangeItemServiceTest {
         assertThat(result.getContent().get(0).getImageUrl()).isEqualTo("http://example.com/image1.jpg");
         assertThat(result.getContent().get(0).getOwnerNickname()).isEqualTo("JohnDoe");
         assertThat(result.getContent().get(0).getOwnerTrustScore()).isEqualTo(85);
+
+        verify(categoryRepository, times(1)).findById(categoryId);
+        verify(exchangeItemRepository, times(1)).findAllByCriteria(search, tradeStatus, category, deposit, PageRequest.of(page, size));
+        verify(imageService, times(1)).getFirstImagesByItemIds(any(), any());
+        verify(userTrustScoreService, times(1)).getTrustScore(any());
     }
 
     @Test
     @DisplayName("교환상품 전체목록 조회 실패 - 보증금 기준 정렬 옵션에 해당되지 않은 값이 들어온 경우")
     void testGetAllExchangeItems_Fail_INVALID_SORT_PARAMETER () {
         String search = "shoes";
-        String invalidDeposit = "adesc";
+        String deposit = "adesc";
         TradeStatus tradeStatus = TradeStatus.AVAILABLE;
         Long categoryId = 1L;
         int page = 0;
@@ -566,7 +571,7 @@ class ExchangeItemServiceTest {
 
         when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(mock(Category.class)));
         BusinessException exception = assertThrows(BusinessException.class, () ->
-                exchangeItemService.getAllExchangeItems(search, invalidDeposit, tradeStatus, categoryId, page, size));
+                exchangeItemService.getAllExchangeItems(search, deposit, tradeStatus, categoryId, page, size));
 
         assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_SORT_PARAMETER);
     }

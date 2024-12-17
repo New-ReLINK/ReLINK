@@ -80,6 +80,10 @@ public class ExchangeItemService {
         Category category = getValidCategory(categoryId);
         Pageable pageable = PageRequest.of(page, size);
 
+        if (deposit != null && !deposit.isEmpty() && !deposit.equalsIgnoreCase("asc") && !deposit.equalsIgnoreCase("desc")) {
+            throw new BusinessException(ErrorCode.INVALID_SORT_PARAMETER);
+        }
+
         Page<ExchangeItem> itemsPage = exchangeItemRepository.findAllByCriteria(search, tradeStatus, category, deposit, pageable);
         List<Long> itemIds = itemsPage.getContent().stream().map(ExchangeItem::getId).toList();
         Map<Long, String> imageMap = imageService.getFirstImagesByItemIds(EntityType.EXCHANGE_ITEM, itemIds);
