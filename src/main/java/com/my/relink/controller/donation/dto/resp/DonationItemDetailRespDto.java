@@ -1,6 +1,7 @@
 package com.my.relink.controller.donation.dto.resp;
 
 import com.my.relink.domain.item.donation.DonationItem;
+import com.my.relink.domain.item.donation.DonationStatus;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -15,6 +16,7 @@ public class DonationItemDetailRespDto {
     private String description;
     private String imageUrl;
     private String category;
+    private DonationStatus donationStatus;
     private LocalDate createdAt;
 
     public static DonationItemDetailRespDto fromEntity(DonationItem item,  Map<Long, String> imageMap) {
@@ -26,6 +28,7 @@ public class DonationItemDetailRespDto {
                 .description(item.getDescription())
                 .category(item.getCategory().getName())
                 .imageUrl(imageUrl)
+                .donationStatus(item.getDonationStatus())
                 .createdAt(item.getCreatedAt().toLocalDate())
                 .build();
     }
