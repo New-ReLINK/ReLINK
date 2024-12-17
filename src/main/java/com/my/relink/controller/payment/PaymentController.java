@@ -18,7 +18,6 @@ public class PaymentController {
 
     @PostMapping("/users/point")
     public ResponseEntity<PaymentRespDto> confirmPaymentForPointCharge(@RequestBody @Valid PaymentReqDto paymentReqDto){
-        System.out.println("paymentReqDto.getUserId() = " + paymentReqDto.getUserId());
         return ResponseEntity.ok(paymentServiceFacade.processPayment(paymentReqDto));
     }
 }
