@@ -61,12 +61,8 @@ public class ImageService {
 
     @Transactional
     public ImageUserProfileDeleteRespDto deleteUserProfile(Long userId, Long imageId) {
-        Image image = imageRepository.findById(imageId)
+        Image image = imageRepository.findByIdAndEntityIdAndEntityType(imageId, userId, EntityType.USER)
                 .orElseThrow(() -> new BusinessException(ErrorCode.IMAGE_NOT_FOUND));
-
-        if (!image.getEntityId().equals(userId)) {
-            throw new BusinessException(ErrorCode.IMAGE_ACCESS_DENIED);
-        }
 
         s3Service.deleteImage(image.getImageUrl());
         imageRepository.delete(image);
