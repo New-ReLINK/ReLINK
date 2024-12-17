@@ -4,6 +4,7 @@ import com.my.relink.config.security.AuthUser;
 import com.my.relink.domain.user.Role;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
+import com.my.relink.ex.SecurityFilterChainException;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SecurityException;
@@ -59,16 +60,16 @@ public class JwtProvider {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
         } catch (SecurityException | MalformedJwtException e) {
             log.warn("유효하지 않는 JWT 서명입니다.");
-            throw new BusinessException(ErrorCode.INVALID_JWT_SIGNATURE);
+            throw new SecurityFilterChainException(ErrorCode.INVALID_JWT_SIGNATURE);
         } catch (UnsupportedJwtException e) {
             log.warn("지원되지 않는 JWT 토큰입니다.");
-            throw new BusinessException(ErrorCode.UNSUPPORTED_JWT_TOKEN);
+            throw new SecurityFilterChainException(ErrorCode.UNSUPPORTED_JWT_TOKEN);
         } catch (IllegalArgumentException e) {
             log.warn("잘못된 JWT 토큰입니다.");
-            throw new BusinessException(ErrorCode.INVALID_JWT_TOKEN);
+            throw new SecurityFilterChainException(ErrorCode.INVALID_JWT_TOKEN);
         } catch (ExpiredJwtException e) {
             log.info("만료된 JWT token 입니다.");
-            throw new BusinessException(ErrorCode.EXPIRED_JWT_TOKEN);
+            throw new SecurityFilterChainException(ErrorCode.EXPIRED_JWT_TOKEN);
         }
     }
 
