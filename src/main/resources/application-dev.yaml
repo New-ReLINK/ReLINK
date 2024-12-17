@@ -33,6 +33,11 @@ logging:
     org.springframework.web.socket: DEBUG
     org.springframework.messaging: DEBUG
 
+
 jwt:
   secret:
-    key: XyZ1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z7A8B9C0D1
+    key: ${JWT_SECRET_KEY}
+
+toss:
+  widget-secret-key: test_gsk_docs_OaPz8L5KdmQXkzRz3y47BMw6 #결제 위젯 연동 api 테스트를 위한 공개키
+  client-key: test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm #결제 위젯 연동 api 테스트를 위한 공개키

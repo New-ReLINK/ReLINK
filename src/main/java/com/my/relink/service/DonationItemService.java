@@ -1,9 +1,11 @@
 package com.my.relink.service;
 
 import com.my.relink.config.security.AuthUser;
+import com.my.relink.controller.donation.dto.PagingInfo;
 import com.my.relink.controller.donation.dto.req.DonationItemReqDto;
 import com.my.relink.controller.donation.dto.resp.DonationItemListRespDto;
 import com.my.relink.controller.donation.dto.resp.DonationItemIdRespDto;
+import com.my.relink.controller.donation.dto.resp.DonationItemUserListRespDto;
 import com.my.relink.domain.category.Category;
 import com.my.relink.domain.category.repository.CategoryRepository;
 import com.my.relink.domain.item.donation.DonationItem;
@@ -49,4 +51,17 @@ public class DonationItemService {
 
         return DonationItemListRespDto.of(donationItems, totalCompletedDonations, completedDonationsThisMonth);
     }
+
+    public DonationItemUserListRespDto getUserDonationItems(AuthUser authUser, int page, int size) {
+        User user = userRepository.findById(authUser.getId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<DonationItem> donationItems = donationItemRepository.findByUserId(authUser.getId(), pageable);
+
+        PagingInfo pagingInfo = PagingInfo.fromPage(donationItems);
+
+        return DonationItemUserListRespDto.of(donationItems, pagingInfo);
+    }
+
 }

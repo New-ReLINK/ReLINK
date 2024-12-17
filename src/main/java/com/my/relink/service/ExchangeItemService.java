@@ -1,7 +1,8 @@
 package com.my.relink.service;
 
 import com.my.relink.chat.service.ChatService;
-import com.my.relink.controller.exchangeItem.dto.req.ExchangeItemReqDto;
+import com.my.relink.controller.exchangeItem.dto.req.CreateExchangeItemReqDto;
+import com.my.relink.controller.exchangeItem.dto.req.UpdateExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemRespDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemsRespDto;
 import com.my.relink.domain.category.Category;
@@ -12,6 +13,7 @@ import com.my.relink.domain.item.exchange.repository.ExchangeItemRepository;
 import com.my.relink.domain.point.Point;
 import com.my.relink.domain.point.repository.PointRepository;
 import com.my.relink.domain.trade.Trade;
+import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.BusinessException;
@@ -40,7 +42,7 @@ public class ExchangeItemService {
     private final ChatService chatService;
 
     @Transactional
-    public long createExchangeItem(ExchangeItemReqDto reqDto, Long userId) {
+    public long createExchangeItem(CreateExchangeItemReqDto reqDto, Long userId) {
         Category category = getValidCategory(reqDto.getCategoryId());
         User user = getValidUser(userId);
         validateDeposit(reqDto.getDeposit(), userId);
@@ -67,29 +69,41 @@ public class ExchangeItemService {
     }
 
     public GetExchangeItemRespDto getExchangeItemModifyPage(Long itemId, Long userId) {
-        ExchangeItem exchangeItem = getValidExchangeItem(itemId, userId);
-        Category category = exchangeItem.getCategory();
+        ExchangeItem exchangeItem = findByIdOrFail(itemId);
+        exchangeItem.validExchangeItemOwner(exchangeItem.getUser().getId(), userId);
 
-        return GetExchangeItemRespDto.from(exchangeItem, category);
+        return GetExchangeItemRespDto.from(exchangeItem);
     }
 
     @Transactional
-    public Long updateExchangeItem(Long itemId, ExchangeItemReqDto reqDto, Long userId) {
-        ExchangeItem exchangeItem = getValidExchangeItem(itemId, userId);
+    public Long updateExchangeItem(Long itemId, UpdateExchangeItemReqDto reqDto, Long userId) {
+        ExchangeItem exchangeItem = findByIdOrFail(itemId);
+        validExchangeItemTradeStatus(exchangeItem.getTradeStatus());
         Category category = getValidCategory(reqDto.getCategoryId());
         validateDeposit(reqDto.getDeposit(), userId);
-        exchangeItem.updateFromDto(reqDto, category);
+        exchangeItem.update(
+                reqDto.getName(),
+                reqDto.getDescription(),
+                category,
+                reqDto.getItemQuality(),
+                reqDto.getSize(),
+                reqDto.getBrand(),
+                reqDto.getDesiredItem(),
+                reqDto.getDeposit()
+        );
         return exchangeItem.getId();
     }
 
     // 삭제는 soft delete
     @Transactional
     public Long deleteExchangeItem(Long itemId, Long userId) {
-        ExchangeItem exchangeItem = getValidExchangeItem(itemId, userId);
+        ExchangeItem exchangeItem = findByIdOrFail(itemId);
+        exchangeItem.validExchangeItemOwner(exchangeItem.getUser().getId(), userId);
         exchangeItem.delete(true);
         deleteRelatedEntities(exchangeItem.getId());
         return exchangeItem.getId();
     }
+
     // 연관된 image, like, chat 삭제
     private void deleteRelatedEntities(Long itemId) {
         imageService.deleteImagesByEntityId(EntityType.EXCHANGE_ITEM, itemId);
@@ -98,28 +112,23 @@ public class ExchangeItemService {
         chatService.deleteChatsByTradeId(tradeId);
     }
 
+    // 상품의 상태 확인
+    public void validExchangeItemTradeStatus(TradeStatus tradeStatus) {
+        if (tradeStatus != TradeStatus.AVAILABLE) {
+            throw new BusinessException(ErrorCode.ITEM_NOT_AVAILABLE);
+        }
+    }
+
     // user 가져오기
     public User getValidUser(Long userId) {
-        User user = userRepository.findById(userId)
+        return userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-        return user;
     }
 
     // category 가져오기
     public Category getValidCategory(Long categoryId) {
-        Category category = categoryRepository.findById(categoryId)
+        return categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
-        return category;
-    }
-
-    // Item 가져오기
-    public ExchangeItem getValidExchangeItem(Long itemId, Long userId) {
-        ExchangeItem exchangeItem = exchangeItemRepository.findById(itemId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.ITEM_NOT_FOUND));
-        if (!exchangeItem.getUser().getId().equals(userId)) {
-            throw new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS);
-        }
-        return exchangeItem;
     }
 
     // 보증금 유효성 검사

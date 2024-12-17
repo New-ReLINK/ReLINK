@@ -4,6 +4,7 @@ import com.my.relink.config.security.AuthUser;
 import com.my.relink.controller.donation.dto.resp.DonationItemListRespDto;
 import com.my.relink.controller.donation.dto.req.DonationItemReqDto;
 import com.my.relink.controller.donation.dto.resp.DonationItemIdRespDto;
+import com.my.relink.controller.donation.dto.resp.DonationItemUserListRespDto;
 import com.my.relink.service.DonationItemService;
 import com.my.relink.util.api.ApiResult;
 import jakarta.validation.Valid;
@@ -30,9 +31,20 @@ public class DonationController {
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String search,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "100") int size) {
 
         DonationItemListRespDto response = donationItemService.getDonationItems(category, search, page, size);
+        return ResponseEntity.ok(ApiResult.success(response));
+    }
+
+    @GetMapping("/user/donations")
+    public ResponseEntity<ApiResult<DonationItemUserListRespDto>> getUserDonationItems(
+            @AuthenticationPrincipal AuthUser authUser,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "100") int size) {
+
+        DonationItemUserListRespDto response = donationItemService.getUserDonationItems(authUser, page, size);
+
         return ResponseEntity.ok(ApiResult.success(response));
     }
 

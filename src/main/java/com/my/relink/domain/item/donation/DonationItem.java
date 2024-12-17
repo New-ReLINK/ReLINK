@@ -45,6 +45,9 @@ public class DonationItem extends BaseEntity {
     @Column(length = 128)
     private String destination;
 
+    @Column(length = 20)
+    private String size;
+
     @Embedded
     private Address returnAddress;
 
@@ -72,6 +75,7 @@ public class DonationItem extends BaseEntity {
             String detailRejectedReason,
             String certificateUrl,
             String destination,
+            String size,
             Address returnAddress,
             ItemQuality itemQuality,
             DonationStatus donationStatus,
@@ -87,6 +91,7 @@ public class DonationItem extends BaseEntity {
         this.detailRejectedReason = detailRejectedReason;
         this.certificateUrl = certificateUrl;
         this.destination = destination;
+        this.size = size;
         this.returnAddress = returnAddress;
         this.itemQuality = itemQuality;
         this.donationStatus = donationStatus;
