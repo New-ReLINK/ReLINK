@@ -26,6 +26,8 @@ class LikeServiceTest {
     private LikeRepository likeRepository;
     @Mock
     private ExchangeItemService exchangeItemService;
+    @Mock
+    private UserService userService;
 
     @Test
     @DisplayName("찜하기 성공")
@@ -35,7 +37,7 @@ class LikeServiceTest {
         User user = mock(User.class);
         ExchangeItem exchangeItem = mock(ExchangeItem.class);
 
-        when(exchangeItemService.getValidUser(userId)).thenReturn(user);
+        when(userService.findByIdOrFail(userId)).thenReturn(user);
         when(exchangeItemService.findByIdOrFail(itemId)).thenReturn(exchangeItem);
         when(likeRepository.findByUserAndExchangeItem(user, exchangeItem)).thenReturn(Optional.empty());
         Like newLike = Like.builder()
@@ -65,14 +67,14 @@ class LikeServiceTest {
                 .exchangeItem(exchangeItem)
                 .build();
 
-        when(exchangeItemService.getValidUser(userId)).thenReturn(user);
+        when(userService.findByIdOrFail(userId)).thenReturn(user);
         when(exchangeItemService.findByIdOrFail(itemId)).thenReturn(exchangeItem);
         when(likeRepository.findByUserAndExchangeItem(user, exchangeItem)).thenReturn(Optional.of(existingLike));
 
         Long deletedLikeId = likeService.toggleLike(userId, itemId);
 
         assertThat(deletedLikeId).isEqualTo(likeId);
-        verify(likeRepository, times(1)).deleteByUserAndExchangeItem(user, exchangeItem);
+        verify(likeRepository, times(1)).delete(existingLike);
         verify(likeRepository, never()).save(any(Like.class));
 
     }

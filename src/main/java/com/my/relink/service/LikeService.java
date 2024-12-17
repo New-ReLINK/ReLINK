@@ -20,6 +20,7 @@ import java.util.Optional;
 public class LikeService {
     private final LikeRepository likeRepository;
     private final ExchangeItemService exchangeItemService;
+    private final UserService userService;
 
     public PageResponse<LikeExchangeItemListRespDto> getLikeItemList(Long userId, Pageable pageable) {
         Page<LikeExchangeItemListRepositoryDto> likeExchangeItem
@@ -29,22 +30,23 @@ public class LikeService {
 
     @Transactional
     public Long toggleLike(Long userId, Long itemId) {
-        User user = exchangeItemService.getValidUser(userId);
+        User user = userService.findByIdOrFail(userId);
         ExchangeItem exchangeItem = exchangeItemService.findByIdOrFail(itemId);
 
-        Optional<Like> existingLike = likeRepository.findByUserAndExchangeItem(user, exchangeItem);
-
-        if (existingLike.isPresent()) {
-            Long likeId = existingLike.get().getId();
-            likeRepository.deleteByUserAndExchangeItem(user, exchangeItem);
-            return likeId;
-        } else {
-            Like like = Like.builder()
-                    .user(user)
-                    .exchangeItem(exchangeItem)
-                    .build();
-            Like savedLike = likeRepository.save(like);
-            return savedLike.getId();
-        }
+        return likeRepository.findByUserAndExchangeItem(user, exchangeItem)
+                .map(like -> {
+                    Long likeId = like.getId();
+                    likeRepository.delete(like);
+                    return likeId;
+                })
+                .orElseGet(() -> {
+                    Like savedLike = likeRepository.save(
+                            Like.builder()
+                                    .user(user)
+                                    .exchangeItem(exchangeItem)
+                                    .build()
+                    );
+                    return savedLike.getId();
+                });
     }
 }

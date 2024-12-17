@@ -9,6 +9,4 @@ import java.util.Optional;
 
 public interface LikeRepository extends JpaRepository<Like, Long>, CustomLikeRepository {
     Optional<Like> findByUserAndExchangeItem(User user, ExchangeItem exchangeItem);
-
-    void deleteByUserAndExchangeItem(User user, ExchangeItem exchangeItem);
 }
