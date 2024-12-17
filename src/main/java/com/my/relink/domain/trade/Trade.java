@@ -73,11 +73,15 @@ public class Trade extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private TradeCancelReason cancelReason;
 
+    @Lob
+    private String tradeCancelDescription;
+
     public ExchangeItem getPartnerItem(Long userId){
         return userId.equals(getOwner().getId()) ?
                 requesterExchangeItem :
                 ownerExchangeItem;
     }
+
 
     public User getOwner() {
         return this.getOwnerExchangeItem().getUser();
@@ -137,6 +141,10 @@ public class Trade extends BaseEntity {
         return this.requester.getId().equals(userId);
     }
 
+    public boolean isTradeInExchange(Trade trade){
+        return trade.getTradeStatus() == TradeStatus.IN_EXCHANGE;
+    }
+
     public ExchangeItem getMyExchangeItem(Long myUserId) {
         if (isRequester(myUserId)) {
             return requesterExchangeItem;
@@ -184,5 +192,10 @@ public class Trade extends BaseEntity {
         this.hasOwnerRequested = hasOwnerRequested;
         this.hasRequesterRequested = hasRequesterRequested;
         this.cancelReason = cancelReason;
+    }
+
+    public void updateTradeCancelReason(TradeCancelReason tradeCancelReason, String tradeCancelDescription) {
+        this.cancelReason = tradeCancelReason;
+        this.tradeCancelDescription = tradeCancelDescription;
     }
 }
