@@ -49,4 +49,8 @@ public class LikeService {
                     return savedLike.getId();
                 });
     }
+
+    public void deleteLikesByExchangeItemId(Long itemId) {
+        likeRepository.deleteByExchangeItemId(itemId);
+    }
 }

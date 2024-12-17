@@ -69,4 +69,8 @@ public class ImageService {
 
         return new ImageUserProfileDeleteRespDto(imageId);
     }
+
+    public void deleteImagesByEntityId(EntityType entityType, Long entityId) {
+        imageRepository.deleteByEntityTypeAndEntityId(entityType, entityId);
+    }
 }

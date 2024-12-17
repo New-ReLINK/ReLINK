@@ -303,5 +303,9 @@ public class TradeService {
         return ViewReviewRespDto.from(trade, partnerImage, partnerUser, partnerExchangeItem, completedAt);
 
     }
+    public Long getTradeIdByItemId (Long itemId) {
+        return tradeRepository.findTradeIdByExchangeItemId(itemId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
+    }
 }
 
