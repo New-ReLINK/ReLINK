@@ -84,7 +84,7 @@ public class UserService {
         User user = userRepository.findByEmail(dto.getEmail())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        delayDeleteUser(dto.getEmail());
+        delayDeleteUser(user);
 
         if (!passwordEncoder.matches(dto.getPassword(), user.getPassword())) {
             throw new BusinessException(ErrorCode.MISS_MATCHER_PASSWORD);
@@ -111,13 +111,9 @@ public class UserService {
         return new UserProfileRespDto(avgStar, repositoryDto);
     }
 
-    public void delayDeleteUser(String email) {
-        boolean hasActiveTrades = tradeRepository.existsByRequesterEmailAndTradeStatus(email, TradeStatus.IN_EXCHANGE) ||
-                        tradeRepository.existsByOwnerEmailAndTradeStatus(email, TradeStatus.IN_EXCHANGE) ||
-                        tradeRepository.existsByRequesterEmailAndTradeStatus(email, TradeStatus.IN_DELIVERY) ||
-                        tradeRepository.existsByOwnerEmailAndTradeStatus(email, TradeStatus.IN_DELIVERY) ||
-                        tradeRepository.existsByRequesterEmailAndTradeStatus(email, TradeStatus.EXCHANGED) ||
-                        tradeRepository.existsByOwnerEmailAndTradeStatus(email, TradeStatus.EXCHANGED);
+    public void delayDeleteUser(User currentUser) {
+        boolean hasActiveTrades = tradeRepository.existsByRequesterIdAndTradeStatus(currentUser.getId(), TradeStatus.IN_EXCHANGE) ||
+                        tradeRepository.existsByRequesterIdAndTradeStatus(currentUser.getId(), TradeStatus.IN_DELIVERY);
         if (hasActiveTrades) {
             throw new BusinessException(ErrorCode.ACTIVE_TRADE_EXISTS);
         }

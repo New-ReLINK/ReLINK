@@ -65,6 +65,11 @@ public class ReviewService {
         Trade trade = tradeRepository.findByIdWithExchangeItem(tradeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
 
+//        //거래 상대방이 탈퇴했을 떄
+//        if(!userRepository.existsByIdAndIsDeletedFalse(trade.getPartner(currentUser.getId()).getId())) {
+//            throw new BusinessException(ErrorCode.USER_SECESSION);
+//        }
+
         if (trade.getTradeStatus() != TradeStatus.EXCHANGED) {
             throw new BusinessException(ErrorCode.TRADE_NOT_COMPLETE);
         }

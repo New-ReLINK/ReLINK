@@ -36,9 +36,7 @@ public interface TradeRepository extends JpaRepository<Trade, Long>, CustomTrade
             "where t.id = :tradeId")
     Optional<Trade> findByIdWithUsers(@Param("tradeId") Long tradeId);
 
-    boolean existsByRequesterEmailAndTradeStatus(String email, TradeStatus tradeStatus);
-
-    boolean existsByOwnerEmailAndTradeStatus(String email, TradeStatus tradeStatus);
+    boolean existsByRequesterIdAndTradeStatus(Long userId, TradeStatus tradeStatus);
 
     @Query("SELECT t FROM Trade t " +
             "JOIN FETCH t.ownerExchangeItem oei " + // 거래의 owner가 등록한 아이템 정보
