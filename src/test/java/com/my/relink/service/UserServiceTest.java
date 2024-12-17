@@ -257,7 +257,7 @@ class UserServiceTest extends DummyObject {
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
         // when & then
         assertThrows(BusinessException.class, () -> userService.deleteUser(userId, reqDto));
-        verify(userRepository, times(1)).findByEmail(any());
+        verify(userRepository, times(1)).findById(any());
     }
 
     @Test
@@ -281,7 +281,7 @@ class UserServiceTest extends DummyObject {
 
         // when & then
         assertThrows(BusinessException.class, () -> userService.deleteUser(userId, reqDto));
-        verify(userRepository, times(1)).findByEmail(any());
+        verify(userRepository, times(1)).findById(any());
     }
 
     @Test
@@ -307,7 +307,7 @@ class UserServiceTest extends DummyObject {
         userService.deleteUser(userId, reqDto);
 
         // then
-        verify(userRepository, times(1)).findByEmail(any());
+        verify(userRepository, times(1)).findById(any());
         verify(passwordEncoder, times(1)).matches(any(), any());
     }
 
