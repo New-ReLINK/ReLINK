@@ -49,7 +49,8 @@ public enum ErrorCode {
     IMAGE_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "이미지를 찾을 수 없습니다."),
     IMAGE_ACCESS_DENIED(HttpStatus.BAD_REQUEST.value(), "해당 이미지의 소유자와 다릅니다."),
     INVALID_FILE_URL(HttpStatus.BAD_REQUEST.value(), "파일 URL 이 비어있습니다."),
-    ITEM_IN_EXCHANGE(HttpStatus.BAD_REQUEST.value(), "해당 상품이 거래중입니다.")
+    ITEM_IN_EXCHANGE(HttpStatus.BAD_REQUEST.value(), "해당 상품이 거래중입니다."),
+    DONATION_ITEM_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR.value(), "해당 기부 상품을 찾을 수 없습니다.")
 
     ;
 
