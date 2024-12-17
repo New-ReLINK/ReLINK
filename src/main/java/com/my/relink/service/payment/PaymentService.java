@@ -28,6 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -124,8 +125,12 @@ public class PaymentService {
         try {
             payment.updateFailInfo(
                     PaymentCancelReason.SERVER_ERROR_FAIL_TO_UPDATE_POINT.getMessage(),
-                    canceledPaymentInfo.getStatus());
-        }catch(Exception e){
+                    canceledPaymentInfo.getStatus(),
+                    LocalDateTime.parse(canceledPaymentInfo.getCancels().stream()
+                            .findFirst()
+                            .map(Cancels::getCanceledAt)
+                            .orElseThrow(() -> new BusinessException(ErrorCode.PAYMENT_CANCEL_INCOMPLETE)), DateTimeFormatter.ISO_DATE_TIME));
+        } catch (Exception e){
             log.error("[결제 내역 취소 상태로 변경 중 오류 발생] cause = {}, paymentId = {}, paymentKey = {}", e.getMessage(), payment.getId(), canceledPaymentInfo.getPaymentKey());
             throw new BusinessException(ErrorCode.FAIL_TO_UPDATE_PAYMENT_STATUS);
         }

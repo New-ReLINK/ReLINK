@@ -27,6 +27,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
 
@@ -105,6 +107,7 @@ class PaymentServiceTest {
             TossPaymentRespDto mockRespDto = mock(TossPaymentRespDto.class);
             Cancels mockCancels = mock(Cancels.class);
             String paymentKey = "paymentKey";
+            String canceledAt = "2024-12-17T10:00:00+09:00";
 
 
             when(pointService.findByIdOrFail(user))
@@ -119,6 +122,7 @@ class PaymentServiceTest {
             when(mockRespDto.getStatus()).thenReturn(PaymentStatus.CANCELED.toString());
             when(mockCancels.getCancelStatus()).thenReturn(PaymentStatus.DONE.toString());
             when(mockRespDto.getCancels()).thenReturn(List.of(mockCancels));
+            when(mockCancels.getCanceledAt()).thenReturn(canceledAt);
 
 
             assertThatThrownBy(() -> paymentService.chargePointWithHistory(user, payment, paymentReqDto))
@@ -133,7 +137,9 @@ class PaymentServiceTest {
             );
             verify(payment).updateFailInfo(
                     eq(PaymentCancelReason.SERVER_ERROR_FAIL_TO_UPDATE_POINT.getMessage()),
-                    eq(PaymentStatus.CANCELED.toString())
+                    eq(PaymentStatus.CANCELED.toString()),
+                    eq(LocalDateTime.parse(canceledAt, DateTimeFormatter.ISO_DATE_TIME))
+
             );
         }
 
@@ -145,12 +151,14 @@ class PaymentServiceTest {
             TossPaymentRespDto mockRespDto = mock(TossPaymentRespDto.class);
             Cancels mockCancels = mock(Cancels.class);
             String paymentKey = "paymentKey";
+            String canceledAt = "2024-12-17T10:00:00+09:00";
 
             ArgumentCaptor<Integer> amountCaptor = ArgumentCaptor.forClass(Integer.class);
             when(pointService.findByIdOrFail(user)).thenReturn(point);
             when(payment.getAmount()).thenReturn(amount);
             when(pointHistoryRepository.save(any())).thenThrow(new RuntimeException("저장 실패"));
             when(point.getAmount()).thenReturn(amount);
+            when(mockCancels.getCanceledAt()).thenReturn(canceledAt);
 
             when(paymentReqDto.getPaymentKey()).thenReturn(paymentKey);
             when(tossPaymentClient.cancelPayment(
@@ -162,6 +170,11 @@ class PaymentServiceTest {
             when(mockRespDto.getStatus()).thenReturn(PaymentStatus.CANCELED.toString());
             when(mockCancels.getCancelStatus()).thenReturn(PaymentStatus.DONE.toString());
             when(mockRespDto.getCancels()).thenReturn(List.of(mockCancels));
+            doNothing().when(payment).updateFailInfo(
+                    anyString(),
+                    anyString(),
+                    any(LocalDateTime.class)
+            );
 
             assertThatThrownBy(() -> paymentService.chargePointWithHistory(user, payment, paymentReqDto))
                     .isInstanceOf(BusinessException.class)
@@ -172,6 +185,11 @@ class PaymentServiceTest {
                 assertEquals(amountCaptor.getValue(), amount);
                 verify(point).getAmount();
                 verifyNoMoreInteractions(point);
+                verify(payment).updateFailInfo(
+                        eq(PaymentCancelReason.SERVER_ERROR_FAIL_TO_UPDATE_POINT.getMessage()),
+                        eq(PaymentStatus.CANCELED.toString()),
+                        eq(LocalDateTime.parse(canceledAt, DateTimeFormatter.ISO_DATE_TIME))
+                );
             });
         }
 
@@ -182,12 +200,15 @@ class PaymentServiceTest {
             Integer amount = 1000;
             TossPaymentRespDto mockRespDto = mock(TossPaymentRespDto.class);
             String paymentKey = "paymentKey";
+            String canceledAt = "2024-12-17T10:00:00+09:00";
+
 
             ArgumentCaptor<Integer> amountCaptor = ArgumentCaptor.forClass(Integer.class);
             when(pointService.findByIdOrFail(user)).thenReturn(point);
             when(payment.getAmount()).thenReturn(amount);
             when(pointHistoryRepository.save(any())).thenThrow(new RuntimeException("저장 실패"));
             when(point.getAmount()).thenReturn(amount);
+
 
             when(paymentReqDto.getPaymentKey()).thenReturn(paymentKey);
             when(tossPaymentClient.cancelPayment(
@@ -209,7 +230,8 @@ class PaymentServiceTest {
             );
             verify(payment, never()).updateFailInfo(
                     eq(PaymentCancelReason.SERVER_ERROR_FAIL_TO_UPDATE_POINT.getMessage()),
-                    eq(PaymentStatus.CANCELED.toString())
+                    eq(PaymentStatus.CANCELED.toString()),
+                    eq(LocalDateTime.parse(canceledAt, DateTimeFormatter.ISO_DATE_TIME))
             );
         }
 
@@ -222,6 +244,8 @@ class PaymentServiceTest {
             String paymentKey = "paymentKey";
             point = mock(Point.class);
             Integer amount = 1000;
+            String canceledAt = "2024-12-17T10:00:00+09:00";
+            when(mockCancels.getCanceledAt()).thenReturn(canceledAt);
 
 
             when(pointService.findByIdOrFail(user))
@@ -242,7 +266,8 @@ class PaymentServiceTest {
                     .when(payment)
                     .updateFailInfo(
                             any(String.class),
-                            any(String.class)
+                            any(String.class),
+                            any(LocalDateTime.class)
                     );
 
 
@@ -257,7 +282,8 @@ class PaymentServiceTest {
             );
             verify(payment).updateFailInfo(
                     eq(PaymentCancelReason.SERVER_ERROR_FAIL_TO_UPDATE_POINT.getMessage()),
-                    eq(PaymentStatus.CANCELED.toString())
+                    eq(PaymentStatus.CANCELED.toString()),
+                    eq(LocalDateTime.parse(canceledAt, DateTimeFormatter.ISO_DATE_TIME))
             );
         }
     }
