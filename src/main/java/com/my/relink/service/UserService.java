@@ -80,9 +80,8 @@ public class UserService {
         userRepository.save(user);
     }
 
-    @Transactional
-    public void deleteUser(UserDeleteReqDto dto) {
-        User user = userRepository.findByEmail(dto.getEmail())
+    public void deleteUser(Long userId, UserDeleteReqDto dto) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         if (!passwordEncoder.matches(dto.getPassword(), user.getPassword())) {

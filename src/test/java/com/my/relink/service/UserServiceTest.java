@@ -254,21 +254,24 @@ class UserServiceTest extends DummyObject {
     @DisplayName("회원 탈퇴 시 유저정보를 찾을 수 없는 경우 USER_NOT_FOUND Exception 이 발생한다.")
     void notFoundUserFailTest() {
         // given
+        Long userId = 1L;
         UserDeleteReqDto reqDto = UserDeleteReqDto.builder()
                 .email("test@example.com")
                 .password("password1234")
                 .build();
 
-        when(userRepository.findByEmail(reqDto.getEmail())).thenReturn(Optional.empty());
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
         // when & then
-        assertThrows(BusinessException.class, () -> userService.deleteUser(reqDto));
-        verify(userRepository, times(1)).findByEmail(any());
+        assertThrows(BusinessException.class, () -> userService.deleteUser(userId, reqDto));
+        verify(userRepository, times(1)).findById(any());
     }
 
     @Test
     @DisplayName("회원 탈퇴 시 비밀번호가 맞지 않는 경우 MISS_MATCH_PASSWORD Exception 이 발생한다.")
     void missMatchPasswordFailTest() {
         // given
+        Long userId = 1L;
+
         UserDeleteReqDto reqDto = UserDeleteReqDto.builder()
                 .email("test@example.com")
                 .password("password1234")
@@ -280,17 +283,19 @@ class UserServiceTest extends DummyObject {
                 .nickname("testNickname")
                 .build();
 
-        when(userRepository.findByEmail(reqDto.getEmail())).thenReturn(Optional.of(user));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
         // when & then
-        assertThrows(BusinessException.class, () -> userService.deleteUser(reqDto));
-        verify(userRepository, times(1)).findByEmail(any());
+        assertThrows(BusinessException.class, () -> userService.deleteUser(userId, reqDto));
+        verify(userRepository, times(1)).findById(any());
     }
 
     @Test
     @DisplayName("회원 탈퇴 시 비밀번호와 이메일이 일치하는 경우 isDeleted 가 True 가 된다.")
     void signOutSuccessTest() {
         // given
+        Long userId = 1L;
+
         UserDeleteReqDto reqDto = UserDeleteReqDto.builder()
                 .email("test@example.com")
                 .password("password1234")
@@ -301,14 +306,14 @@ class UserServiceTest extends DummyObject {
                 .password("password1234")
                 .build();
 
-        when(userRepository.findByEmail(reqDto.getEmail())).thenReturn(Optional.of(user));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(passwordEncoder.matches(any(), any())).thenReturn(true);
 
         // when
-        userService.deleteUser(reqDto);
+        userService.deleteUser(userId, reqDto);
 
         // then
-        verify(userRepository, times(1)).findByEmail(any());
+        verify(userRepository, times(1)).findById(any());
         verify(passwordEncoder, times(1)).matches(any(), any());
     }
 
@@ -443,7 +448,7 @@ class UserServiceTest extends DummyObject {
     @DisplayName("회원 탈퇴시 회원이 등록한 교환아이템들을 전부 교환 불가 상태로 변경한다.")
     void deleteUserWithExchangeItemStatusToUnavailableSuccessTest() {
         // given
-        String email = "test@example.com";
+        Long userId = 1L;
 
         UserDeleteReqDto reqDto = UserDeleteReqDto.builder()
                 .email("test@example.com")
@@ -456,17 +461,17 @@ class UserServiceTest extends DummyObject {
                 .password("test")
                 .build();
 
-        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(passwordEncoder.matches(any(), any())).thenReturn(true);
         when(userRepository.save(any(User.class))).thenReturn(user);
 
         doNothing().when(exchangeItemRepository).updateTradeStatusToUnavailable(user.getId());
 
         // when
-        userService.deleteUser(reqDto);
+        userService.deleteUser(userId, reqDto);
 
         // then
-        verify(userRepository, times(1)).findByEmail(any());
+        verify(userRepository, times(1)).findById(any());
         verify(passwordEncoder, times(1)).matches(any(), any());
         verify(userRepository, times(1)).save(any());
         verify(exchangeItemRepository, times(1)).updateTradeStatusToUnavailable(any());

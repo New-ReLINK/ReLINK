@@ -14,7 +14,7 @@ public enum ErrorCode {
     VALIDATION_FAILED(HttpStatus.BAD_REQUEST.value(), "유효성 검사 실패"),
     RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "요청된 URI를 찾을 수 없습니다"),
     REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "해당 리뷰를 찾을 수 없습니다."),
-
+    ITEM_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "해당 상품을 찾을 수 없습니다."),
     TRADE_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "해당 거래를 찾을 수 없습니다"),
     TRADE_ACCESS_DENIED(HttpStatus.FORBIDDEN.value(), "해당 거래에 접근 권한이 없습니다"),
     POINT_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "포인트를 찾을 수 없습니다"),
@@ -27,10 +27,17 @@ public enum ErrorCode {
     DEPOSIT_ALREADY_REFUNDED(HttpStatus.BAD_REQUEST.value(), "이미 환급한 보증금 내역입니다."),
     INVALID_REPORT_REASON(HttpStatus.NOT_FOUND.value(), "해당 신고 사유는 존재하지 않습니다"),
     ALREADY_REPORTED_TRADE(HttpStatus.CONFLICT.value(), "이미 신고된 거래입니다"),
-
+    UNAUTHORIZED_ACCESS(HttpStatus.UNAUTHORIZED.value(), "해당 상품의 소유자가 아닙니다"),
+    ITEM_NOT_AVAILABLE(HttpStatus.BAD_REQUEST.value(), "해당 상품이 교환가능 상태가 아닙니다."),
     EXCHANGE_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "해당 교환 상품을 찾을 수 없습니다"),
     NOTIFICATION_CREATE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR.value(), "알람 저장이 실패하였습니다."),
-    NOTIFICATION_DELIVERY_FAILED(HttpStatus.INTERNAL_SERVER_ERROR.value(), "알림 발송에 실패하였습니다.")
+    NOTIFICATION_DELIVERY_FAILED(HttpStatus.INTERNAL_SERVER_ERROR.value(), "알림 발송에 실패하였습니다."),
+    FILE_SIZE_EXCEEDED(HttpStatus.BAD_REQUEST.value(), "파일 크기를 초과하였습니다."),
+    INVALID_FILE_EXTENSION(HttpStatus.BAD_REQUEST.value(), "지원하지 않는 파일 형식입니다."),
+    ALREADY_IMAGE_FILE(HttpStatus.BAD_REQUEST.value(), "프로필 이미지는 하나만 등록할 수 있습니다."),
+    IMAGE_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "이미지를 찾을 수 없습니다."),
+    IMAGE_ACCESS_DENIED(HttpStatus.BAD_REQUEST.value(), "해당 이미지의 소유자와 다릅니다."),
+    INVALID_FILE_URL(HttpStatus.BAD_REQUEST.value(), "파일 URL 이 비어있습니다."),
 
     ;
 
