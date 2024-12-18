@@ -38,4 +38,3 @@ out/
 application-local.yaml
 *.env
 .env
-.env

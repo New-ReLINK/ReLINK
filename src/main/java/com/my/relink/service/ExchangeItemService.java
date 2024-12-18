@@ -156,4 +156,10 @@ public class ExchangeItemService {
         return exchangeItemRepository.findById(itemId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EXCHANGE_ITEM_NOT_FOUND));
     }
+
+
+    public ExchangeItem findByIdFetchUser(Long itemId){
+        return exchangeItemRepository.findByIdWithUser(itemId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.EXCHANGE_ITEM_NOT_FOUND));
+    }
 }
