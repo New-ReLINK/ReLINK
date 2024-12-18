@@ -34,6 +34,12 @@ public class ImageService {
                 .orElse(null);
     }
 
+    public Map<Long, String> getImagesByItemIds(EntityType entityType, List<Long> itemIds) {
+        List<Image> images = imageRepository.findImages(entityType, itemIds);
+        return images.stream()
+                .collect(Collectors.toMap(Image::getEntityId, Image::getImageUrl));
+    }
+
     public Map<Long, String> getFirstImagesByItemIds(EntityType entityType, List<Long> itemIds) {
         List<Image> images = imageRepository.findFirstImages(entityType, itemIds);
         return images.stream()
