@@ -30,48 +30,43 @@ public class PointHistoryCustomRepositoryImpl implements PointHistoryCustomRepos
 
     private final JPAQueryFactory queryFactory;
     private final DateTimeUtil dateTimeUtil;
+
     @Override
     public PageResponse<PointUsageHistoryRespDto> findPointUsageHistories(User user, int page, int size) {
-        QTrade t = trade;
-        QPointHistory ph = pointHistory;
+        List<Long> tradeIdList = getTradeIdList(user, page, size);
+        List<Tuple> pointHistoryTuple = getPointHistoryTuple(tradeIdList, user);
+        List<PointUsageHistoryRespDto> contents = convertToDto(pointHistoryTuple, tradeIdList);
+        PageInfo pageInfo = getPointUsagePageInfo(user, page, size);
 
-        List<Tuple> tradeInfoList = queryFactory
-                .select(ph.trade.id, ph.createdAt.max())
-                .from(ph)
+        return new PageResponse<>(contents, pageInfo);
+    }
+
+
+    private PageInfo getPointUsagePageInfo(User user, int page, int size){
+        Long totalCount = queryFactory
+                .select(pointHistory.trade.countDistinct())
+                .from(pointHistory)
                 .where(
-                        ph.point.user.eq(user)
-                                .and(ph.pointTransactionType.in(
-                                        PointTransactionType.RETURN,
-                                        PointTransactionType.DEPOSIT
+                        pointHistory.point.user.eq(user)
+                                .and(pointHistory.pointTransactionType.in(
+                                        PointTransactionType.DEPOSIT,
+                                        PointTransactionType.RETURN
                                 ))
                 )
-                .groupBy(ph.trade.id)
-                .orderBy(ph.createdAt.max().desc())
-                .offset(page * size)
-                .limit(size)
-                .fetch();
+                .fetchOne();
 
-        List<Long> tradeIdList = tradeInfoList.stream()
-                .map(tradeInfo -> tradeInfo.get(0, Long.class))
-                .toList();
+        long count = totalCount != null ? totalCount : 0L;
+        int totalPages = (int) Math.ceil((double) count / size);
 
-        List<Tuple> pointHistoryTuple = queryFactory
-                .select(
-                        t.id,
-                        t.tradeStatus,
-                        new CaseBuilder()
-                                .when(t.requester.eq(user))
-                                .then(t.ownerExchangeItem.name)
-                                .otherwise(t.requesterExchangeItem.name),
-                        ph.pointTransactionType,
-                        ph.amount,
-                        ph.createdAt
-                )
-                .from(ph)
-                .join(ph.trade, t)
-                .where(t.id.in(tradeIdList))
-                .fetch();
+        return new PageInfo (
+                totalPages,
+                count,
+                page > 0,
+                page + 1 < totalPages);
+    }
 
+
+    private List<PointUsageHistoryRespDto> convertToDto(List<Tuple> pointHistoryTuple, List<Long> tradeIdList){
         Map<Long, PointUsageHistoryRespDto> dtoMap = new LinkedHashMap<>();
         for (Tuple tuple : pointHistoryTuple) {
             Long tradeId = tuple.get(0, Long.class);
@@ -97,32 +92,54 @@ public class PointHistoryCustomRepositoryImpl implements PointHistoryCustomRepos
             }
         }
 
-        List<PointUsageHistoryRespDto> contents = tradeIdList.stream()
+        return tradeIdList.stream()
                 .map(dtoMap::get)
                 .toList();
+    }
 
-        Long totalCount = queryFactory
-                .select(ph.trade.countDistinct())
+
+    private List<Long> getTradeIdList(User user, int page, int size){
+        QTrade t = trade;
+        QPointHistory ph = pointHistory;
+
+        List<Tuple> tradeInfoList = queryFactory
+                .select(ph.trade.id, ph.createdAt.max())
                 .from(ph)
                 .where(
                         ph.point.user.eq(user)
                                 .and(ph.pointTransactionType.in(
-                                        PointTransactionType.DEPOSIT,
-                                        PointTransactionType.RETURN
+                                        PointTransactionType.RETURN,
+                                        PointTransactionType.DEPOSIT
                                 ))
                 )
-                .fetchOne();
+                .groupBy(ph.trade.id)
+                .orderBy(ph.createdAt.max().desc())
+                .offset(page * size)
+                .limit(size)
+                .fetch();
 
-        long count = totalCount != null ? totalCount : 0L;
-        int totalPages = (int) Math.ceil((double) count / size);
+        return tradeInfoList.stream()
+                .map(tradeInfo -> tradeInfo.get(0, Long.class))
+                .toList();
+    }
 
-        return new PageResponse<>(
-                contents,
-                new PageInfo(
-                        totalPages,
-                        count,
-                        page > 0,
-                        page + 1 < totalPages)
-        );
+
+    private List<Tuple> getPointHistoryTuple(List<Long> tradeIdList, User user){
+        return queryFactory
+                .select(
+                        trade.id,
+                        trade.tradeStatus,
+                        new CaseBuilder()
+                                .when(trade.requester.eq(user))
+                                .then(trade.ownerExchangeItem.name)
+                                .otherwise(trade.requesterExchangeItem.name),
+                        pointHistory.pointTransactionType,
+                        pointHistory.amount,
+                        pointHistory.createdAt
+                )
+                .from(pointHistory)
+                .join(pointHistory.trade, trade)
+                .where(trade.id.in(tradeIdList))
+                .fetch();
     }
 }
