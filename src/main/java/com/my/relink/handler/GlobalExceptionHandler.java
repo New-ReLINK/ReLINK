@@ -1,5 +1,11 @@
 package com.my.relink.handler;
 
+import com.my.relink.client.tosspayments.ex.TossPaymentException;
+import com.my.relink.client.tosspayments.ex.badRequest.TossPaymentBadRequestException;
+import com.my.relink.client.tosspayments.ex.forbidden.TossPaymentForbiddenException;
+import com.my.relink.client.tosspayments.ex.notFound.TossPaymentNotFoundException;
+import com.my.relink.client.tosspayments.ex.serverError.TossPaymentServerException;
+import com.my.relink.client.tosspayments.ex.unAuthorized.TossPaymentUnauthorizedException;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import com.my.relink.util.api.ApiResult;
@@ -42,6 +48,20 @@ public class GlobalExceptionHandler {
                 HttpStatus.valueOf(e.getErrorCode().getStatus())
         );
     }
+
+
+    /**
+     * 토스 페이먼츠 에러 처리
+     */
+    @ExceptionHandler(TossPaymentException.class)
+    public ResponseEntity<ApiResult<String>> handleTossPaymentException(TossPaymentException e) {
+        HttpStatus status = getHttpStatusForException(e);
+        return new ResponseEntity<>(
+                ApiResult.error(e.getMessage(), status.value()),
+                status
+        );
+    }
+
 
     /**
      * DTO 유효성 검사 실패 예외 처리
@@ -95,6 +115,22 @@ public class GlobalExceptionHandler {
             lastNode = node;
         }
         return lastNode != null? lastNode.getName(): "필드 정보 없음";
+    }
+
+    private HttpStatus getHttpStatusForException(TossPaymentException e) {
+        if (e instanceof TossPaymentBadRequestException) {
+            return HttpStatus.BAD_REQUEST;
+        } else if (e instanceof TossPaymentUnauthorizedException) {
+            return HttpStatus.UNAUTHORIZED;
+        } else if (e instanceof TossPaymentForbiddenException) {
+            return HttpStatus.FORBIDDEN;
+        } else if (e instanceof TossPaymentNotFoundException) {
+            return HttpStatus.NOT_FOUND;
+        } else if (e instanceof TossPaymentServerException) {
+            return HttpStatus.INTERNAL_SERVER_ERROR;
+        } else {
+            return HttpStatus.INTERNAL_SERVER_ERROR;
+        }
     }
 
 

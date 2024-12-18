@@ -1,5 +1,6 @@
 package com.my.relink.service;
 
+import com.my.relink.chat.service.ChatService;
 import com.my.relink.controller.exchangeItem.dto.req.CreateExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.req.UpdateExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemRespDto;
@@ -37,7 +38,8 @@ public class ExchangeItemService {
     private final PointRepository pointRepository;
     private final TradeService tradeService;
     private final ImageService imageService;
-
+    private final LikeService likeService;
+    private final ChatService chatService;
 
     @Transactional
     public long createExchangeItem(CreateExchangeItemReqDto reqDto, Long userId) {
@@ -92,10 +94,35 @@ public class ExchangeItemService {
         return exchangeItem.getId();
     }
 
-    // 상품의 상태 확인
+    // 삭제는 soft delete
+    @Transactional
+    public Long deleteExchangeItem(Long itemId, Long userId) {
+        ExchangeItem exchangeItem = findByIdOrFail(itemId);
+        exchangeItem.validExchangeItemOwner(exchangeItem.getUser().getId(), userId);
+        validDeleteExchangeItemTradeStatus(exchangeItem.getTradeStatus());
+        exchangeItem.delete();
+        deleteRelatedEntities(exchangeItem.getId());
+        return exchangeItem.getId();
+    }
+
+    // 연관된 image, like, chat 삭제
+    private void deleteRelatedEntities(Long itemId) {
+        imageService.deleteImagesByEntityId(EntityType.EXCHANGE_ITEM, itemId);
+        likeService.deleteLikesByExchangeItemId(itemId);
+        Long tradeId = tradeService.getTradeIdByItemId(itemId);
+        chatService.deleteChatsByTradeId(tradeId);
+    }
+
+    // 상품의 거래 상태 확인(수정 시)
     public void validExchangeItemTradeStatus(TradeStatus tradeStatus) {
         if (tradeStatus != TradeStatus.AVAILABLE) {
             throw new BusinessException(ErrorCode.ITEM_NOT_AVAILABLE);
+        }
+    }
+    // 상품의 거래 상태 확인(삭제 시)
+    public void validDeleteExchangeItemTradeStatus(TradeStatus tradeStatus) {
+        if (tradeStatus == TradeStatus.IN_EXCHANGE) {
+            throw new BusinessException(ErrorCode.ITEM_IN_EXCHANGE);
         }
     }
 
@@ -127,6 +154,12 @@ public class ExchangeItemService {
 
     public ExchangeItem findByIdOrFail(Long itemId) {
         return exchangeItemRepository.findById(itemId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.EXCHANGE_ITEM_NOT_FOUND));
+    }
+
+
+    public ExchangeItem findByIdFetchUser(Long itemId){
+        return exchangeItemRepository.findByIdWithUser(itemId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EXCHANGE_ITEM_NOT_FOUND));
     }
 }

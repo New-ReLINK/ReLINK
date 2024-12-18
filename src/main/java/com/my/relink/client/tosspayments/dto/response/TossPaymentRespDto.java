@@ -1,9 +1,7 @@
 package com.my.relink.client.tosspayments.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 
 import java.util.List;
 
@@ -11,6 +9,8 @@ import java.util.List;
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ToString
+@AllArgsConstructor
+@Builder
 public class TossPaymentRespDto {
 
     private String version; //객체 응답 버전
@@ -43,6 +43,8 @@ public class TossPaymentRespDto {
 
     @NoArgsConstructor
     @Getter
+    @AllArgsConstructor
+    @Builder
     public static class Cancels{
         private Integer cancelAmount; //결제 취소 금액
         private String cancelReason; //결제 취소 이유. 최대 길이 200자

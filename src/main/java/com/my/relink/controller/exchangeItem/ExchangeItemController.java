@@ -50,4 +50,11 @@ public class ExchangeItemController {
         return new ResponseEntity<>(ApiResult.success(exchangeItemId), HttpStatus.OK);
     }
 
+    @DeleteMapping("/users/items/exchanges/{itemId}")
+    public ResponseEntity<ApiResult<Long>> deleteExchangeItem(@PathVariable(value = "itemId") Long itemId,
+                                                              @AuthenticationPrincipal AuthUser authUser) {
+        Long exchangeItemId = exchangeItemService.deleteExchangeItem(itemId, authUser.getId());
+        return new ResponseEntity<>(ApiResult.success(exchangeItemId), HttpStatus.OK);
+    }
+
 }
