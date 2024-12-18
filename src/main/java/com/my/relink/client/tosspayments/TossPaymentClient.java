@@ -5,7 +5,7 @@ import com.my.relink.client.tosspayments.dto.request.TossPaymentCancelReqDto;
 import com.my.relink.client.tosspayments.dto.request.TossPaymentReqDto;
 import com.my.relink.client.tosspayments.dto.response.TossPaymentErrorRespDto;
 import com.my.relink.client.tosspayments.dto.response.TossPaymentRespDto;
-import com.my.relink.client.tosspayments.ex.PaymentFeature;
+import com.my.relink.client.tosspayments.feature.PaymentFeature;
 import com.my.relink.client.tosspayments.ex.TossPaymentErrorCode;
 import com.my.relink.client.tosspayments.ex.TossPaymentException;
 import com.my.relink.client.tosspayments.ex.TossPaymentNetworkException;

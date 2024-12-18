@@ -33,6 +33,10 @@ public class Point extends BaseEntity {
         this.amount -= amountToDeduct;
     }
 
+    public void charge(Integer amount){
+        this.amount += amount;
+    }
+
     public void restore(Integer amountToAdd) {
         this.amount += amountToAdd;
     }
