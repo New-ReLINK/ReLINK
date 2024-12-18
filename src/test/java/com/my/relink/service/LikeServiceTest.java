@@ -1,6 +1,7 @@
 package com.my.relink.service;
 
 import com.my.relink.domain.item.exchange.ExchangeItem;
+import com.my.relink.domain.item.exchange.repository.ExchangeItemRepository;
 import com.my.relink.domain.like.Like;
 import com.my.relink.domain.like.repository.LikeRepository;
 import com.my.relink.domain.user.User;
@@ -25,7 +26,7 @@ class LikeServiceTest {
     @Mock
     private LikeRepository likeRepository;
     @Mock
-    private ExchangeItemService exchangeItemService;
+    private ExchangeItemRepository exchangeItemRepository;
     @Mock
     private UserService userService;
 
@@ -38,7 +39,7 @@ class LikeServiceTest {
         ExchangeItem exchangeItem = mock(ExchangeItem.class);
 
         when(userService.findByIdOrFail(userId)).thenReturn(user);
-        when(exchangeItemService.findByIdOrFail(itemId)).thenReturn(exchangeItem);
+        when(exchangeItemRepository.findById(itemId)).thenReturn(Optional.of(exchangeItem));
         when(likeRepository.findByUserAndExchangeItem(user, exchangeItem)).thenReturn(Optional.empty());
         Like newLike = Like.builder()
                 .user(user)
@@ -68,7 +69,7 @@ class LikeServiceTest {
                 .build();
 
         when(userService.findByIdOrFail(userId)).thenReturn(user);
-        when(exchangeItemService.findByIdOrFail(itemId)).thenReturn(exchangeItem);
+        when(exchangeItemRepository.findById(itemId)).thenReturn(Optional.of(exchangeItem));
         when(likeRepository.findByUserAndExchangeItem(user, exchangeItem)).thenReturn(Optional.of(existingLike));
 
         Long deletedLikeId = likeService.toggleLike(userId, itemId);
