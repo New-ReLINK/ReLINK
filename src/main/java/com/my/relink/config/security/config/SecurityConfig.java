@@ -1,6 +1,7 @@
 package com.my.relink.config.security.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.my.relink.config.security.GlobalFilterExceptionHandler;
 import com.my.relink.config.security.JwtAuthorizationFilter;
 import com.my.relink.config.security.LoginAuthenticationFilter;
 import com.my.relink.config.security.jwt.JwtProvider;
@@ -26,6 +27,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.context.SecurityContextHolderFilter;
 
 @Slf4j
 @Configuration
@@ -64,8 +66,9 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .httpBasic(AbstractHttpConfigurer::disable)
+                .addFilterBefore(new GlobalFilterExceptionHandler(objectMapper), SecurityContextHolderFilter.class)
                 .addFilterBefore(new JwtAuthorizationFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class)
-                .addFilterAt(
+                .addFilterBefore(
                         new LoginAuthenticationFilter(
                                 authenticationManager(authenticationConfiguration), objectMapper, jwtProvider, userRepository
                         ),
