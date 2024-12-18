@@ -1,11 +1,8 @@
 package com.my.relink.controller.donation;
 
 import com.my.relink.config.security.AuthUser;
-import com.my.relink.controller.donation.dto.resp.DonationItemDetailRespDto;
-import com.my.relink.controller.donation.dto.resp.DonationItemListRespDto;
+import com.my.relink.controller.donation.dto.resp.*;
 import com.my.relink.controller.donation.dto.req.DonationItemReqDto;
-import com.my.relink.controller.donation.dto.resp.DonationItemIdRespDto;
-import com.my.relink.controller.donation.dto.resp.DonationItemUserListRespDto;
 import com.my.relink.service.DonationItemService;
 import com.my.relink.util.api.ApiResult;
 import jakarta.validation.Valid;
@@ -58,4 +55,15 @@ public class DonationController {
 
         return ResponseEntity.ok(ApiResult.success(response));
     }
+
+    @GetMapping("/donations/{donationItemId}/completion")
+    public ResponseEntity<ApiResult<DonationCompleteItemDetailRespDto>> getCompletionDonationItem(
+            @PathVariable Long itemId,
+            @AuthenticationPrincipal AuthUser authUser){
+
+        DonationCompleteItemDetailRespDto response = donationItemService.getCompletionDonationItem(itemId, authUser.getId());
+
+        return ResponseEntity.ok(ApiResult.success(response));
+    }
+
 }
