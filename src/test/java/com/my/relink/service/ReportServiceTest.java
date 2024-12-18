@@ -2,6 +2,7 @@ package com.my.relink.service;
 
 import com.my.relink.controller.report.dto.request.ExchangeItemReportCreateReqDto;
 import com.my.relink.controller.report.dto.request.TradeReportCreateReqDto;
+import com.my.relink.controller.report.dto.response.ExchangeItemInfoRespDto;
 import com.my.relink.controller.report.dto.response.TradeInfoRespDto;
 import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.report.Report;
@@ -51,6 +52,69 @@ class ReportServiceTest {
 
     @Mock
     private DateTimeUtil dateTimeUtil;
+
+
+    @Nested
+    @DisplayName("신고 전 교환 상품 조회 테스트")
+    class GetExchangeItemInfoForReport{
+
+        Long exchangeItemId = 1L;
+        ExchangeItem exchangeItem;
+        User user;
+
+        private String imgUrl = "img";
+
+        @BeforeEach
+        void setUp(){
+            user = User.builder()
+                    .nickname("닉네임")
+                    .build();
+
+            exchangeItem = ExchangeItem.builder()
+                    .id(exchangeItemId)
+                    .name("교환 상품명")
+                    .user(user)
+                    .build();
+        }
+
+        @Nested
+        @DisplayName("성공 케이스")
+        class SuccessCase{
+
+            @Test
+            @DisplayName("정상 조회한다")
+            void success(){
+                when(exchangeItemService.findByIdFetchUser(exchangeItemId)).thenReturn(exchangeItem);
+                when(imageService.getExchangeItemThumbnailUrl(exchangeItem)).thenReturn(imgUrl);
+
+                ExchangeItemInfoRespDto result = reportService.getExchangeItemInfoForReport(exchangeItemId);
+
+                assertAll(() -> {
+                    assertEquals(result.getOwnerNickname(), user.getNickname());
+                    assertEquals(result.getExchangeItemId(), exchangeItemId);
+                    assertEquals(result.getExchangeItemName(), exchangeItem.getName());
+                    assertEquals(result.getExchangeItemImageUrl(), imgUrl);
+                });
+            }
+        }
+
+        @Nested
+        @DisplayName("실패 케이스")
+        class FailCase{
+
+            //삭제된 아이템을 조회할 경우 예외가 발생한다
+            @Test
+            @DisplayName("삭제된 교환 상품을 조회할 경우 예외가 발생한다")
+            void fail_if_exchangeItem_is_deleted(){
+                given(exchangeItemService.findByIdFetchUser(exchangeItemId))
+                        .willThrow(new BusinessException(ErrorCode.EXCHANGE_ITEM_NOT_FOUND));
+
+                assertThatThrownBy(() -> reportService.getExchangeItemInfoForReport(exchangeItemId))
+                        .isInstanceOf(BusinessException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.EXCHANGE_ITEM_NOT_FOUND);
+            }
+        }
+    }
 
 
     @Nested
@@ -117,7 +181,7 @@ class ReportServiceTest {
             @Test
             @DisplayName("owner가 requester의 정보를 조회할 수 있다")
             void owner_can_get_requester_info() {
-                when(imageService.getExchangeItemUrl(requesterItem)).thenReturn(imageUrl);
+                when(imageService.getExchangeItemThumbnailUrl(requesterItem)).thenReturn(imageUrl);
                 when(dateTimeUtil.getExchangeStartFormattedTime(now)).thenReturn(exchangedStartDate);
 
                 TradeInfoRespDto result = reportService.getTradeInfoForReport(tradeId, ownerId);
@@ -133,7 +197,7 @@ class ReportServiceTest {
             @Test
             @DisplayName("requester가 owner의 정보를 조회할 수 있다")
             void requester_can_get_owner_info() {
-                when(imageService.getExchangeItemUrl(ownerItem)).thenReturn(imageUrl);
+                when(imageService.getExchangeItemThumbnailUrl(ownerItem)).thenReturn(imageUrl);
                 when(dateTimeUtil.getExchangeStartFormattedTime(now)).thenReturn(exchangedStartDate);
 
                 TradeInfoRespDto result = reportService.getTradeInfoForReport(tradeId, requesterId);
@@ -152,7 +216,7 @@ class ReportServiceTest {
             void can_get_partner_info_when_partner_withdrawn(){
                 owner.changeIsDeleted();
 
-                when(imageService.getExchangeItemUrl(ownerItem)).thenReturn(imageUrl);
+                when(imageService.getExchangeItemThumbnailUrl(ownerItem)).thenReturn(imageUrl);
                 when(dateTimeUtil.getExchangeStartFormattedTime(now)).thenReturn(exchangedStartDate);
 
                 TradeInfoRespDto result = reportService.getTradeInfoForReport(tradeId, requesterId);

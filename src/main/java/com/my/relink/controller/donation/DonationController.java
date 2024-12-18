@@ -1,6 +1,7 @@
 package com.my.relink.controller.donation;
 
 import com.my.relink.config.security.AuthUser;
+import com.my.relink.controller.donation.dto.resp.DonationItemDetailRespDto;
 import com.my.relink.controller.donation.dto.resp.DonationItemListRespDto;
 import com.my.relink.controller.donation.dto.req.DonationItemReqDto;
 import com.my.relink.controller.donation.dto.resp.DonationItemIdRespDto;
@@ -48,4 +49,13 @@ public class DonationController {
         return ResponseEntity.ok(ApiResult.success(response));
     }
 
+    @GetMapping("/users/items/donations/{itemId}")
+    public ResponseEntity<ApiResult<DonationItemDetailRespDto>> getDonationItem(
+            @PathVariable Long itemId,
+            @AuthenticationPrincipal AuthUser authUser) {
+
+        DonationItemDetailRespDto response = donationItemService.getDonationItem(itemId, authUser.getId());
+
+        return ResponseEntity.ok(ApiResult.success(response));
+    }
 }

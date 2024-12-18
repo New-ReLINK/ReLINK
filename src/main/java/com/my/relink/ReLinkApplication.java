@@ -11,5 +11,4 @@ public class ReLinkApplication {
     public static void main(String[] args) {
         SpringApplication.run(ReLinkApplication.class, args);
     }
-
 }

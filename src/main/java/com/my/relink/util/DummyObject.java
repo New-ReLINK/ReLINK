@@ -145,6 +145,37 @@ public class DummyObject {
                 .build();
     }
 
+    protected Trade mockTradeExchanged(User owner, User requester, boolean hasOwnerRequested, boolean hasRequesterRequested, boolean hasOwnerReceived, boolean hasRequesterReceived) {
+        return Trade.builder()
+                .requester(requester)
+                .ownerExchangeItem(
+                        ExchangeItem.builder()
+                                .name("owner item")
+                                .user(owner)
+                                .isDeleted(false)
+                                .deposit(10000)
+                                .id(10L)
+                                .itemQuality(ItemQuality.NEW)
+                                .build()
+                )
+                .requesterExchangeItem(
+                        ExchangeItem.builder()
+                                .name("requester item")
+                                .user(requester)
+                                .isDeleted(false)
+                                .deposit(10000)
+                                .id(13L)
+                                .itemQuality(ItemQuality.NEW)
+                                .build()
+                )
+                .tradeStatus(TradeStatus.EXCHANGED)
+                .hasOwnerRequested(hasOwnerRequested)
+                .hasRequesterRequested(hasRequesterRequested)
+                .hasOwnerReceived(hasOwnerReceived)
+                .hasRequesterReceived(hasRequesterReceived)
+                .build();
+    }
+
     protected Point mockRequesterPoint(Long id, Integer amount){
         return Point.builder()
                 .id(id)
