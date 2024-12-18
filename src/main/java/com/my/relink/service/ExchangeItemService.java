@@ -78,9 +78,8 @@ public class ExchangeItemService {
     }
 
     public GetAllExchangeItemsRespDto getAllExchangeItems(GetAllExchangeItemReqDto reqDto) {
-        Category category = getValidCategory(reqDto.getCategoryId());
-        Pageable pageable = PageRequest.of(reqDto.getPage(), reqDto.getSize());
-
+        Category category = (reqDto.getCategoryId() != null) ? getValidCategory(reqDto.getCategoryId()) : null;
+        Pageable pageable = PageRequest.of(reqDto.getPage() - 1, reqDto.getSize());
         Page<ExchangeItem> itemsPage = exchangeItemRepository.findAllByCriteria(reqDto.getSearch(),
                 reqDto.getTradeStatus(),
                 category,
