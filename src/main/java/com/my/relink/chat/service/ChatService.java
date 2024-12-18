@@ -1,7 +1,10 @@
 package com.my.relink.chat.service;
 
-import com.my.relink.chat.controller.dto.ChatMessageReqDto;
-import com.my.relink.chat.controller.dto.ChatMessageRespDto;
+import com.my.relink.chat.controller.dto.request.ChatImageReqDto;
+import com.my.relink.chat.controller.dto.request.ChatMessageReqDto;
+import com.my.relink.chat.controller.dto.response.ChatImageRespDto;
+import com.my.relink.chat.controller.dto.response.ChatMessageRespDto;
+import com.my.relink.config.s3.S3Service;
 import com.my.relink.domain.message.Message;
 import com.my.relink.domain.message.repository.MessageRepository;
 import com.my.relink.domain.trade.Trade;
@@ -20,6 +23,7 @@ public class ChatService {
     private final MessageRepository messageRepository;
     private final TradeService tradeService;
     private final UserService userService;
+    private final S3Service s3Service;
 
     @Transactional
     public ChatMessageRespDto saveMessage(Long tradeId, ChatMessageReqDto chatMessageReqDto, Long senderId) {
@@ -31,5 +35,10 @@ public class ChatService {
 
     public void deleteChatsByTradeId(Long tradeId) {
         messageRepository.deleteByTradeId(tradeId);
+    }
+
+
+    public ChatImageRespDto saveImageForChat(Long tradeId, ChatImageReqDto chatImageReqDto, Long userId) {
+
     }
 }

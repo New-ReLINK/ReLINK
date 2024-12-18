@@ -1,4 +1,4 @@
-package com.my.relink.chat.controller.dto;
+package com.my.relink.chat.controller.dto.request;
 
 import com.my.relink.domain.message.Message;
 import com.my.relink.domain.trade.Trade;
