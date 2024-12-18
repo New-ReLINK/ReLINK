@@ -7,12 +7,16 @@ import com.my.relink.controller.trade.dto.request.AddressReqDto;
 import com.my.relink.controller.trade.dto.request.TrackingNumberReqDto;
 import com.my.relink.controller.trade.dto.request.TradeCancelReqDto;
 import com.my.relink.controller.trade.dto.response.*;
+import com.my.relink.domain.image.EntityType;
+import com.my.relink.domain.image.Image;
+import com.my.relink.domain.image.repository.ImageRepository;
 import com.my.relink.domain.item.donation.ItemQuality;
 import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.point.Point;
 import com.my.relink.domain.point.pointHistory.PointHistory;
 import com.my.relink.domain.point.pointHistory.PointTransactionType;
 import com.my.relink.domain.point.pointHistory.repository.PointHistoryRepository;
+import com.my.relink.domain.point.repository.PointRepository;
 import com.my.relink.domain.review.Review;
 import com.my.relink.domain.review.TradeReview;
 import com.my.relink.domain.review.repository.ReviewRepository;
@@ -37,7 +41,9 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import javax.swing.text.html.Option;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -56,7 +62,11 @@ class TradeServiceTest extends DummyObject {
     @Mock
     private PointHistoryRepository pointHistoryRepository;
     @Mock
+    private PointRepository pointRepository;
+    @Mock
     private PointTransactionService pointTransactionService;
+    @Mock
+    private ImageRepository imageRepository;
     @Mock
     private DateTimeUtil dateTimeUtil;
     @Mock
@@ -341,7 +351,7 @@ class TradeServiceTest extends DummyObject {
 
     @Test
     @DisplayName("교환 진행 페이지 : 조회 성공 케이스")
-    void testFindTradeCompletionInfo_success() {
+    void testFindTradeCompletionInfo_success() { // stubbing 수정 필요
         Long tradeId = 1L;
         User requester = mockRequesterUser();
         User owner = mockOwnerUser();
