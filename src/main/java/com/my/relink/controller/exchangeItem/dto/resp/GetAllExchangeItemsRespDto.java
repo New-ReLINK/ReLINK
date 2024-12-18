@@ -25,8 +25,8 @@ public class GetAllExchangeItemsRespDto {
     private List<String> imageUrls;
     private Long ownerId;
     private String ownerNickname;
-    private int ownerTrustScore;
-    private boolean like;
+    private Integer ownerTrustScore;
+    private Boolean like;
     private String description;
     private String category;
     private Integer deposit;
@@ -50,7 +50,7 @@ public class GetAllExchangeItemsRespDto {
         return GetAllExchangeItemsRespDto.builder()
                 .exchangeItemId(item.getId())
                 .exchangeItemName(item.getName())
-                .desiredItem(item.getDesiredItem())
+                .description(item.getDescription())
                 .category(item.getCategory().getName())
                 .deposit(item.getDeposit())
                 .createdAt(item.getCreatedAt().toLocalDate())

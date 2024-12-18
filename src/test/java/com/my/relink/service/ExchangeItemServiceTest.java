@@ -37,14 +37,13 @@ import org.springframework.data.domain.*;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.lang.reflect.Field;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.mock;
@@ -272,13 +271,13 @@ class ExchangeItemServiceTest {
         GetExchangeItemRespDto result = exchangeItemService.getExchangeItemModifyPage(itemId, userId);
 
         Assertions.assertNotNull(result);
-        Assertions.assertEquals("Test Item", result.getExchangeItemName());
-        Assertions.assertEquals("Test Description", result.getDescription());
-        Assertions.assertEquals("의류", result.getCategory().getName());
-        Assertions.assertEquals(ItemQuality.NEW, result.getItemQuality());
-        Assertions.assertEquals("M", result.getSize());
-        Assertions.assertEquals("Test Brand", result.getBrand());
-        Assertions.assertEquals("Test Desired Item", result.getDesiredItem());
+        assertEquals("Test Item", result.getExchangeItemName());
+        assertEquals("Test Description", result.getDescription());
+        assertEquals("의류", result.getCategory().getName());
+        assertEquals(ItemQuality.NEW, result.getItemQuality());
+        assertEquals("M", result.getSize());
+        assertEquals("Test Brand", result.getBrand());
+        assertEquals("Test Desired Item", result.getDesiredItem());
     }
 
     @Test
@@ -306,7 +305,7 @@ class ExchangeItemServiceTest {
         BusinessException exception = assertThrows(BusinessException.class, () -> {
             exchangeItemService.getExchangeItemModifyPage(itemId, userId);
         });
-        Assertions.assertEquals(ErrorCode.UNAUTHORIZED_ACCESS, exception.getErrorCode());
+        assertEquals(ErrorCode.UNAUTHORIZED_ACCESS, exception.getErrorCode());
     }
 
     @Test
@@ -318,7 +317,7 @@ class ExchangeItemServiceTest {
         BusinessException exception = assertThrows(BusinessException.class, () -> {
             exchangeItemService.getExchangeItemModifyPage(itemId, userId);
         });
-        Assertions.assertEquals(ErrorCode.EXCHANGE_ITEM_NOT_FOUND, exception.getErrorCode());
+        assertEquals(ErrorCode.EXCHANGE_ITEM_NOT_FOUND, exception.getErrorCode());
     }
 
     @Test
@@ -575,4 +574,152 @@ class ExchangeItemServiceTest {
 
         assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_SORT_PARAMETER);
     }
+
+    @Test
+    @DisplayName("교환하기 페이지 조회 성공")
+    void testGetExchangeItemFromOwner_Success() {
+        Long itemId = 1L;
+        Long userId = 2L;
+        User user = User.builder().id(1L).nickname("Test User").build();
+        Category category = new Category("의류");
+        ExchangeItem exchangeItem = ExchangeItem.builder()
+                .id(itemId)
+                .name("Test Item")
+                .description("Test Description")
+                .category(category)
+                .itemQuality(ItemQuality.NEW)
+                .user(user)
+                .deposit(5000)
+                .size("M")
+                .brand("Test Brand")
+                .desiredItem("Test Desired Item")
+                .tradeStatus(TradeStatus.AVAILABLE)
+                .isDeleted(false)
+                .build();
+        try {
+            Field createdAtField = BaseEntity.class.getDeclaredField("createdAt");
+            createdAtField.setAccessible(true);
+            createdAtField.set(exchangeItem, LocalDateTime.of(2023, 12, 1, 12, 0));
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Reflection failed", e);
+        }
+
+        when(exchangeItemRepository.findById(itemId)).thenReturn(Optional.of(exchangeItem));
+        when(userTrustScoreService.getTrustScore(any())).thenReturn(90);
+        when(imageService.getImageUrlsByItemId(any(), any())).thenReturn(Arrays.asList("img1.jpg", "img2.jpg"));
+        when(likeService.existsItemLike(itemId, userId)).thenReturn(true);
+
+        GetAllExchangeItemsRespDto result = exchangeItemService.getExchangeItemFromOwner(itemId, userId);
+
+        assertEquals(exchangeItem.getId(), result.getExchangeItemId());
+        assertEquals("Test Item", result.getExchangeItemName());
+        assertEquals("Test Description", result.getDescription());
+        assertEquals("의류", result.getCategory());
+        assertEquals(5000, result.getDeposit());
+        assertEquals(LocalDate.of(2023, 12, 1), result.getCreatedAt());
+        assertEquals("교환 가능", result.getTradeStatus());
+        assertEquals(ItemQuality.NEW, result.getItemQuality());
+        assertEquals("Test Desired Item", result.getDesiredItem());
+        assertEquals(Arrays.asList("img1.jpg", "img2.jpg"), result.getImageUrls());
+        assertEquals(user.getId(), result.getOwnerId());
+        assertEquals("Test User", result.getOwnerNickname());
+        assertEquals(90, result.getOwnerTrustScore());
+        assertTrue(result.getLike());
+    }
+
+    @Test
+    @DisplayName("교환하기 페이지 조회 성공 - 이미지가 없는 경우")
+    void testGetExchangeItemFromOwner_Success_NotImage () {
+        Long itemId = 1L;
+        Long userId = 2L;
+        User user = User.builder().id(1L).nickname("Test User").build();
+        Category category = new Category("의류");
+        ExchangeItem exchangeItem = ExchangeItem.builder()
+                .id(itemId)
+                .name("Test Item")
+                .description("Test Description")
+                .category(category)
+                .itemQuality(ItemQuality.NEW)
+                .user(user)
+                .deposit(5000)
+                .size("M")
+                .brand("Test Brand")
+                .desiredItem("Test Desired Item")
+                .tradeStatus(TradeStatus.AVAILABLE)
+                .isDeleted(false)
+                .build();
+        try {
+            Field createdAtField = BaseEntity.class.getDeclaredField("createdAt");
+            createdAtField.setAccessible(true);
+            createdAtField.set(exchangeItem, LocalDateTime.of(2023, 12, 1, 12, 0));
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Reflection failed", e);
+        }
+
+        when(exchangeItemRepository.findById(itemId)).thenReturn(Optional.of(exchangeItem));
+        when(userTrustScoreService.getTrustScore(any())).thenReturn(90);
+        when(imageService.getImageUrlsByItemId(any(), any())).thenReturn(Collections.emptyList());
+        when(likeService.existsItemLike(itemId, userId)).thenReturn(true);
+
+        GetAllExchangeItemsRespDto result = exchangeItemService.getExchangeItemFromOwner(itemId, userId);
+
+        assertEquals(exchangeItem.getId(), result.getExchangeItemId());
+        assertEquals("Test Item", result.getExchangeItemName());
+        assertEquals("Test Description", result.getDescription());
+        assertEquals("의류", result.getCategory());
+        assertEquals(5000, result.getDeposit());
+        assertEquals(LocalDate.of(2023, 12, 1), result.getCreatedAt());
+        assertEquals("교환 가능", result.getTradeStatus());
+        assertEquals(ItemQuality.NEW, result.getItemQuality());
+        assertEquals("Test Desired Item", result.getDesiredItem());
+        assertEquals(Collections.emptyList(), result.getImageUrls());
+        assertEquals(user.getId(), result.getOwnerId());
+        assertEquals("Test User", result.getOwnerNickname());
+        assertEquals(90, result.getOwnerTrustScore());
+        assertTrue(result.getLike());
+    }
+
+    @Test
+    @DisplayName("교환하기 페이지 조회 실패 - 조회 직전 아이템의 거래 상태가 IN_EXCHANGE로 변경된 경우")
+    void testGetExchangeItemFromOwner_Fail_Trading () {
+        Long itemId = 1L;
+        Long userId = 2L;
+        User user = User.builder().id(1L).nickname("Test User").build();
+        Category category = new Category("의류");
+        ExchangeItem exchangeItem = ExchangeItem.builder()
+                .id(itemId)
+                .name("Test Item")
+                .description("Test Description")
+                .category(category)
+                .itemQuality(ItemQuality.NEW)
+                .user(user)
+                .deposit(5000)
+                .size("M")
+                .brand("Test Brand")
+                .desiredItem("Test Desired Item")
+                .tradeStatus(TradeStatus.IN_EXCHANGE)
+                .isDeleted(false)
+                .build();
+        try {
+            Field createdAtField = BaseEntity.class.getDeclaredField("createdAt");
+            createdAtField.setAccessible(true);
+            createdAtField.set(exchangeItem, LocalDateTime.of(2023, 12, 1, 12, 0));
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Reflection failed", e);
+        }
+
+        when(exchangeItemRepository.findById(itemId)).thenReturn(Optional.of(exchangeItem));
+
+        BusinessException exception = assertThrows(BusinessException.class, () -> {
+            exchangeItemService.getExchangeItemFromOwner(itemId, userId);
+        });
+
+        assertEquals(ErrorCode.ITEM_NOT_AVAILABLE, exception.getErrorCode());
+        assertEquals("해당 상품이 교환가능 상태가 아닙니다.", exception.getMessage());
+    }
+
+
 }

@@ -99,6 +99,7 @@ public class ExchangeItemService {
 
     public GetAllExchangeItemsRespDto getExchangeItemFromOwner(Long itemId, Long userId) {
         ExchangeItem exchangeItem = findByIdOrFail(itemId);
+        validExchangeItemTradeStatus(exchangeItem.getTradeStatus());
         int trustScore = userTrustScoreService.getTrustScore(exchangeItem.getUser());
         List<String> imageUrls = imageService.getImageUrlsByItemId(EntityType.EXCHANGE_ITEM, itemId);
         Boolean like = likeService.existsItemLike(itemId, userId);
