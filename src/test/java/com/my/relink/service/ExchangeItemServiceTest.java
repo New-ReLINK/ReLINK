@@ -1,6 +1,7 @@
 package com.my.relink.service;
 
 
+import com.my.relink.chat.service.ChatService;
 import com.my.relink.controller.exchangeItem.dto.req.CreateExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.req.UpdateExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemRespDto;
@@ -45,8 +46,9 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ExchangeItemServiceTest {
@@ -65,6 +67,10 @@ class ExchangeItemServiceTest {
     private TradeService tradeService;
     @Mock
     private ImageService imageService;
+    @Mock
+    private LikeService likeService;
+    @Mock
+    private ChatService chatService;
 
     @Test
     @DisplayName("내 교환상품 생성하기 성공")
@@ -295,7 +301,7 @@ class ExchangeItemServiceTest {
                 .isDeleted(false)
                 .build();
         Mockito.when(exchangeItemRepository.findById(itemId)).thenReturn(Optional.of(exchangeItem));
-        BusinessException exception = Assertions.assertThrows(BusinessException.class, () -> {
+        BusinessException exception = assertThrows(BusinessException.class, () -> {
             exchangeItemService.getExchangeItemModifyPage(itemId, userId);
         });
         Assertions.assertEquals(ErrorCode.UNAUTHORIZED_ACCESS, exception.getErrorCode());
@@ -307,7 +313,7 @@ class ExchangeItemServiceTest {
         Long userId = 1L;
         Long itemId = 2L;
         Mockito.when(exchangeItemRepository.findById(itemId)).thenReturn(Optional.empty());
-        BusinessException exception = Assertions.assertThrows(BusinessException.class, () -> {
+        BusinessException exception = assertThrows(BusinessException.class, () -> {
             exchangeItemService.getExchangeItemModifyPage(itemId, userId);
         });
         Assertions.assertEquals(ErrorCode.EXCHANGE_ITEM_NOT_FOUND, exception.getErrorCode());
@@ -443,6 +449,75 @@ class ExchangeItemServiceTest {
         assertThatThrownBy(() -> exchangeItemService.updateExchangeItem(itemId, reqDto, userId))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("포인트가 부족합니다");
+    }
+
+    @Test
+    @DisplayName("내 교환 상품 삭제하기 성공")
+    void testDeleteExchangeItem_Success() {
+        Long userId = 1L;
+        Long itemId = 100L;
+        Long tradeId = 200L;
+        User user = User.builder().id(userId).build();
+        ExchangeItem exchangeItem = mock(ExchangeItem.class);
+
+        when(exchangeItemRepository.findById(itemId)).thenReturn(Optional.of(exchangeItem));
+        when(exchangeItem.getUser()).thenReturn(user);
+        when(exchangeItem.getId()).thenReturn(itemId);
+        when(tradeService.getTradeIdByItemId(itemId)).thenReturn(tradeId);
+
+        Long deletedItemId = exchangeItemService.deleteExchangeItem(itemId, userId);
+
+        assertThat(deletedItemId).isEqualTo(itemId);
+        verify(exchangeItem).validExchangeItemOwner(userId, userId);
+        verify(exchangeItem).delete();
+        verify(imageService, times(1)).deleteImagesByEntityId(EntityType.EXCHANGE_ITEM, itemId);
+        verify(likeService, times(1)).deleteLikesByExchangeItemId(itemId);
+        verify(chatService, times(1)).deleteChatsByTradeId(tradeId);
+    }
+
+    @Test
+    @DisplayName("내 교환 상품 삭제하기 실패 - 상품의 소유자가 아닌 경우 ")
+    void testDeleteExchangeItem_Fail_NotOwner() {
+        Long userId = 1L;
+        Long invalidUserId = 999L; // 잘못된 사용자 ID
+        Long itemId = 100L;
+        User ownerUser = User.builder().id(userId).build();
+        ExchangeItem exchangeItem = mock(ExchangeItem.class);
+
+        when(exchangeItemRepository.findById(itemId)).thenReturn(Optional.of(exchangeItem));
+        when(exchangeItem.getUser()).thenReturn(ownerUser);
+        doThrow(new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS))
+                .when(exchangeItem).validExchangeItemOwner(userId, invalidUserId);
+        BusinessException exception = assertThrows(BusinessException.class, () ->
+                exchangeItemService.deleteExchangeItem(itemId, invalidUserId));
+
+        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.UNAUTHORIZED_ACCESS);
+        verify(exchangeItem).validExchangeItemOwner(userId, invalidUserId);
+        verify(exchangeItem, never()).delete();
+        verify(imageService, never()).deleteImagesByEntityId(any(), anyLong());
+        verify(likeService, never()).deleteLikesByExchangeItemId(anyLong());
+        verify(chatService, never()).deleteChatsByTradeId(anyLong());
+    }
+
+    @Test
+    @DisplayName("내 교환 상품 삭제하기 실패 - 상품의 IN_EXCHANGE인 경우")
+    void testDeleteExchangeItem_Fail_InExchange() {
+        Long userId = 1L;
+        Long itemId = 100L;
+        ExchangeItem exchangeItem = mock(ExchangeItem.class);
+        User user = User.builder().id(userId).build();
+
+        when(exchangeItemRepository.findById(itemId)).thenReturn(Optional.of(exchangeItem));
+        when(exchangeItem.getTradeStatus()).thenReturn(TradeStatus.IN_EXCHANGE); // 거래 상태가 IN_EXCHANGE
+        when(exchangeItem.getUser()).thenReturn(user);
+        BusinessException exception = assertThrows(BusinessException.class,
+                () -> exchangeItemService.deleteExchangeItem(itemId, userId));
+
+        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.ITEM_IN_EXCHANGE);
+        verify(exchangeItem, never()).delete();
+        verify(imageService, never()).deleteImagesByEntityId(any(), anyLong());
+        verify(likeService, never()).deleteLikesByExchangeItemId(anyLong());
+        verify(chatService, never()).deleteChatsByTradeId(anyLong());
     }
 
 }

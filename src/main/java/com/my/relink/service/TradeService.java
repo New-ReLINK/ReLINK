@@ -56,7 +56,7 @@ public class TradeService {
 
         trade.validateAccess(userId);
 
-        String requestedItemImageUrl = imageService.getExchangeItemUrl(trade.getRequesterExchangeItem());
+        String requestedItemImageUrl = imageService.getExchangeItemThumbnailUrl(trade.getRequesterExchangeItem());
         User partner = trade.getPartner(userId);
         int trustScoreOfPartner = userTrustScoreService.getTrustScore(partner);
 
@@ -302,6 +302,10 @@ public class TradeService {
 
         return ViewReviewRespDto.from(trade, partnerImage, partnerUser, partnerExchangeItem, completedAt);
 
+    }
+    public Long getTradeIdByItemId (Long itemId) {
+        return tradeRepository.findTradeIdByExchangeItemId(itemId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
     }
 }
 
