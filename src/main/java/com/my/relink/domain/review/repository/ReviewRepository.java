@@ -15,4 +15,6 @@ public interface ReviewRepository extends JpaRepository<Review, Long>, CustomRev
 
     @Query("select count(r) from Review r join ExchangeItem i on r.exchangeItem.id = i.id where i.user.id = :userId and i.tradeStatus = :status")
     long countByUserIdAndTradStatus(@Param("status") TradeStatus status, @Param("userId") Long userId);
+
+    boolean existsByExchangeItemIdAndWriterId(Long exchangeItemId, Long writerId);
 }

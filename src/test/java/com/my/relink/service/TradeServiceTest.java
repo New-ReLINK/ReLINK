@@ -1,6 +1,8 @@
 package com.my.relink.service;
 
 import com.my.relink.config.security.AuthUser;
+import com.my.relink.controller.review.dto.request.ReviewReqDto;
+import com.my.relink.controller.review.dto.resp.ReviewRespDto;
 import com.my.relink.controller.trade.dto.request.AddressReqDto;
 import com.my.relink.controller.trade.dto.request.TrackingNumberReqDto;
 import com.my.relink.controller.trade.dto.request.TradeCancelReqDto;
@@ -15,6 +17,9 @@ import com.my.relink.domain.point.pointHistory.PointHistory;
 import com.my.relink.domain.point.pointHistory.PointTransactionType;
 import com.my.relink.domain.point.pointHistory.repository.PointHistoryRepository;
 import com.my.relink.domain.point.repository.PointRepository;
+import com.my.relink.domain.review.Review;
+import com.my.relink.domain.review.TradeReview;
+import com.my.relink.domain.review.repository.ReviewRepository;
 import com.my.relink.domain.trade.Trade;
 import com.my.relink.domain.trade.TradeCancelReason;
 import com.my.relink.domain.trade.TradeStatus;
@@ -37,6 +42,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import javax.swing.text.html.Option;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -63,9 +69,13 @@ class TradeServiceTest extends DummyObject {
     private ImageRepository imageRepository;
     @Mock
     private DateTimeUtil dateTimeUtil;
+    @Mock
+    private ReviewRepository reviewRepository;
 
     @InjectMocks
     private TradeService tradeService;
+    @InjectMocks
+    private ReviewService reviewService;
 
     @Nested
     @DisplayName("거래 상세 조회 테스트")
@@ -158,7 +168,6 @@ class TradeServiceTest extends DummyObject {
         // then
         assertNotNull(result);
         verify(pointTransactionService).deductPoints(tradeId, currentUser);
-        //verify(tradeRepository).save(trade);
     }
 
     @Test
@@ -365,12 +374,9 @@ class TradeServiceTest extends DummyObject {
         User partnerUser = trade.getPartner(requester.getId());  // 거래 상대방 (소유자)
 
         Mockito.when(userRepository.findById(requester.getId())).thenReturn(Optional.of(requester));
-//        Mockito.when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
         Mockito.when(tradeRepository.findTradeWithDetails(tradeId)).thenReturn(Optional.of(trade));
         Mockito.when(imageService.getExchangeItemThumbnailUrl(myExchangeItem)).thenReturn(myImageUrl);
         Mockito.when(imageService.getExchangeItemThumbnailUrl(partnerExchangeItem)).thenReturn(partnerImageUrl);
-
-//        Mockito.when(userRepository.findById(trade.getPartner(requester.getId()).getId())).thenReturn(Optional.of(partnerUser));
         Mockito.when(dateTimeUtil.getTradeStatusFormattedTime(trade.getModifiedAt()))
                 .thenReturn("2024년 12월 12일 14:30");
 
@@ -417,7 +423,6 @@ class TradeServiceTest extends DummyObject {
 
 
         Mockito.when(userRepository.findById(requester.getId())).thenReturn(Optional.of(requester));
-        Mockito.when(tradeRepository.findTradeWithDetails(tradeId)).thenReturn(Optional.empty());  // 거래가 없음
 
         BusinessException exception = assertThrows(
                 BusinessException.class,
@@ -605,6 +610,63 @@ class TradeServiceTest extends DummyObject {
 
         verify(userRepository).findById(authUser.getId());
         verifyNoInteractions(tradeRepository, imageService, dateTimeUtil);
+    }
+
+    @Test
+    @DisplayName("리뷰 작성 : 성공 케이스")
+    void postTradeReview_success(){
+        Long tradeId = 1L;
+        User requester = mockRequesterUser();
+        User owner = mockOwnerUser();
+        BigDecimal star = new BigDecimal("4.5");
+        String description = "Excellent transaction!";
+        ReviewReqDto reqDto = new ReviewReqDto(star, TradeReview.TIME_PUNCTUAL, description);
+        Trade trade = mockTradeExchanged(owner, requester, true, true, true, true);
+        ExchangeItem partnerExchangeItem;
+
+        if (trade.isRequester(requester.getId())) {
+            partnerExchangeItem = trade.getOwnerExchangeItem();
+        } else {
+            partnerExchangeItem = trade.getRequesterExchangeItem();
+        }
+
+        Mockito.when(userRepository.findById(requester.getId())).thenReturn(Optional.of(requester));
+        Mockito.when(tradeRepository.findByIdWithExchangeItem(tradeId)).thenReturn(Optional.of(trade));
+        Mockito.when(reviewRepository.existsByExchangeItemIdAndWriterId(partnerExchangeItem.getId(), requester.getId()))
+                .thenReturn(false);
+
+        ReviewRespDto result = reviewService.postTradeReview(tradeId, reqDto, new AuthUser(requester.getId(), "test@email.com", Role.USER));
+
+        assertNotNull(result);
+
+        verify(reviewRepository).existsByExchangeItemIdAndWriterId(partnerExchangeItem.getId(), requester.getId());
+        verify(reviewRepository).save(any(Review.class));
+    }
+
+    @Test
+    @DisplayName("리뷰 작성 : 거래 상태가 EXCHANGED가 아닌 실패 케이스")
+    void postTradeReview_tradeStatusInvalid() {
+
+        Long tradeId = 1L;
+        ReviewReqDto reqDto = new ReviewReqDto(new BigDecimal("4.5"), TradeReview.TIME_PUNCTUAL, "Great!");
+
+        User requester = mockRequesterUser();
+        User owner = mockOwnerUser();
+
+        Trade trade = mockTradeInExchange(owner, requester, true, true, true, true);
+
+        AuthUser authUser = new AuthUser(requester.getId(), "test@example.com", Role.USER);
+
+        Mockito.when(userRepository.findById(authUser.getId())).thenReturn(Optional.of(requester));
+        Mockito.when(tradeRepository.findByIdWithExchangeItem(tradeId)).thenReturn(Optional.of(trade));
+
+        BusinessException exception = assertThrows(BusinessException.class, () -> {
+            reviewService.postTradeReview(tradeId, reqDto, authUser);
+        });
+
+        assertEquals(ErrorCode.TRADE_NOT_COMPLETE, exception.getErrorCode());
+
+        verify(userRepository).findById(authUser.getId());
     }
 
 }

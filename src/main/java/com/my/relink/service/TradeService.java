@@ -219,11 +219,11 @@ public class TradeService {
         String partnerImage = imageService.getExchangeItemThumbnailUrl(partnerExchangeItem);
 
         User partnerUser = partnerExchangeItem.getUser();
-      
+
         return TradeCompletionRespDto.from(myExchangeItem, partnerExchangeItem, myImage, partnerImage, partnerUser, trade, dateTimeUtil);
     }
-  
-      public Map<Long, Trade> getTradesByItemIds(List<Long> itemIds) {
+
+    public Map<Long, Trade> getTradesByItemIds(List<Long> itemIds) {
         List<Trade> trades = tradeRepository.findByExchangeItemIds(itemIds);
         return trades.stream()
                 .flatMap(trade -> List.of(
