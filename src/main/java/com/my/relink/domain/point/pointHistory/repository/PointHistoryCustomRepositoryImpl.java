@@ -44,7 +44,7 @@ public class PointHistoryCustomRepositoryImpl implements PointHistoryCustomRepos
 
 
     private PageInfo getPointUsagePageInfo(User user, int page, int size){
-        Long totalCount = queryFactory
+        long totalCount = queryFactory
                 .select(pointHistory.trade.countDistinct())
                 .from(pointHistory)
                 .where(
@@ -56,12 +56,11 @@ public class PointHistoryCustomRepositoryImpl implements PointHistoryCustomRepos
                 )
                 .fetchOne();
 
-        long count = totalCount != null ? totalCount : 0L;
-        int totalPages = (int) Math.ceil((double) count / size);
+        int totalPages = (int) Math.ceil((double) totalCount / size);
 
         return new PageInfo (
                 totalPages,
-                count,
+                totalCount,
                 page > 0,
                 page + 1 < totalPages);
     }
