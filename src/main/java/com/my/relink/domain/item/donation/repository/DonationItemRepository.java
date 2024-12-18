@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Optional;
+
 public interface DonationItemRepository extends JpaRepository<DonationItem, Long> {
 
     @Query("SELECT d FROM DonationItem d " +
@@ -26,4 +28,9 @@ public interface DonationItemRepository extends JpaRepository<DonationItem, Long
             "AND FUNCTION('MONTH', d.modifiedAt) = FUNCTION('MONTH', CURRENT_DATE) " +
             "AND FUNCTION('YEAR', d.modifiedAt) = FUNCTION('YEAR', CURRENT_DATE)")
     long countCompletedDonationsThisMonth();
+
+    Page<DonationItem> findByUserId(Long userId, Pageable pageable);
+
+    @Query("SELECT d FROM DonationItem d JOIN FETCH d.category WHERE d.id = :id")
+    Optional<DonationItem> findByIdWithCategory(@Param("id") Long id);
 }

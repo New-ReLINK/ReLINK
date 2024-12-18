@@ -20,7 +20,8 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        if (request.getRequestURI().contains("/auth") || isWsEndPoint(request)) {
+
+        if (isTestEndpoint(request)|| request.getRequestURI().contains("/auth") || isWsEndPoint(request)) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -40,5 +41,10 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
     }
     private boolean isWsEndPoint(HttpServletRequest request){
         return request.getRequestURI().contains("/chats");
+    }
+
+    private boolean isTestEndpoint(HttpServletRequest request) {
+        String uri = request.getRequestURI();
+        return uri.contains("charge") || uri.contains("/favicon.ico") ||uri.contains("point");
     }
 }
