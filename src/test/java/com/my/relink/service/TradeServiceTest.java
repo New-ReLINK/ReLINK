@@ -85,14 +85,14 @@ class TradeServiceTest extends DummyObject {
                 int trustScore = 80;
 
                 when(tradeRepository.findByIdWithItemsAndUser(trade.getId())).thenReturn(Optional.of(trade));
-                when(imageService.getExchangeItemUrl(trade.getRequesterExchangeItem())).thenReturn(imageUrl);
+                when(imageService.getExchangeItemThumbnailUrl(trade.getRequesterExchangeItem())).thenReturn(imageUrl);
                 when(userTrustScoreService.getTrustScore(partner)).thenReturn(trustScore);
 
                 TradeInquiryDetailRespDto result = tradeService.getTradeInquiryDetail(trade.getId(), user.getId());
 
                 assertAll(
                         () -> assertNotNull(result),
-                        () -> verify(imageService).getExchangeItemUrl(trade.getRequesterExchangeItem()),
+                        () -> verify(imageService).getExchangeItemThumbnailUrl(trade.getRequesterExchangeItem()),
                         () -> verify(userTrustScoreService).getTrustScore(partner),
                         () -> assertEquals(imageUrl, result.getExchangeItemInfoDto().getRequestedItem().getImgUrl()),
                         () -> assertEquals(trustScore, result.getTradePartnerInfoDto().getTrustScore())

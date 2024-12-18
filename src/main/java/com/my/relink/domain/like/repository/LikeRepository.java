@@ -9,4 +9,6 @@ import java.util.Optional;
 
 public interface LikeRepository extends JpaRepository<Like, Long>, CustomLikeRepository {
     Optional<Like> findByUserAndExchangeItem(User user, ExchangeItem exchangeItem);
+
+    void deleteByExchangeItemId(Long itemId);
 }

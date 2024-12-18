@@ -5,7 +5,7 @@ import com.my.relink.client.tosspayments.dto.request.TossPaymentCancelReqDto;
 import com.my.relink.client.tosspayments.dto.request.TossPaymentReqDto;
 import com.my.relink.client.tosspayments.dto.response.TossPaymentErrorRespDto;
 import com.my.relink.client.tosspayments.dto.response.TossPaymentRespDto;
-import com.my.relink.client.tosspayments.ex.PaymentFeature;
+import com.my.relink.client.tosspayments.feature.PaymentFeature;
 import com.my.relink.client.tosspayments.ex.TossPaymentErrorCode;
 import com.my.relink.client.tosspayments.ex.TossPaymentException;
 import com.my.relink.client.tosspayments.ex.TossPaymentNetworkException;
@@ -26,6 +26,9 @@ import org.springframework.web.client.RestClient;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.ConnectException;
+import java.net.SocketTimeoutException;
+import java.util.concurrent.TimeoutException;
 
 @RequiredArgsConstructor
 @Service
@@ -41,7 +44,9 @@ public class TossPaymentClient {
     @Retryable(
             retryFor = {TossPaymentNetworkException.class},
             maxAttempts = 3,
-            backoff = @Backoff(delay = 1000)
+            backoff = @Backoff(delay = 1000),
+            noRetryFor = {TossPaymentException.class},
+            recover = "recoverPaymentForCancelPayment"
     )
     public TossPaymentRespDto cancelPayment(String paymentKey, TossPaymentCancelReqDto cancelReqDto, PaymentFeature paymentFeature){
         try {
@@ -72,7 +77,9 @@ public class TossPaymentClient {
     @Retryable(
             retryFor = {TossPaymentNetworkException.class},
             maxAttempts = 3,
-            backoff = @Backoff(delay = 1000)
+            backoff = @Backoff(delay = 1000),
+            noRetryFor = {TossPaymentException.class},
+            recover = "recoverPaymentForCheckPaymentInfo"
     )
     public TossPaymentRespDto checkPaymentInfo(String paymentKey, PaymentFeature paymentFeature){
         try {
@@ -101,7 +108,9 @@ public class TossPaymentClient {
     @Retryable(
             retryFor = {TossPaymentNetworkException.class},
             maxAttempts = 3,
-            backoff = @Backoff(delay = 1000)
+            backoff = @Backoff(delay = 1000),
+            noRetryFor = {TossPaymentException.class},
+            recover = "recoverPaymentForPaymentConfirm"
     )
     public TossPaymentRespDto confirmPayment(TossPaymentReqDto tossPaymentReqDto, PaymentFeature paymentFeature){
         log.info("[토스페이먼츠 결제 승인 요청] paymentKey={}, orderId={}, amount={}",
@@ -137,6 +146,10 @@ public class TossPaymentClient {
 
 
     private void checkAndThrowIfRetryable(Exception e){
+        if (e instanceof TossPaymentException) {
+            throw (TossPaymentException) e;
+        }
+
         if (TossPaymentNetworkException.isRetryableException(e)) {
             throw new TossPaymentNetworkException("네트워크 통신 오류가 발생했습니다", e);
         }
@@ -183,21 +196,21 @@ public class TossPaymentClient {
 
 
     @Recover
-    public TossPaymentRespDto recoverPayment(TossPaymentNetworkException e, String paymentKey, TossPaymentCancelReqDto cancelReqDto, PaymentFeature paymentFeature) {
+    public TossPaymentRespDto recoverPaymentForCancelPayment(TossPaymentNetworkException e, String paymentKey, TossPaymentCancelReqDto cancelReqDto, PaymentFeature paymentFeature) {
         logAndThrowRecoveryFailure(paymentKey, paymentFeature, e);
         return null;
     }
 
 
     @Recover
-    public TossPaymentRespDto recoverPayment(TossPaymentNetworkException e, String paymentKey, PaymentFeature paymentFeature) {
+    public TossPaymentRespDto recoverPaymentForCheckPaymentInfo(TossPaymentNetworkException e, String paymentKey, PaymentFeature paymentFeature) {
         logAndThrowRecoveryFailure(paymentKey, paymentFeature, e);
         return null;
     }
 
 
     @Recover
-    public TossPaymentRespDto recoverPayment(TossPaymentNetworkException e, TossPaymentReqDto tossPaymentReqDto, PaymentFeature paymentFeature) {
+    public TossPaymentRespDto recoverPaymentForPaymentConfirm(TossPaymentNetworkException e, TossPaymentReqDto tossPaymentReqDto, PaymentFeature paymentFeature) {
         logAndThrowRecoveryFailure(tossPaymentReqDto.getPaymentKey(), paymentFeature, e);
         return null;
     }

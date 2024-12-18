@@ -26,7 +26,8 @@ public class ImageService {
     private final ImageRepository imageRepository;
     private final S3Service s3Service;
 
-    public String getExchangeItemUrl(ExchangeItem exchangeItem) {
+
+    public String getExchangeItemThumbnailUrl(ExchangeItem exchangeItem){
         return imageRepository.findTopByEntityIdAndEntityTypeOrderByCreatedAtAsc(
                         exchangeItem.getId(),
                         EntityType.EXCHANGE_ITEM)
@@ -68,5 +69,9 @@ public class ImageService {
         imageRepository.delete(image);
 
         return new ImageUserProfileDeleteRespDto(imageId);
+    }
+
+    public void deleteImagesByEntityId(EntityType entityType, Long entityId) {
+        imageRepository.deleteByEntityTypeAndEntityId(entityType, entityId);
     }
 }

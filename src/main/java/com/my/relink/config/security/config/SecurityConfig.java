@@ -53,7 +53,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> {
                     auth
                             .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.ERROR).permitAll()
-                            .requestMatchers("/auth/**", "/chats/**", "/charge-success", "/charge/**", "/charge/users/**", "/charge-form").permitAll()
+                            .requestMatchers("/auth/**", "/chats/**", "/charge-success", "/charge/**", "/charge/users/**", "/charge-form", "/users/point", "/charge-fail").permitAll()
                             .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll() //정적 리소스 허용
                             .requestMatchers("/error").permitAll();
                     if (profileType.equals("dev")) {
