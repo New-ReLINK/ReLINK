@@ -1,10 +1,13 @@
 package com.my.relink.service.payment;
 
 import com.my.relink.client.tosspayments.TossPaymentClient;
+import com.my.relink.client.tosspayments.dto.request.TossPaymentCancelReqDto;
 import com.my.relink.client.tosspayments.dto.response.TossPaymentRespDto;
+import com.my.relink.client.tosspayments.feature.PaymentFeature;
 import com.my.relink.client.tosspayments.feature.PaymentStatus;
 import com.my.relink.controller.payment.dto.request.PaymentReqDto;
 import com.my.relink.domain.payment.Payment;
+import com.my.relink.domain.payment.PaymentCancelReason;
 import com.my.relink.domain.payment.repository.PaymentRepository;
 import com.my.relink.domain.point.Point;
 import com.my.relink.domain.point.pointHistory.PointHistory;
@@ -24,6 +27,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.List;
 
 import static com.my.relink.client.tosspayments.dto.response.TossPaymentRespDto.*;
@@ -63,10 +69,16 @@ class PaymentServiceTest {
         private Point point;
         private PointHistory pointHistory;
 
+        private PaymentReqDto paymentReqDto;
+
+        private TossPaymentRespDto paymentRespDto;
+
+
         @BeforeEach
         void setUp(){
             user = mock(User.class);
             payment = mock(Payment.class);
+            paymentReqDto = mock(PaymentReqDto.class);
         }
 
         @Test
@@ -80,7 +92,7 @@ class PaymentServiceTest {
             when(payment.getAmount()).thenReturn(amount);
             when(pointHistoryRepository.save(any())).thenReturn(pointHistory);
 
-            PointHistory result = paymentService.chargePointWithHistory(user, payment);
+            PointHistory result = paymentService.chargePointWithHistory(user, payment, paymentReqDto);
 
             assertAll(() -> {
                 verify(point).charge(amount);
@@ -90,16 +102,43 @@ class PaymentServiceTest {
         }
 
         @Test
-        @DisplayName("포인트 조회 실패 시 에외가 발생한다")
-        void fail_when_pointNotFound(){
+        @DisplayName("포인트 조회 실패 후 결제 취소 프로세스가 성공적으로 수행되면 충전 실패 에외가 발생한다")
+        void fail_when_pointNotFound_throws_FailToPointInfoCharge_exception(){
+            TossPaymentRespDto mockRespDto = mock(TossPaymentRespDto.class);
+            Cancels mockCancels = mock(Cancels.class);
+            String paymentKey = "paymentKey";
+            String canceledAt = "2024-12-17T10:00:00+09:00";
+
+
             when(pointService.findByIdOrFail(user))
                     .thenThrow(new BusinessException(ErrorCode.POINT_INFO_NOT_FOUND));
+            when(paymentReqDto.getPaymentKey()).thenReturn(paymentKey);
+            when(tossPaymentClient.cancelPayment(
+                    anyString(),
+                    any(TossPaymentCancelReqDto.class),
+                    any(PaymentFeature.class)
+            )).thenReturn(mockRespDto);
 
-            assertThatThrownBy(() -> paymentService.chargePointWithHistory(user, payment))
+            when(mockRespDto.getStatus()).thenReturn(PaymentStatus.CANCELED.toString());
+            when(mockCancels.getCancelStatus()).thenReturn(PaymentStatus.DONE.toString());
+            when(mockRespDto.getCancels()).thenReturn(List.of(mockCancels));
+
+
+            assertThatThrownBy(() -> paymentService.chargePointWithHistory(user, payment, paymentReqDto))
                     .isInstanceOf(BusinessException.class)
                     .hasFieldOrPropertyWithValue("errorCode", ErrorCode.FAIL_TO_POINT_CHARGE);
 
             verify(pointHistoryRepository, never()).save(any());
+            verify(tossPaymentClient).cancelPayment(
+                    eq(paymentKey),
+                    any(TossPaymentCancelReqDto.class),
+                    eq(PaymentFeature.PAYMENT_CANCEL)
+            );
+            verify(payment).updateFailInfo(
+                    eq(PaymentCancelReason.SERVER_ERROR_FAIL_TO_UPDATE_POINT.getMessage()),
+                    eq(PaymentStatus.CANCELED.toString())
+
+            );
         }
 
         @Test
@@ -107,6 +146,10 @@ class PaymentServiceTest {
         void rollback_when_fail_to_save_pointHistory(){
             point = mock(Point.class);
             Integer amount = 1000;
+            TossPaymentRespDto mockRespDto = mock(TossPaymentRespDto.class);
+            Cancels mockCancels = mock(Cancels.class);
+            String paymentKey = "paymentKey";
+            String canceledAt = "2024-12-17T10:00:00+09:00";
 
             ArgumentCaptor<Integer> amountCaptor = ArgumentCaptor.forClass(Integer.class);
             when(pointService.findByIdOrFail(user)).thenReturn(point);
@@ -114,7 +157,22 @@ class PaymentServiceTest {
             when(pointHistoryRepository.save(any())).thenThrow(new RuntimeException("저장 실패"));
             when(point.getAmount()).thenReturn(amount);
 
-            assertThatThrownBy(() -> paymentService.chargePointWithHistory(user, payment))
+            when(paymentReqDto.getPaymentKey()).thenReturn(paymentKey);
+            when(tossPaymentClient.cancelPayment(
+                    anyString(),
+                    any(TossPaymentCancelReqDto.class),
+                    any(PaymentFeature.class)
+            )).thenReturn(mockRespDto);
+
+            when(mockRespDto.getStatus()).thenReturn(PaymentStatus.CANCELED.toString());
+            when(mockCancels.getCancelStatus()).thenReturn(PaymentStatus.DONE.toString());
+            when(mockRespDto.getCancels()).thenReturn(List.of(mockCancels));
+            doNothing().when(payment).updateFailInfo(
+                    anyString(),
+                    anyString()
+            );
+
+            assertThatThrownBy(() -> paymentService.chargePointWithHistory(user, payment, paymentReqDto))
                     .isInstanceOf(BusinessException.class)
                     .hasFieldOrPropertyWithValue("errorCode", ErrorCode.FAIL_TO_POINT_CHARGE);
 
@@ -123,21 +181,99 @@ class PaymentServiceTest {
                 assertEquals(amountCaptor.getValue(), amount);
                 verify(point).getAmount();
                 verifyNoMoreInteractions(point);
+                verify(payment).updateFailInfo(
+                        eq(PaymentCancelReason.SERVER_ERROR_FAIL_TO_UPDATE_POINT.getMessage()),
+                        eq(PaymentStatus.CANCELED.toString())
+                );
             });
         }
 
         @Test
-        @DisplayName("포인트 충전 실패 시 충전 내역이 저장되지 않고 예외가 발생한다")
+        @DisplayName("포인트 충전 실패 후 포인트 충전 프로세스에서 취소 정보 검증에 실패하면 예외가 발생한다")
         void do_not_save_pointHistory_and_throws_exception_when_fail_to_point_charge(){
             point = mock(Point.class);
+            Integer amount = 1000;
+            TossPaymentRespDto mockRespDto = mock(TossPaymentRespDto.class);
+            String paymentKey = "paymentKey";
+            String canceledAt = "2024-12-17T10:00:00+09:00";
+
+
+            ArgumentCaptor<Integer> amountCaptor = ArgumentCaptor.forClass(Integer.class);
             when(pointService.findByIdOrFail(user)).thenReturn(point);
-            doThrow(new RuntimeException("포인트 충전 실패")).when(point).charge(anyInt());
+            when(payment.getAmount()).thenReturn(amount);
+            when(pointHistoryRepository.save(any())).thenThrow(new RuntimeException("저장 실패"));
+            when(point.getAmount()).thenReturn(amount);
 
-            assertThatThrownBy(() -> paymentService.chargePointWithHistory(user, payment))
+
+            when(paymentReqDto.getPaymentKey()).thenReturn(paymentKey);
+            when(tossPaymentClient.cancelPayment(
+                    anyString(),
+                    any(TossPaymentCancelReqDto.class),
+                    any(PaymentFeature.class)
+            )).thenReturn(mockRespDto);
+
+            when(mockRespDto.getStatus()).thenReturn(PaymentStatus.ABORTED.toString());
+
+            assertThatThrownBy(() -> paymentService.chargePointWithHistory(user, payment, paymentReqDto))
                     .isInstanceOf(BusinessException.class)
-                    .hasFieldOrPropertyWithValue("errorCode", ErrorCode.FAIL_TO_POINT_CHARGE);
+                    .hasFieldOrPropertyWithValue("errorCode", ErrorCode.PAYMENT_CANCEL_INCOMPLETE);
 
-            verifyNoInteractions(pointHistoryRepository);
+            verify(tossPaymentClient).cancelPayment(
+                    eq(paymentKey),
+                    any(TossPaymentCancelReqDto.class),
+                    eq(PaymentFeature.PAYMENT_CANCEL)
+            );
+            verify(payment, never()).updateFailInfo(
+                    eq(PaymentCancelReason.SERVER_ERROR_FAIL_TO_UPDATE_POINT.getMessage()),
+                    eq(PaymentStatus.CANCELED.toString())
+            );
+        }
+
+
+        @Test
+        @DisplayName("포인트 충전 실패 후 결제 취소 프로세스에서 예기치 못한 예외가 발생하면 CRITICAL 에러가 발생한다")
+        void when_point_charge_fails_then_cancel_process_fails_then_throws_exception(){
+            TossPaymentRespDto mockRespDto = mock(TossPaymentRespDto.class);
+            Cancels mockCancels = mock(Cancels.class);
+            String paymentKey = "paymentKey";
+            point = mock(Point.class);
+            Integer amount = 1000;
+
+            when(pointService.findByIdOrFail(user))
+                    .thenReturn(point);
+            when(paymentReqDto.getPaymentKey()).thenReturn(paymentKey);
+            when(payment.getAmount()).thenReturn(amount);
+            when(pointHistoryRepository.save(any())).thenThrow(new RuntimeException("저장 실패"));
+            when(tossPaymentClient.cancelPayment(
+                    anyString(),
+                    any(TossPaymentCancelReqDto.class),
+                    any(PaymentFeature.class)
+            )).thenReturn(mockRespDto);
+
+            when(mockRespDto.getStatus()).thenReturn(PaymentStatus.CANCELED.toString());
+            when(mockCancels.getCancelStatus()).thenReturn(PaymentStatus.DONE.toString());
+            when(mockRespDto.getCancels()).thenReturn(List.of(mockCancels));
+            doThrow(new RuntimeException("결제 상태 업데이트 실패"))
+                    .when(payment)
+                    .updateFailInfo(
+                            any(String.class),
+                            any(String.class)
+                    );
+
+
+            assertThatThrownBy(() -> paymentService.chargePointWithHistory(user, payment, paymentReqDto))
+                    .isInstanceOf(BusinessException.class)
+                    .hasFieldOrPropertyWithValue("errorCode", ErrorCode.CRITICAL_POINT_CHARGE_ERROR);
+
+            verify(tossPaymentClient).cancelPayment(
+                    eq(paymentKey),
+                    any(TossPaymentCancelReqDto.class),
+                    eq(PaymentFeature.PAYMENT_CANCEL)
+            );
+            verify(payment).updateFailInfo(
+                    eq(PaymentCancelReason.SERVER_ERROR_FAIL_TO_UPDATE_POINT.getMessage()),
+                    eq(PaymentStatus.CANCELED.toString())
+            );
         }
     }
 
