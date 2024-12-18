@@ -64,7 +64,7 @@ public enum ErrorCode {
     INVALID_FILE_URL(HttpStatus.BAD_REQUEST.value(), "파일 URL 이 비어있습니다."),
     ITEM_IN_EXCHANGE(HttpStatus.BAD_REQUEST.value(), "해당 상품이 거래중입니다."),
     DONATION_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "해당 기부 상품을 찾을 수 없습니다."),
-    DONATION_ITEM_CANNOT_BE_DELETED(HttpStatus.BAD_REQUEST.value(), "해당 기부 상품은 기부 완료되어 삭제 할 수 없습니다."),
+    DONATION_ITEM_CANNOT_BE_DELETED(HttpStatus.BAD_REQUEST.value(), "검수중,검수완료,기부완료 된 물품은 삭제 할 수 없습니다."),
 
 
     ;
