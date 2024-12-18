@@ -97,7 +97,8 @@ public class DonationItemService {
         }
 
         if (donationItem.getDonationStatus() == DonationStatus.UNDER_INSPECTION ||
-                donationItem.getDonationStatus() == DonationStatus.INSPECTION_COMPLETED) {
+                donationItem.getDonationStatus() == DonationStatus.INSPECTION_COMPLETED ||
+                donationItem.getDonationStatus() == DonationStatus.DONATION_COMPLETED) {
             throw new BusinessException(ErrorCode.DONATION_ITEM_CANNOT_BE_DELETED);
         }
 
