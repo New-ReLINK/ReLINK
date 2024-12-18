@@ -1,13 +1,12 @@
 package com.my.relink.controller.point.dto.response;
 
 import com.my.relink.domain.payment.Payment;
+import com.my.relink.domain.payment.repository.dto.PointChargeHistoryDto;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
 
 @NoArgsConstructor
 @Getter
-@ToString
 public class PointChargeHistoryRespDto {
 
     private String chargedDateTime;
@@ -17,12 +16,12 @@ public class PointChargeHistoryRespDto {
     private Integer chargePoint; //충전된 포인트
     private String status; //결제 처리 상태
 
-    public PointChargeHistoryRespDto(Payment payment, String chargedDateTime) {
+    public PointChargeHistoryRespDto(String chargedDateTime, PointChargeHistoryDto dto) {
         this.chargedDateTime = chargedDateTime;
-        this.method = payment.getMethod();
-        this.provider = payment.getProvider() != null ? payment.getProvider() : null;
-        this.amount = payment.getAmount();
-        this.chargePoint = payment.getAmount();
-        this.status = payment.getStatus();
+        this.method = dto.getMethod();
+        this.provider = dto.getProvider() != null ? dto.getProvider() : null;
+        this.amount = dto.getAmount();
+        this.chargePoint = dto.getAmount();
+        this.status = dto.getStatus();
     }
 }

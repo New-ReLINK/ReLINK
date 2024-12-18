@@ -13,6 +13,7 @@ import com.my.relink.domain.payment.Payment;
 import com.my.relink.domain.payment.PaymentCancelReason;
 import com.my.relink.domain.payment.PaymentType;
 import com.my.relink.domain.payment.repository.PaymentRepository;
+import com.my.relink.domain.payment.repository.dto.PointChargeHistoryDto;
 import com.my.relink.domain.point.Point;
 import com.my.relink.domain.point.pointHistory.PointHistory;
 import com.my.relink.domain.point.pointHistory.repository.PointHistoryRepository;
@@ -23,6 +24,7 @@ import com.my.relink.service.PointService;
 import com.my.relink.service.UserService;
 import com.my.relink.service.payment.dto.PaymentValidation;
 import com.my.relink.service.payment.ex.PaymentCancelFailException;
+import com.my.relink.util.DateTimeUtil;
 import com.my.relink.util.page.PageResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -47,12 +49,29 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final PointHistoryRepository pointHistoryRepository;
     private final PointService pointService;
+    private final DateTimeUtil dateTimeUtil;
     // TODO 구현 예정.  private final AlertService alertService;
 
 
     public PageResponse<PointChargeHistoryRespDto> getPointChargeHistories(Long userId, int page, int size){
         User user = userService.findByIdOrFail(userId);
-        return paymentRepository.findPointChargeHistories(user, page, size);
+        List<PointChargeHistoryRespDto> content = convertToResponseDto(
+                paymentRepository.findPointChargeHistories(user, page, size)
+        );
+        return new PageResponse<>(
+                content,
+                paymentRepository.getPointChargePageInfo(user, page, size)
+        );
+    }
+
+
+    private List<PointChargeHistoryRespDto> convertToResponseDto(List<PointChargeHistoryDto> dtoList) {
+        return dtoList.stream()
+                .map(dto -> new PointChargeHistoryRespDto(
+                        dateTimeUtil.getUsagePointHistoryFormattedTime(dto.getChargedDateTime()),
+                        dto
+                ))
+                .toList();
     }
 
 
