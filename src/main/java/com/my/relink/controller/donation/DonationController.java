@@ -58,10 +58,10 @@ public class DonationController {
 
     @GetMapping("/donations/{donationItemId}/completion")
     public ResponseEntity<ApiResult<DonationCompleteItemDetailRespDto>> getCompletionDonationItem(
-            @PathVariable Long itemId,
+            @PathVariable Long donationItemId,
             @AuthenticationPrincipal AuthUser authUser){
 
-        DonationCompleteItemDetailRespDto response = donationItemService.getCompletionDonationItem(itemId, authUser.getId());
+        DonationCompleteItemDetailRespDto response = donationItemService.getCompletionDonationItem(donationItemId, authUser.getId());
 
         return ResponseEntity.ok(ApiResult.success(response));
     }
