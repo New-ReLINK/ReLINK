@@ -58,4 +58,16 @@ public class DonationController {
 
         return ResponseEntity.ok(ApiResult.success(response));
     }
+
+    @DeleteMapping("/users/items/donations/{itemId}")
+    public ResponseEntity<ApiResult<DonationItemIdRespDto>> deleteDonationItem(
+            @PathVariable Long itemId,
+            @RequestBody @Valid DonationItemReqDto request,
+            @AuthenticationPrincipal AuthUser authUser) {
+
+        DonationItemIdRespDto deletedItem = donationItemService.deleteDonationItem(itemId, authUser.getId());
+
+        return ResponseEntity.ok(ApiResult.success(deletedItem));
+    }
+
 }
