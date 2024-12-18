@@ -12,6 +12,7 @@ import com.my.relink.util.page.PageResponse;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.CaseBuilder;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -69,12 +70,12 @@ public class PointHistoryCustomRepositoryImpl implements PointHistoryCustomRepos
     private List<PointUsageHistoryRespDto> convertToDto(List<Tuple> pointHistoryTuple, List<Long> tradeIdList){
         Map<Long, PointUsageHistoryRespDto> dtoMap = new LinkedHashMap<>();
         for (Tuple tuple : pointHistoryTuple) {
-            Long tradeId = tuple.get(0, Long.class);
-            TradeStatus tradeStatus = tuple.get(1, TradeStatus.class);
-            String itemName = tuple.get(2, String.class);
-            PointTransactionType type = tuple.get(3, PointTransactionType.class);
-            Integer amount = tuple.get(4, Integer.class);
-            LocalDateTime createdAt = tuple.get(5, LocalDateTime.class);
+            Long tradeId = tuple.get(trade.id);
+            TradeStatus tradeStatus = tuple.get(trade.tradeStatus);
+            String itemName = tuple.get(Expressions.stringPath("itemName"));
+            PointTransactionType type = tuple.get(pointHistory.pointTransactionType);
+            Integer amount = tuple.get(pointHistory.amount);
+            LocalDateTime createdAt = tuple.get(pointHistory.createdAt);
 
             PointUsageHistoryRespDto dto = dtoMap.computeIfAbsent(tradeId, k ->
                     PointUsageHistoryRespDto.builder()
@@ -132,7 +133,7 @@ public class PointHistoryCustomRepositoryImpl implements PointHistoryCustomRepos
                         new CaseBuilder()
                                 .when(trade.requester.eq(user))
                                 .then(trade.ownerExchangeItem.name)
-                                .otherwise(trade.requesterExchangeItem.name),
+                                .otherwise(trade.requesterExchangeItem.name).as("itemName"),
                         pointHistory.pointTransactionType,
                         pointHistory.amount,
                         pointHistory.createdAt
