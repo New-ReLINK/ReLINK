@@ -1,8 +1,10 @@
 package com.my.relink.controller.review;
 
 import com.my.relink.config.security.AuthUser;
+import com.my.relink.controller.review.dto.request.ReviewReqDto;
 import com.my.relink.controller.review.dto.resp.ReviewDetailsRespDto;
 import com.my.relink.controller.review.dto.resp.ReviewListRespDto;
+import com.my.relink.controller.review.dto.resp.ReviewRespDto;
 import com.my.relink.controller.review.dto.resp.ReviewStatisticsRespDto;
 import com.my.relink.controller.review.dto.resp.ReviewWithExchangeItemListRespDto;
 import com.my.relink.service.ReviewService;
@@ -14,9 +16,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -61,6 +61,15 @@ public class ReviewController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ApiResult.success(reviewService.getReviewWithExchange(authUser.getId(), pageable)));
+    }
+
+    @PostMapping("/trades/{tradeId}/review")
+    public ResponseEntity<ApiResult<ReviewRespDto>> postTradeReview(
+            @PathVariable(name = "tradeId") Long tradeId,
+            @RequestBody ReviewReqDto reqDto,
+            @AuthenticationPrincipal AuthUser authUser) {
+        ReviewRespDto responseDto = reviewService.postTradeReview(tradeId, reqDto, authUser);
+        return new ResponseEntity<>(ApiResult.success(responseDto), HttpStatus.CREATED);
     }
 
 }
