@@ -80,9 +80,8 @@ public class PointHistoryCustomRepositoryImpl implements PointHistoryCustomRepos
         contents.forEach(content -> content.formatDateTime(dateTimeUtil));
 
         Long totalCount = queryFactory
-                .select(t.countDistinct())
+                .select(ph.trade.countDistinct())
                 .from(ph)
-                .join(ph.trade, t)
                 .where(
                         ph.point.user.eq(user)
                                 .and(ph.pointTransactionType.in(
