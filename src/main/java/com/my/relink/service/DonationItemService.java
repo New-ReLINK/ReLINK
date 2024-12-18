@@ -88,7 +88,7 @@ public class DonationItemService {
                 .orElseThrow(()->new BusinessException(ErrorCode.DONATION_ITEM_NOT_FOUND));
 
         String imageUrl = imageService.getImageByItemId(EntityType.DONATION_ITEM, itemId);
-        String certificateUrl = imageService.getImageByItemId(EntityType.DONATION_ITEM, itemId);
+        String certificateUrl = imageService.getImageByItemId(EntityType.DONATION_CERTIFICATION, itemId);
 
         return DonationCompleteItemDetailRespDto.fromEntity(donationItem, imageUrl, certificateUrl);
     }
