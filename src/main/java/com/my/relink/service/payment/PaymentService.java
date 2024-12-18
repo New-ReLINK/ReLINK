@@ -8,6 +8,7 @@ import com.my.relink.client.tosspayments.ex.TossPaymentException;
 import com.my.relink.client.tosspayments.feature.PaymentFeature;
 import com.my.relink.client.tosspayments.feature.PaymentStatus;
 import com.my.relink.controller.payment.dto.request.PaymentReqDto;
+import com.my.relink.controller.point.dto.response.PointChargeHistoryRespDto;
 import com.my.relink.domain.payment.Payment;
 import com.my.relink.domain.payment.PaymentCancelReason;
 import com.my.relink.domain.payment.PaymentType;
@@ -22,13 +23,13 @@ import com.my.relink.service.PointService;
 import com.my.relink.service.UserService;
 import com.my.relink.service.payment.dto.PaymentValidation;
 import com.my.relink.service.payment.ex.PaymentCancelFailException;
+import com.my.relink.util.page.PageResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -47,6 +48,12 @@ public class PaymentService {
     private final PointHistoryRepository pointHistoryRepository;
     private final PointService pointService;
     // TODO 구현 예정.  private final AlertService alertService;
+
+
+    public PageResponse<PointChargeHistoryRespDto> getPointChargeHistories(Long userId, int page, int size){
+        User user = userService.findByIdOrFail(userId);
+        return paymentRepository.findPointChargeHistories(user, page, size);
+    }
 
 
     public TossPaymentRespDto confirmPayment(PaymentReqDto paymentReqDto){
