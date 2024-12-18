@@ -18,4 +18,7 @@ public interface ExchangeItemRepository extends JpaRepository<ExchangeItem, Long
     @Modifying(clearAutomatically = true)
     @Query("update ExchangeItem e set e.tradeStatus = com.my.relink.domain.trade.TradeStatus.UNAVAILABLE where e.user.id = :userId")
     void updateTradeStatusToUnavailable(@Param("userId") Long userId);
+
+    @Query("SELECT e FROM ExchangeItem e WHERE e.user.id = :userId AND e.tradeStatus = com.my.relink.domain.trade.TradeStatus.AVAILABLE ORDER BY e.modifiedAt DESC")
+    Page<ExchangeItem> findAvailableItemsByUserIdOrderByModifiedAt(@Param("userId") Long userId, Pageable pageable);
 }

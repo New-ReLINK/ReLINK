@@ -8,7 +8,6 @@ import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemRespDto;
 import com.my.relink.domain.category.Category;
 import com.my.relink.domain.category.repository.CategoryRepository;
 import com.my.relink.domain.image.EntityType;
-import com.my.relink.domain.image.Image;
 import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.item.exchange.repository.ExchangeItemRepository;
 import com.my.relink.domain.point.Point;
@@ -125,6 +124,20 @@ public class ExchangeItemService {
         return exchangeItem.getId();
     }
 
+    public GetExchangeItemRespDto getExchangeItemChoicePage(Long userId, int page, int size) {
+        User user = getValidUser(userId);
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<ExchangeItem> items = exchangeItemRepository.findAvailableItemsByUserIdOrderByModifiedAt(user.getId(), pageable);
+        if (items.isEmpty()) {
+            return GetExchangeItemRespDto.empty(pageable);
+        }
+        List<Long> itemIds = items.getContent().stream().map(ExchangeItem::getId).toList();
+        Map<Long, String> imageMap = imageService.getFirstImagesByItemIds(EntityType.EXCHANGE_ITEM, itemIds);
+        Page<GetExchangeItemRespDto> content = items.map(item -> GetExchangeItemRespDto.from(item, imageMap));
+
+        return GetExchangeItemRespDto.of(content);
+    }
+
     // 삭제는 soft delete
     @Transactional
     public Long deleteExchangeItem(Long itemId, Long userId) {
@@ -188,4 +201,6 @@ public class ExchangeItemService {
         return exchangeItemRepository.findById(itemId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EXCHANGE_ITEM_NOT_FOUND));
     }
+
+
 }

@@ -24,16 +24,17 @@ import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import com.my.relink.util.page.PageInfo;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.lang.reflect.Field;
@@ -46,8 +47,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ExchangeItemServiceTest {
@@ -560,7 +559,7 @@ class ExchangeItemServiceTest {
 
     @Test
     @DisplayName("교환상품 전체목록 조회 실패 - 보증금 기준 정렬 옵션에 해당되지 않은 값이 들어온 경우")
-    void testGetAllExchangeItems_Fail_INVALID_SORT_PARAMETER () {
+    void testGetAllExchangeItems_Fail_INVALID_SORT_PARAMETER() {
         String search = "shoes";
         String deposit = "adesc";
         TradeStatus tradeStatus = TradeStatus.AVAILABLE;
@@ -630,7 +629,7 @@ class ExchangeItemServiceTest {
 
     @Test
     @DisplayName("교환하기 페이지 조회 성공 - 이미지가 없는 경우")
-    void testGetExchangeItemFromOwner_Success_NotImage () {
+    void testGetExchangeItemFromOwner_Success_NotImage() {
         Long itemId = 1L;
         Long userId = 2L;
         User user = User.builder().id(1L).nickname("Test User").build();
@@ -683,7 +682,7 @@ class ExchangeItemServiceTest {
 
     @Test
     @DisplayName("교환하기 페이지 조회 실패 - 조회 직전 아이템의 거래 상태가 IN_EXCHANGE로 변경된 경우")
-    void testGetExchangeItemFromOwner_Fail_Trading () {
+    void testGetExchangeItemFromOwner_Fail_Trading() {
         Long itemId = 1L;
         Long userId = 2L;
         User user = User.builder().id(1L).nickname("Test User").build();
@@ -721,5 +720,28 @@ class ExchangeItemServiceTest {
         assertEquals("해당 상품이 교환가능 상태가 아닙니다.", exception.getMessage());
     }
 
+    @Test
+    @DisplayName("교환할 내 물품 선택 페이지 조회 성공")
+    void testGetExchangeItemChoicePage_Success() {
+        Long userId = 1L;
+        int page = 1;
+        int size = 10;
+
+        User user = User.builder().id(userId).build();
+        ExchangeItem exchangeItem = mock(ExchangeItem.class);
+        Page<ExchangeItem> items = new PageImpl<>(List.of(exchangeItem));
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(exchangeItemRepository.findAvailableItemsByUserIdOrderByModifiedAt(userId, PageRequest.of(page - 1, size))).thenReturn(items);
+        when(imageService.getFirstImagesByItemIds(any(), any())).thenReturn(Map.of(1L, "http://example.com/image.jpg"));
+        when(exchangeItem.getId()).thenReturn(1L);
+        when(exchangeItem.getCreatedAt()).thenReturn(LocalDateTime.now());
+
+        GetExchangeItemRespDto result = exchangeItemService.getExchangeItemChoicePage(userId, page, size);
+
+        assertThat(result.getContent()).isNotEmpty();
+        assertThat(result.getContent().get(0).getExchangeItemId()).isEqualTo(1L);
+        assertThat(result.getContent().get(0).getImageUrl()).isEqualTo("http://example.com/image.jpg");
+    }
 
 }
