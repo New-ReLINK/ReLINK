@@ -16,7 +16,7 @@ public class PaymentController {
 
     private final PaymentProcessService paymentServiceFacade;
 
-    @PostMapping("/users/point")
+    @PostMapping("/users/payment")
     public ResponseEntity<PaymentRespDto> confirmPaymentForPointCharge(@RequestBody @Valid PaymentReqDto paymentReqDto){
         return ResponseEntity.ok(paymentServiceFacade.processPayment(paymentReqDto));
     }
