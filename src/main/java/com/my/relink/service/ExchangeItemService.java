@@ -2,6 +2,7 @@ package com.my.relink.service;
 
 import com.my.relink.chat.service.ChatService;
 import com.my.relink.controller.exchangeItem.dto.req.CreateExchangeItemReqDto;
+import com.my.relink.controller.exchangeItem.dto.req.GetAllExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.req.UpdateExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetAllExchangeItemsRespDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemRespDto;
@@ -76,15 +77,15 @@ public class ExchangeItemService {
         return GetExchangeItemRespDto.from(exchangeItem);
     }
 
-    public GetAllExchangeItemsRespDto getAllExchangeItems(String search, String deposit, TradeStatus tradeStatus, Long categoryId, int page, int size) {
-        Category category = getValidCategory(categoryId);
-        Pageable pageable = PageRequest.of(page, size);
+    public GetAllExchangeItemsRespDto getAllExchangeItems(GetAllExchangeItemReqDto reqDto) {
+        Category category = getValidCategory(reqDto.getCategoryId());
+        Pageable pageable = PageRequest.of(reqDto.getPage(), reqDto.getSize());
 
-        if (deposit != null && !deposit.isEmpty() && !deposit.equalsIgnoreCase("asc") && !deposit.equalsIgnoreCase("desc")) {
-            throw new BusinessException(ErrorCode.INVALID_SORT_PARAMETER);
-        }
-
-        Page<ExchangeItem> itemsPage = exchangeItemRepository.findAllByCriteria(search, tradeStatus, category, deposit, pageable);
+        Page<ExchangeItem> itemsPage = exchangeItemRepository.findAllByCriteria(reqDto.getSearch(),
+                reqDto.getTradeStatus(),
+                category,
+                reqDto.getDeposit(),
+                pageable);
         List<Long> itemIds = itemsPage.getContent().stream().map(ExchangeItem::getId).toList();
         Map<Long, String> imageMap = imageService.getFirstImagesByItemIds(EntityType.EXCHANGE_ITEM, itemIds);
 
