@@ -307,5 +307,21 @@ public class TradeService {
         return tradeRepository.findTradeIdByExchangeItemId(itemId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
     }
+
+    @Transactional
+    public Long createTrade(ExchangeItem itemFromOwner, ExchangeItem itemFromRequester, User requester) {
+        Trade trade = Trade.builder()
+                .requester(requester)
+                .ownerExchangeItem(itemFromOwner)
+                .requesterExchangeItem(itemFromRequester)
+                .tradeStatus(TradeStatus.AVAILABLE)
+                .hasOwnerRequested(false)
+                .hasRequesterRequested(false)
+                .hasOwnerReceived(false)
+                .hasRequesterReceived(false)
+                .build();
+        Trade savedTrade = tradeRepository.save(trade);
+        return savedTrade.getId();
+    }
 }
 

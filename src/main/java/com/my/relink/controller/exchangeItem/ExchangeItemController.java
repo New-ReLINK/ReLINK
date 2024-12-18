@@ -1,6 +1,7 @@
 package com.my.relink.controller.exchangeItem;
 
 import com.my.relink.config.security.AuthUser;
+import com.my.relink.controller.exchangeItem.dto.req.ChoiceExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.req.CreateExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.req.UpdateExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetAllExchangeItemsRespDto;
@@ -84,4 +85,11 @@ public class ExchangeItemController {
         return new ResponseEntity<>(ApiResult.success(respDto), HttpStatus.OK);
     }
 
+    @PostMapping("/items/exchanges/{itemId}/availble")
+    public ResponseEntity<ApiResult<Long>> choiceExchangeItem(@PathVariable(value = "itemId") Long itemId,
+                                                              @Valid @RequestBody ChoiceExchangeItemReqDto reqDto,
+                                                              @AuthenticationPrincipal AuthUser authUser) {
+        Long tradeId = exchangeItemService.choiceExchangeItem(itemId, reqDto, authUser.getId());
+        return new ResponseEntity<>(ApiResult.success(tradeId), HttpStatus.OK);
+    }
 }

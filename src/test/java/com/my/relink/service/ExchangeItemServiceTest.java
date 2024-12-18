@@ -2,6 +2,7 @@ package com.my.relink.service;
 
 
 import com.my.relink.chat.service.ChatService;
+import com.my.relink.controller.exchangeItem.dto.req.ChoiceExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.req.CreateExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.req.UpdateExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetAllExchangeItemsRespDto;
@@ -17,6 +18,7 @@ import com.my.relink.domain.point.Point;
 import com.my.relink.domain.point.repository.PointRepository;
 import com.my.relink.domain.trade.Trade;
 import com.my.relink.domain.trade.TradeStatus;
+import com.my.relink.domain.trade.repository.TradeRepository;
 import com.my.relink.domain.user.Role;
 import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.repository.UserRepository;
@@ -62,6 +64,8 @@ class ExchangeItemServiceTest {
     @Mock
     private PointRepository pointRepository;
     @Mock
+    private TradeRepository tradeRepository;
+    @Mock
     private TradeService tradeService;
     @Mock
     private ImageService imageService;
@@ -97,7 +101,6 @@ class ExchangeItemServiceTest {
                 .thenAnswer(invocation -> {
                     ExchangeItem savedItem = invocation.getArgument(0);
                     ReflectionTestUtils.setField(savedItem, "id", 1L);
-                    System.out.println("Saved ExchangeItem: " + savedItem);
                     return savedItem;
                 });
         Long savedId = exchangeItemService.createExchangeItem(reqDto, userId);
@@ -742,6 +745,52 @@ class ExchangeItemServiceTest {
         assertThat(result.getContent()).isNotEmpty();
         assertThat(result.getContent().get(0).getExchangeItemId()).isEqualTo(1L);
         assertThat(result.getContent().get(0).getImageUrl()).isEqualTo("http://example.com/image.jpg");
+    }
+
+    @Test
+    @DisplayName("교환 요청 성공")
+    void testChoiceExchangeItem_Success() {
+        System.out.println("테스트 시작");
+        Long userId = 1L;
+        Long itemFromOwnerId = 100L;
+        Long itemFromRequesterId = 200L;
+        User user = User.builder().id(userId).build();
+        ExchangeItem itemFromOwner = ExchangeItem.builder()
+                .id(itemFromOwnerId)
+                .tradeStatus(TradeStatus.AVAILABLE)
+                .user(User.builder().id(2L).build())
+                .build();
+        ExchangeItem itemFromRequester = ExchangeItem.builder()
+                .id(itemFromRequesterId)
+                .tradeStatus(TradeStatus.AVAILABLE)
+                .user(user)
+                .build();
+
+        when(exchangeItemRepository.findById(itemFromOwnerId)).thenReturn(Optional.of(itemFromOwner));
+        when(exchangeItemRepository.findById(itemFromRequesterId)).thenReturn(Optional.of(itemFromRequester));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        System.out.println("tradeRepository 호출 전");
+        when(tradeRepository.save(any(Trade.class))).thenAnswer(invocation -> {
+            Trade trade = invocation.getArgument(0);
+            ReflectionTestUtils.setField(trade, "id", 1L);
+            return trade;
+        });
+
+        ChoiceExchangeItemReqDto reqDto = new ChoiceExchangeItemReqDto(itemFromRequesterId);
+        Long tradeId = exchangeItemService.choiceExchangeItem(itemFromOwnerId, reqDto, userId);
+
+        assertThat(tradeId).isEqualTo(1L);
+        verify(exchangeItemRepository, times(2)).findById(anyLong());
+        verify(tradeRepository, times(1)).save(any(Trade.class));
+        System.out.println("테스트 종료");
+
+        //when(exchangeItemRepository.save(any(ExchangeItem.class)))
+        //                .thenAnswer(invocation -> {
+        //                    ExchangeItem savedItem = invocation.getArgument(0);
+        //                    ReflectionTestUtils.setField(savedItem, "id", 1L);
+        //                    return savedItem;
+        //                });
+        //        Long savedId = exchangeItemService.createExchangeItem(reqDto, userId);
     }
 
 }

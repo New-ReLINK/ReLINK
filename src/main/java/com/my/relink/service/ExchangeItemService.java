@@ -1,6 +1,7 @@
 package com.my.relink.service;
 
 import com.my.relink.chat.service.ChatService;
+import com.my.relink.controller.exchangeItem.dto.req.ChoiceExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.req.CreateExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.req.UpdateExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetAllExchangeItemsRespDto;
@@ -18,6 +19,7 @@ import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -138,6 +140,15 @@ public class ExchangeItemService {
         return GetExchangeItemRespDto.of(content);
     }
 
+    public Long choiceExchangeItem(Long itemId, @Valid ChoiceExchangeItemReqDto reqDto, Long userId) {
+        ExchangeItem itemFromOwner = findByIdOrFail(itemId);
+        ExchangeItem itemFromRequester = findByIdOrFail(reqDto.getItemId());
+        User user = getValidUser(userId);
+        itemFromRequester.validExchangeItemOwner(itemFromRequester.getUser().getId(), userId);
+        validExchangeItemTradeStatus(itemFromOwner.getTradeStatus());
+        return tradeService.createTrade(itemFromOwner, itemFromRequester, user);
+    }
+
     // 삭제는 soft delete
     @Transactional
     public Long deleteExchangeItem(Long itemId, Long userId) {
@@ -201,6 +212,7 @@ public class ExchangeItemService {
         return exchangeItemRepository.findById(itemId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EXCHANGE_ITEM_NOT_FOUND));
     }
+
 
 
 }
