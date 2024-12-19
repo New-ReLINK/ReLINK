@@ -381,7 +381,7 @@ public class TradeService {
     }
 
     @Transactional
-    public Long createTrade(ExchangeItem itemFromOwner, ExchangeItem itemFromRequester, User requester) {
+    public TradeIdRespDto createTrade(ExchangeItem itemFromOwner, ExchangeItem itemFromRequester, User requester) {
         Trade trade = Trade.builder()
                 .requester(requester)
                 .ownerExchangeItem(itemFromOwner)
@@ -393,7 +393,7 @@ public class TradeService {
                 .hasRequesterReceived(false)
                 .build();
         Trade savedTrade = tradeRepository.save(trade);
-        return savedTrade.getId();
+        return  new TradeIdRespDto(savedTrade.getId());
     }
 }
 

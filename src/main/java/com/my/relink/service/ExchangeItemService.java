@@ -7,6 +7,7 @@ import com.my.relink.controller.exchangeItem.dto.req.GetAllExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.req.UpdateExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetAllExchangeItemsRespDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemRespDto;
+import com.my.relink.controller.trade.dto.response.TradeIdRespDto;
 import com.my.relink.domain.category.Category;
 import com.my.relink.domain.category.repository.CategoryRepository;
 import com.my.relink.domain.image.EntityType;
@@ -19,7 +20,6 @@ import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.domain.user.User;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -139,7 +139,7 @@ public class ExchangeItemService {
         return GetExchangeItemRespDto.of(content);
     }
 
-    public Long choiceExchangeItem(Long itemId, @Valid ChoiceExchangeItemReqDto reqDto, Long userId) {
+    public TradeIdRespDto choiceExchangeItem(Long itemId, ChoiceExchangeItemReqDto reqDto, Long userId) {
         ExchangeItem itemFromOwner = findByIdFetchUser(itemId);
         ExchangeItem itemFromRequester = findByIdFetchUser(reqDto.getItemId());
         User user = userService.findByIdOrFail(userId);
