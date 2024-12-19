@@ -9,4 +9,6 @@ import java.util.Optional;
 public interface ReportRepository extends JpaRepository<Report, Long> {
 
     Optional<Report> findByEntityIdAndReportTypeAndTargetUserId(Long entityId, ReportType reportType, Long targetUserId);
+
+    Optional<Report> findByEntityIdAndReportType(Long entityId, ReportType reportType);
 }
