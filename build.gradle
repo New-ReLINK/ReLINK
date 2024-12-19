@@ -2,10 +2,21 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.4.0'
     id 'io.spring.dependency-management' version '1.1.6'
+    id 'war'
 }
 
 group = 'com.my'
 version = '0.0.1-SNAPSHOT'
+
+war{
+    war.enabled = true
+    archiveFileName = 'rerink.war'
+}
+
+bootWar{
+    bootWar.enabled = false
+    archiveFileName = 'rerink.war'
+}
 
 java {
     toolchain {
@@ -62,6 +73,8 @@ dependencies {
     //thymeleaf
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 
+    // 내장 톰캣 제외
+    providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
 }
 
 tasks.named('test') {
