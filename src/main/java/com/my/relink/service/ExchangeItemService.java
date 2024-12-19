@@ -140,8 +140,8 @@ public class ExchangeItemService {
     }
 
     public Long choiceExchangeItem(Long itemId, @Valid ChoiceExchangeItemReqDto reqDto, Long userId) {
-        ExchangeItem itemFromOwner = findByIdOrFail(itemId);
-        ExchangeItem itemFromRequester = findByIdOrFail(reqDto.getItemId());
+        ExchangeItem itemFromOwner = findByIdFetchUser(itemId);
+        ExchangeItem itemFromRequester = findByIdFetchUser(reqDto.getItemId());
         User user = userService.findByIdOrFail(userId);
         itemFromRequester.validExchangeItemOwner(itemFromRequester.getUser().getId(), userId);
         validExchangeItemTradeStatus(itemFromOwner.getTradeStatus());
