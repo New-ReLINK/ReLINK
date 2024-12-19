@@ -1,6 +1,7 @@
 package com.my.relink.controller.donation;
 
 import com.my.relink.config.security.AuthUser;
+import com.my.relink.controller.donation.dto.req.DonationItemRejectReqDto;
 import com.my.relink.controller.donation.dto.resp.*;
 import com.my.relink.controller.donation.dto.req.DonationItemReqDto;
 import com.my.relink.controller.donation.dto.resp.DonationItemIdRespDto;
@@ -91,5 +92,17 @@ public class DonationController {
 
         return ResponseEntity.ok(ApiResult.success(deletedItem));
     }
+
+    @PostMapping("/donations/{donationItemId}/rejection")
+    private ResponseEntity<ApiResult<DonationItemIdRespDto>> rejectDonationItemDisposal(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long donationItemId,
+            @RequestBody @Valid DonationItemRejectReqDto request){
+
+        DonationItemIdRespDto response = donationItemService.rejectDonationItemDisposal(donationItemId, authUser.getId(), request);
+
+        return new ResponseEntity<>(ApiResult.success(response), HttpStatus.CREATED);
+    }
+
 
 }

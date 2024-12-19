@@ -2,6 +2,7 @@ package com.my.relink.service;
 
 import com.my.relink.config.security.AuthUser;
 import com.my.relink.controller.donation.dto.PagingInfo;
+import com.my.relink.controller.donation.dto.req.DonationItemRejectReqDto;
 import com.my.relink.controller.donation.dto.req.DonationItemReqDto;
 import com.my.relink.controller.donation.dto.resp.*;
 import com.my.relink.controller.donation.dto.resp.DonationItemDetailRespDto;
@@ -12,10 +13,9 @@ import com.my.relink.controller.donation.dto.resp.DonationItemUserListRespDto;
 import com.my.relink.domain.category.Category;
 import com.my.relink.domain.category.repository.CategoryRepository;
 import com.my.relink.domain.image.EntityType;
-import com.my.relink.domain.item.donation.DonationItem;
+import com.my.relink.domain.item.donation.*;
 import com.my.relink.domain.item.donation.RejectedReason;
-import com.my.relink.domain.item.donation.DonationStatus;
-import com.my.relink.domain.item.donation.RejectedReason;
+import com.my.relink.domain.user.Address;
 import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.BusinessException;
@@ -138,6 +138,25 @@ public class DonationItemService {
         donationItemRepository.delete(donationItem);
 
         return new DonationItemIdRespDto(itemId);
+    }
+
+    public DonationItemIdRespDto rejectDonationItemDisposal(Long itemId, Long userId, DonationItemRejectReqDto request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        DonationItem donationItem = donationItemRepository.findByIdWithCategory(itemId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.DONATION_ITEM_NOT_FOUND));
+
+        if (request.getDisposal() == DisposalType.RETURNED) {
+            Address address = new Address(request.getZipcode(), request.getBaseAddress(), request.getDetailAddress());
+            donationItem.updateReturnAddress(address);
+        }
+
+        donationItem.updateStatus(request.getDisposal());
+
+        DonationItem savedItem = donationItemRepository.save(donationItem);
+
+        return new DonationItemIdRespDto(savedItem.getId());
     }
 
 }
