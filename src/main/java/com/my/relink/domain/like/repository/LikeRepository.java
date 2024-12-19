@@ -14,5 +14,9 @@ public interface LikeRepository extends JpaRepository<Like, Long>, CustomLikeRep
 
     void deleteByExchangeItemId(Long itemId);
 
-    Boolean existsByExchangeItem_IdAndUser_Id(Long itemId, Long userId);
+    @Query("SELECT CASE WHEN COUNT(l) > 0 THEN TRUE ELSE FALSE END " +
+            "FROM Like l " +
+            "WHERE l.exchangeItem.id = :itemId AND l.user.id = :userId")
+    Boolean existsLike(@Param("itemId") Long itemId, @Param("userId") Long userId);
+
 }
