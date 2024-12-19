@@ -3,10 +3,12 @@ package com.my.relink.config.log;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.MDC;
+import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import java.util.UUID;
 
+@Component
 public class HttpLoggingInterceptor implements HandlerInterceptor {
 
     private static final String START_TIME = "startTime";
