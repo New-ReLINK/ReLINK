@@ -2,6 +2,7 @@ package com.my.relink.service;
 
 import com.my.relink.chat.service.ChatService;
 import com.my.relink.controller.exchangeItem.dto.req.CreateExchangeItemReqDto;
+import com.my.relink.controller.exchangeItem.dto.req.GetAllExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.req.UpdateExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetAllExchangeItemsRespDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemRespDto;
@@ -76,15 +77,14 @@ public class ExchangeItemService {
         return GetExchangeItemRespDto.from(exchangeItem);
     }
 
-    public GetAllExchangeItemsRespDto getAllExchangeItems(String search, String deposit, TradeStatus tradeStatus, Long categoryId, int page, int size) {
-        Category category = getValidCategory(categoryId);
-        Pageable pageable = PageRequest.of(page, size);
-
-        if (deposit != null && !deposit.isEmpty() && !deposit.equalsIgnoreCase("asc") && !deposit.equalsIgnoreCase("desc")) {
-            throw new BusinessException(ErrorCode.INVALID_SORT_PARAMETER);
-        }
-
-        Page<ExchangeItem> itemsPage = exchangeItemRepository.findAllByCriteria(search, tradeStatus, category, deposit, pageable);
+    public GetAllExchangeItemsRespDto getAllExchangeItems(GetAllExchangeItemReqDto reqDto) {
+        Category category = (reqDto.getCategoryId() != null) ? getValidCategory(reqDto.getCategoryId()) : null;
+        Pageable pageable = PageRequest.of(reqDto.getPage() - 1, reqDto.getSize());
+        Page<ExchangeItem> itemsPage = exchangeItemRepository.findAllByCriteria(reqDto.getSearch(),
+                reqDto.getTradeStatus(),
+                category,
+                reqDto.getDeposit(),
+                pageable);
         List<Long> itemIds = itemsPage.getContent().stream().map(ExchangeItem::getId).toList();
         Map<Long, String> imageMap = imageService.getFirstImagesByItemIds(EntityType.EXCHANGE_ITEM, itemIds);
 
@@ -97,7 +97,7 @@ public class ExchangeItemService {
     }
 
     public GetAllExchangeItemsRespDto getExchangeItemFromOwner(Long itemId, Long userId) {
-        ExchangeItem exchangeItem = findByIdOrFail(itemId);
+        ExchangeItem exchangeItem = findByIdFetchUser(itemId);
         validExchangeItemTradeStatus(exchangeItem.getTradeStatus());
         int trustScore = userTrustScoreService.getTrustScore(exchangeItem.getUser());
         List<String> imageUrls = imageService.getImageUrlsByItemId(EntityType.EXCHANGE_ITEM, itemId);
@@ -203,4 +203,8 @@ public class ExchangeItemService {
     }
 
 
+    public ExchangeItem findByIdFetchUser(Long itemId){
+        return exchangeItemRepository.findByIdWithUser(itemId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.EXCHANGE_ITEM_NOT_FOUND));
+    }
 }

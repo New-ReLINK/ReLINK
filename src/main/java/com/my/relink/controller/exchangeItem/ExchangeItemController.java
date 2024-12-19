@@ -2,10 +2,10 @@ package com.my.relink.controller.exchangeItem;
 
 import com.my.relink.config.security.AuthUser;
 import com.my.relink.controller.exchangeItem.dto.req.CreateExchangeItemReqDto;
+import com.my.relink.controller.exchangeItem.dto.req.GetAllExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.req.UpdateExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetAllExchangeItemsRespDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemRespDto;
-import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.service.ExchangeItemService;
 import com.my.relink.util.api.ApiResult;
 import jakarta.validation.Valid;
@@ -59,13 +59,8 @@ public class ExchangeItemController {
     }
 
     @GetMapping("/items/exchanges")
-    public ResponseEntity<ApiResult<GetAllExchangeItemsRespDto>> getAllExchangeItems(@RequestParam(value = "search", required = false) String search,
-                                                                                     @RequestParam(value = "deposit", required = false) String deposit,
-                                                                                     @RequestParam(value = "tradeStatus", required = false) TradeStatus tradeStatus,
-                                                                                     @RequestParam(value = "category", required = false) Long categoryId,
-                                                                                     @RequestParam(value = "page", required = false, defaultValue = "0") int page,
-                                                                                     @RequestParam(value = "size", required = false, defaultValue = "100") int size) {
-        GetAllExchangeItemsRespDto respDto = exchangeItemService.getAllExchangeItems(search, deposit, tradeStatus, categoryId, page, size);
+    public ResponseEntity<ApiResult<GetAllExchangeItemsRespDto>> getAllExchangeItems(@Valid @RequestBody GetAllExchangeItemReqDto reqDto) {
+        GetAllExchangeItemsRespDto respDto = exchangeItemService.getAllExchangeItems(reqDto);
         return new ResponseEntity<>(ApiResult.success(respDto), HttpStatus.OK);
     }
 

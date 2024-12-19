@@ -26,14 +26,13 @@ public class ImageService {
     private final ImageRepository imageRepository;
     private final S3Service s3Service;
 
-    public String getExchangeItemUrl(ExchangeItem exchangeItem) {
+    public String getExchangeItemThumbnailUrl(ExchangeItem exchangeItem){
         return imageRepository.findTopByEntityIdAndEntityTypeOrderByCreatedAtAsc(
                         exchangeItem.getId(),
                         EntityType.EXCHANGE_ITEM)
                 .map(Image::getImageUrl)
                 .orElse(null);
     }
-
     public Map<Long, String> getImagesByItemIds(EntityType entityType, List<Long> itemIds) {
         List<Image> images = imageRepository.findImages(entityType, itemIds);
         return images.stream()
@@ -78,6 +77,12 @@ public class ImageService {
 
     public void deleteImagesByEntityId(EntityType entityType, Long entityId) {
         imageRepository.deleteByEntityTypeAndEntityId(entityType, entityId);
+    }
+
+    public String getDonationItemThumbnailUrl(EntityType entityType, Long itemId) {
+        return imageRepository.findTopByEntityIdAndEntityTypeOrderByCreatedAtAsc(itemId, entityType)
+                .map(Image::getImageUrl)
+                .orElse(null);
     }
 
     public List<String> getImageUrlsByItemId(EntityType entityType, Long itemId) {

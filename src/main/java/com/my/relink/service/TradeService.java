@@ -56,7 +56,7 @@ public class TradeService {
 
         trade.validateAccess(userId);
 
-        String requestedItemImageUrl = imageService.getExchangeItemUrl(trade.getRequesterExchangeItem());
+        String requestedItemImageUrl = imageService.getExchangeItemThumbnailUrl(trade.getRequesterExchangeItem());
         User partner = trade.getPartner(userId);
         int trustScoreOfPartner = userTrustScoreService.getTrustScore(partner);
 
@@ -76,6 +76,12 @@ public class TradeService {
 
     public Trade findByIdFetchItemsAndUsersOrFail(Long tradeId) {
         return tradeRepository.findByIdWithItemsAndUser(tradeId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
+    }
+
+
+    public Trade findByIdWithOwnerItemOrFail(Long tradeId){
+        return tradeRepository.findByIdWithOwnerItem(tradeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
     }
 
@@ -215,15 +221,15 @@ public class TradeService {
         ExchangeItem myExchangeItem = trade.getMyExchangeItem(currentUser.getId());
         ExchangeItem partnerExchangeItem = trade.getPartnerExchangeItem(currentUser.getId());
 
-        String myImage = imageService.getExchangeItemUrl(myExchangeItem);
-        String partnerImage = imageService.getExchangeItemUrl(partnerExchangeItem);
+        String myImage = imageService.getExchangeItemThumbnailUrl(myExchangeItem);
+        String partnerImage = imageService.getExchangeItemThumbnailUrl(partnerExchangeItem);
 
         User partnerUser = partnerExchangeItem.getUser();
-      
+
         return TradeCompletionRespDto.from(myExchangeItem, partnerExchangeItem, myImage, partnerImage, partnerUser, trade, dateTimeUtil);
     }
-  
-      public Map<Long, Trade> getTradesByItemIds(List<Long> itemIds) {
+
+    public Map<Long, Trade> getTradesByItemIds(List<Long> itemIds) {
         List<Trade> trades = tradeRepository.findByExchangeItemIds(itemIds);
         return trades.stream()
                 .flatMap(trade -> List.of(
@@ -247,7 +253,7 @@ public class TradeService {
 
         User partnerUser = partnerExchangeItem.getUser();
 
-        String partnerImage = imageService.getExchangeItemUrl(partnerExchangeItem);
+        String partnerImage = imageService.getExchangeItemThumbnailUrl(partnerExchangeItem);
         String tradeStartedAt = dateTimeUtil.getTradeStatusFormattedTime(trade.getCreatedAt());
 
         return ViewTradeCancelRespDto.from(partnerUser, partnerExchangeItem, partnerImage, tradeStartedAt);
@@ -297,7 +303,7 @@ public class TradeService {
 
         ExchangeItem partnerExchangeItem = trade.getPartnerExchangeItem(currentUser.getId());
         User partnerUser = partnerExchangeItem.getUser();
-        String partnerImage = imageService.getExchangeItemUrl(partnerExchangeItem);
+        String partnerImage = imageService.getExchangeItemThumbnailUrl(partnerExchangeItem);
         String completedAt = dateTimeUtil.getTradeStatusFormattedTime(trade.getModifiedAt());
 
         return ViewReviewRespDto.from(trade, partnerImage, partnerUser, partnerExchangeItem, completedAt);

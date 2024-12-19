@@ -26,15 +26,19 @@ public class CustomExchangeItemRepositoryImpl implements CustomExchangeItemRepos
     @Override
     public Page<ExchangeItem> findAllByCriteria(String search, TradeStatus tradeStatus, Category category, String deposit, Pageable pageable) {
         BooleanBuilder builder = buildSearchCriteria(search, tradeStatus, category);
+
         long totalCount = queryFactory.selectFrom(exchangeItem)
                 .where(builder)
                 .fetchCount();
+
         List<ExchangeItem> items = queryFactory.selectFrom(exchangeItem)
+                .leftJoin(exchangeItem.user).fetchJoin()
                 .where(builder)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .orderBy(getSortOrder(deposit))
                 .fetch();
+
         return new org.springframework.data.domain.PageImpl<>(items, pageable, totalCount);
     }
 
