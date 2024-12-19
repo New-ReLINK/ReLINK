@@ -7,6 +7,7 @@ import com.my.relink.controller.exchangeItem.dto.req.GetAllExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.req.UpdateExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetAllExchangeItemsRespDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemRespDto;
+import com.my.relink.controller.trade.dto.response.TradeIdRespDto;
 import com.my.relink.domain.category.Category;
 import com.my.relink.domain.category.repository.CategoryRepository;
 import com.my.relink.domain.image.EntityType;
@@ -19,7 +20,6 @@ import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.domain.user.User;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -54,10 +54,8 @@ public class ExchangeItemService {
     }
 
     public GetExchangeItemRespDto getExchangeItemsByUserId(Long userId, int page, int size) {
-        User user = userService.findByIdOrFail(userId);
         Pageable pageable = PageRequest.of(page - 1, size);
-
-        Page<ExchangeItem> items = exchangeItemRepository.findByUserId(user.getId(), pageable);
+        Page<ExchangeItem> items = exchangeItemRepository.findByUserIdWithUser(userId, pageable);
         if (items.isEmpty()) {
             return GetExchangeItemRespDto.empty(pageable);
         }
@@ -80,7 +78,7 @@ public class ExchangeItemService {
 
     public GetAllExchangeItemsRespDto getAllExchangeItems(GetAllExchangeItemReqDto reqDto) {
         Category category = (reqDto.getCategoryId() != null) ? getValidCategory(reqDto.getCategoryId()) : null;
-        Pageable pageable = PageRequest.of(reqDto.getPage() - 1, reqDto.getSize());
+        Pageable pageable = PageRequest.of(reqDto.getPage(), reqDto.getSize());
         Page<ExchangeItem> itemsPage = exchangeItemRepository.findAllByCriteria(reqDto.getSearch(),
                 reqDto.getTradeStatus(),
                 category,
@@ -126,9 +124,8 @@ public class ExchangeItemService {
     }
 
     public GetExchangeItemRespDto getExchangeItemChoicePage(Long userId, int page, int size) {
-        User user = userService.findByIdOrFail(userId);
         Pageable pageable = PageRequest.of(page, size);
-        Page<ExchangeItem> items = exchangeItemRepository.findAvailableItemsByUserId(user.getId(), pageable);
+        Page<ExchangeItem> items = exchangeItemRepository.findAvailableItemsByUserId(userId, pageable);
         if (items.isEmpty()) {
             return GetExchangeItemRespDto.empty(pageable);
         }
@@ -139,7 +136,7 @@ public class ExchangeItemService {
         return GetExchangeItemRespDto.of(content);
     }
 
-    public Long choiceExchangeItem(Long itemId, @Valid ChoiceExchangeItemReqDto reqDto, Long userId) {
+    public TradeIdRespDto choiceExchangeItem(Long itemId, ChoiceExchangeItemReqDto reqDto, Long userId) {
         ExchangeItem itemFromOwner = findByIdFetchUser(itemId);
         ExchangeItem itemFromRequester = findByIdFetchUser(reqDto.getItemId());
         User user = userService.findByIdOrFail(userId);
