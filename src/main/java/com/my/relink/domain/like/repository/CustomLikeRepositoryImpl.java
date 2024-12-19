@@ -1,6 +1,7 @@
 package com.my.relink.domain.like.repository;
 
 import com.my.relink.domain.image.EntityType;
+import com.my.relink.domain.like.QLike;
 import com.my.relink.domain.like.repository.dto.LikeExchangeItemListRepositoryDto;
 import com.my.relink.domain.user.QUser;
 import com.querydsl.core.types.Projections;
@@ -27,6 +28,7 @@ public class CustomLikeRepositoryImpl implements CustomLikeRepository {
 
     private final JPAQueryFactory jpaQueryFactory;
     private final QUser likedUser = new QUser("likedUser");
+    private static final QLike like = QLike.like;
 
     @Override
     public Page<LikeExchangeItemListRepositoryDto> findUserLikeExchangeItem(Long userId, Pageable pageable) {
@@ -74,5 +76,16 @@ public class CustomLikeRepositoryImpl implements CustomLikeRepository {
                 .where(like.user.id.eq(userId));
 
         return PageableExecutionUtils.getPage(itemListDtos, pageable, totalCount::fetchOne);
+    }
+
+    public Boolean existsLike(Long itemId, Long userId) {
+        return jpaQueryFactory
+                .selectOne()
+                .from(like)
+                .where(
+                        like.exchangeItem.id.eq(itemId),
+                        like.user.id.eq(userId)
+                )
+                .fetchFirst() != null;
     }
 }
