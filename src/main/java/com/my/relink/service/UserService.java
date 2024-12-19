@@ -9,6 +9,8 @@ import com.my.relink.domain.item.exchange.repository.ExchangeItemRepository;
 import com.my.relink.domain.point.Point;
 import com.my.relink.domain.point.repository.PointRepository;
 import com.my.relink.domain.review.repository.ReviewRepository;
+import com.my.relink.domain.trade.TradeStatus;
+import com.my.relink.domain.trade.repository.TradeRepository;
 import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.domain.user.repository.dto.UserInfoWithCountRepositoryDto;
@@ -29,6 +31,7 @@ public class UserService {
     private final PointRepository pointRepository;
     private final ReviewRepository reviewRepository;
     private final ExchangeItemRepository exchangeItemRepository;
+    private final TradeRepository tradeRepository;
 
     public User findByIdOrFail(Long userId) {
         return userRepository.findById(userId)
@@ -84,6 +87,8 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
+        delayDeleteUser(user);
+
         if (!passwordEncoder.matches(dto.getPassword(), user.getPassword())) {
             throw new BusinessException(ErrorCode.MISS_MATCHER_PASSWORD);
         }
@@ -108,5 +113,13 @@ public class UserService {
         Double avgStar = reviewRepository.getTotalStarAvg(userId);
 
         return new UserProfileRespDto(avgStar, repositoryDto);
+    }
+
+    public void delayDeleteUser(User currentUser) {
+        boolean hasActiveTrades = tradeRepository.existsByRequesterIdAndTradeStatus(currentUser.getId(), TradeStatus.IN_EXCHANGE) ||
+                        tradeRepository.existsByRequesterIdAndTradeStatus(currentUser.getId(), TradeStatus.IN_DELIVERY);
+        if (hasActiveTrades) {
+            throw new BusinessException(ErrorCode.ACTIVE_TRADE_EXISTS);
+        }
     }
 }

@@ -5,17 +5,23 @@ import com.my.relink.domain.item.donation.ItemQuality;
 import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.trade.Trade;
 import com.my.relink.domain.trade.TradeStatus;
+import com.my.relink.util.page.PageInfo;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 
 @Getter
 @Builder
 @ToString
 public class GetExchangeItemRespDto {
+    private List<GetExchangeItemRespDto> content;
+    private PageInfo pageInfo;
     // 공통
     private Long exchangeItemId;
     private String exchangeItemName;
@@ -89,6 +95,24 @@ public class GetExchangeItemRespDto {
                 .size(exchangeItem.getSize())
                 .brand(exchangeItem.getBrand())
                 .desiredItem(exchangeItem.getDesiredItem())
+                .build();
+    }
+    public static GetExchangeItemRespDto empty(Pageable pageable) {
+        return GetExchangeItemRespDto.builder()
+                .content(List.of())
+                .pageInfo(PageInfo.builder()
+                        .totalCount(0)
+                        .totalPages(0)
+                        .hasPrevious(pageable.getPageNumber() > 0)
+                        .hasNext(false)
+                        .build())
+                .build();
+    }
+
+    public static GetExchangeItemRespDto of(Page<GetExchangeItemRespDto> itemsPage) {
+        return GetExchangeItemRespDto.builder()
+                .content(itemsPage.getContent())
+                .pageInfo(PageInfo.from(itemsPage))
                 .build();
     }
 }
