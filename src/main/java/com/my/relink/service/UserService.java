@@ -5,6 +5,7 @@ import com.my.relink.controller.user.dto.resp.*;
 import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.image.Image;
 import com.my.relink.domain.image.repository.ImageRepository;
+import com.my.relink.domain.item.exchange.repository.ExchangeItemRepository;
 import com.my.relink.domain.point.Point;
 import com.my.relink.domain.point.repository.PointRepository;
 import com.my.relink.domain.review.repository.ReviewRepository;
@@ -18,6 +19,7 @@ import com.my.relink.ex.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +30,7 @@ public class UserService {
     private final ImageRepository imageRepository;
     private final PointRepository pointRepository;
     private final ReviewRepository reviewRepository;
+    private final ExchangeItemRepository exchangeItemRepository;
     private final TradeRepository tradeRepository;
 
     public User findByIdOrFail(Long userId) {
@@ -80,8 +83,8 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public void deleteUser(UserDeleteReqDto dto) {
-        User user = userRepository.findByEmail(dto.getEmail())
+    public void deleteUser(Long userId, UserDeleteReqDto dto) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         delayDeleteUser(user);
@@ -92,6 +95,7 @@ public class UserService {
 
         user.changeIsDeleted();
         userRepository.save(user);
+        exchangeItemRepository.updateTradeStatusToUnavailable(user.getId());
     }
 
     public UserValidNicknameRespDto validNickname(UserValidNicknameRepDto dto) {

@@ -85,14 +85,14 @@ class TradeServiceTest extends DummyObject {
                 int trustScore = 80;
 
                 when(tradeRepository.findByIdWithItemsAndUser(trade.getId())).thenReturn(Optional.of(trade));
-                when(imageService.getExchangeItemUrl(trade.getRequesterExchangeItem())).thenReturn(imageUrl);
+                when(imageService.getExchangeItemThumbnailUrl(trade.getRequesterExchangeItem())).thenReturn(imageUrl);
                 when(userTrustScoreService.getTrustScore(partner)).thenReturn(trustScore);
 
                 TradeInquiryDetailRespDto result = tradeService.getTradeInquiryDetail(trade.getId(), user.getId());
 
                 assertAll(
                         () -> assertNotNull(result),
-                        () -> verify(imageService).getExchangeItemUrl(trade.getRequesterExchangeItem()),
+                        () -> verify(imageService).getExchangeItemThumbnailUrl(trade.getRequesterExchangeItem()),
                         () -> verify(userTrustScoreService).getTrustScore(partner),
                         () -> assertEquals(imageUrl, result.getExchangeItemInfoDto().getRequestedItem().getImgUrl()),
                         () -> assertEquals(trustScore, result.getTradePartnerInfoDto().getTrustScore())
@@ -343,7 +343,7 @@ class TradeServiceTest extends DummyObject {
 
     @Test
     @DisplayName("교환 진행 페이지 : 조회 성공 케이스")
-    void testFindTradeCompletionInfo_success() {
+    void testFindTradeCompletionInfo_success() { // stubbing 수정 필요
         Long tradeId = 1L;
         User requester = mockRequesterUser();
         User owner = mockOwnerUser();
@@ -367,8 +367,8 @@ class TradeServiceTest extends DummyObject {
 
         Mockito.when(userRepository.findById(requester.getId())).thenReturn(Optional.of(requester));
         Mockito.when(tradeRepository.findTradeWithDetails(tradeId)).thenReturn(Optional.of(trade));
-        Mockito.when(imageService.getExchangeItemUrl(myExchangeItem)).thenReturn(myImageUrl);
-        Mockito.when(imageService.getExchangeItemUrl(partnerExchangeItem)).thenReturn(partnerImageUrl);
+        Mockito.when(imageService.getExchangeItemThumbnailUrl(myExchangeItem)).thenReturn(myImageUrl);
+        Mockito.when(imageService.getExchangeItemThumbnailUrl(partnerExchangeItem)).thenReturn(partnerImageUrl);
         Mockito.when(dateTimeUtil.getTradeStatusFormattedTime(trade.getModifiedAt()))
                 .thenReturn("2024년 12월 12일 14:30");
 
@@ -445,7 +445,7 @@ class TradeServiceTest extends DummyObject {
 
         Mockito.when(userRepository.findById(requester.getId())).thenReturn(Optional.of(requester));
         Mockito.when(tradeRepository.findById(tradeId)).thenReturn(Optional.of(trade));
-        Mockito.when(imageService.getExchangeItemUrl(partnerExchangeItem)).thenReturn("http://example.com/partner-image.jpg");
+        Mockito.when(imageService.getExchangeItemThumbnailUrl(partnerExchangeItem)).thenReturn("http://example.com/partner-image.jpg");
 
         // 서비스 호출
         ViewTradeCancelRespDto result = tradeService.viewCancelTrade(tradeId, new AuthUser(requester.getId(), "test@email.com", Role.USER));
@@ -566,7 +566,7 @@ class TradeServiceTest extends DummyObject {
 
         Mockito.when(userRepository.findById(requester.getId())).thenReturn(Optional.of(requester));
         Mockito.when(tradeRepository.findById(tradeId)).thenReturn(Optional.of(trade));
-        Mockito.when(imageService.getExchangeItemUrl(partnerExchangeItem)).thenReturn(partnerImage);
+        Mockito.when(imageService.getExchangeItemThumbnailUrl(partnerExchangeItem)).thenReturn(partnerImage);
         Mockito.when(dateTimeUtil.getTradeStatusFormattedTime(trade.getModifiedAt()))
                 .thenReturn("2024년 12월 12일 14:30");
 
@@ -580,7 +580,7 @@ class TradeServiceTest extends DummyObject {
         assertEquals("2024년 12월 12일 14:30", result.getCompletedAt());
 
         verify(tradeRepository).findById(tradeId);
-        verify(imageService).getExchangeItemUrl(partnerExchangeItem);
+        verify(imageService).getExchangeItemThumbnailUrl(partnerExchangeItem);
         verify(dateTimeUtil).getTradeStatusFormattedTime(trade.getModifiedAt());
 
     }

@@ -6,9 +6,9 @@ import com.my.relink.domain.trade.TradeStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import java.util.Optional;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
 
 
 @Repository
@@ -44,4 +44,8 @@ public interface TradeRepository extends JpaRepository<Trade, Long>, CustomTrade
             "WHERE t.id = :tradeId")
     Optional<Trade> findByIdWithExchangeItem(@Param("tradeId") Long tradeId);
 
+    @Query("SELECT t.id FROM Trade t " +
+            "WHERE t.ownerExchangeItem.id = :itemId " +
+            "OR t.requesterExchangeItem.id = :itemId")
+    Optional<Long> findTradeIdByExchangeItemId(@Param("itemId") Long itemId);
 }

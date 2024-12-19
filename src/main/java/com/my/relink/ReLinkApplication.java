@@ -9,7 +9,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 public class ReLinkApplication {
 
     public static void main(String[] args) {
+
         SpringApplication.run(ReLinkApplication.class, args);
     }
-
 }

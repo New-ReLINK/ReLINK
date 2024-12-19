@@ -1,13 +1,13 @@
-package com.my.relink.client.tosspayments.ex;
+package com.my.relink.client.tosspayments.feature;
 
 import lombok.Getter;
 
 @Getter
 public enum PaymentFeature {
 
-    CONFIRM("결제 승인"),
-    INQUIRY("결제 조회"),
-    CANCEL("결제 취소");
+    PAYMENT_CONFIRM("결제 승인"),
+    PAYMENT_INQUIRY("결제 조회"),
+    PAYMENT_CANCEL("결제 취소");
 
     private final String description;
 
