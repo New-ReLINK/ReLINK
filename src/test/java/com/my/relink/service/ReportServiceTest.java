@@ -1,9 +1,12 @@
 package com.my.relink.service;
 
+import com.my.relink.config.s3.S3Service;
 import com.my.relink.controller.report.dto.request.ExchangeItemReportCreateReqDto;
 import com.my.relink.controller.report.dto.request.TradeReportCreateReqDto;
+import com.my.relink.controller.report.dto.request.UploadImagesForReportReqDto;
 import com.my.relink.controller.report.dto.response.ExchangeItemInfoRespDto;
 import com.my.relink.controller.report.dto.response.TradeInfoRespDto;
+import com.my.relink.controller.report.dto.response.UploadImagesForReportRespDto;
 import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.report.Report;
 import com.my.relink.domain.report.ReportReason;
@@ -23,11 +26,15 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
@@ -52,6 +59,194 @@ class ReportServiceTest {
 
     @Mock
     private DateTimeUtil dateTimeUtil;
+    @Mock
+    private S3Service s3Service;
+
+
+    @DisplayName("거래 신고 이미지 업로드 테스트")
+    @Nested
+    class UploadImagesForTradeReport {
+
+        MockMultipartFile createFile(String name){
+            return new MockMultipartFile(
+                    name,
+                    name+".jpg",
+                    MediaType.IMAGE_JPEG_VALUE,
+                    name.getBytes());
+        }
+
+        Report createReport(Long tradeId){
+            return Report.builder()
+                    .id(1L)
+                    .entityId(tradeId)
+                    .reportType(ReportType.TRADE)
+                    .build();
+        }
+
+
+        @DisplayName("성공 케이스")
+        @Nested
+        class SuccessCase {
+            @Test
+            @DisplayName("거래 신고에 대해 이미지 업로드에 성공한다")
+            void success_uploadImagesForTradeReport() {
+                Long tradeId = 1L;
+                Report report = createReport(tradeId);
+
+                MockMultipartFile image1 = createFile("image1");
+                MockMultipartFile image2 = createFile("image2");
+
+                UploadImagesForReportReqDto reqDto = new UploadImagesForReportReqDto(
+                        image1, image2, null, null, null, null, null
+                );
+
+                given(reportRepository.findByEntityIdAndReportType(tradeId, ReportType.TRADE))
+                        .willReturn(Optional.of(report));
+                given(s3Service.upload(any(MultipartFile.class)))
+                        .willReturn("test-url-1")
+                        .willReturn("test-url-2");
+
+                UploadImagesForReportRespDto result = reportService.uploadImagesForTradeReport(tradeId, reqDto);
+
+                assertThat(result).isNotNull();
+                verify(s3Service, times(2)).upload(any(MultipartFile.class));
+                verify(imageService, times(1)).saveImages(anyList());
+            }
+
+            @Test
+            @DisplayName("1개의 이미지만 업로드해도 성공한다")
+            void success_uploadSingleImage() {
+                Long tradeId = 1L;
+                Report report = createReport(tradeId);
+
+                MockMultipartFile image1 = createFile("image1");
+
+                UploadImagesForReportReqDto reqDto = new UploadImagesForReportReqDto(
+                        image1, null, null, null, null, null, null
+                );
+
+                given(reportRepository.findByEntityIdAndReportType(tradeId, ReportType.TRADE))
+                        .willReturn(Optional.of(report));
+                given(s3Service.upload(any(MultipartFile.class)))
+                        .willReturn("test-url-1");
+
+                UploadImagesForReportRespDto result = reportService.uploadImagesForTradeReport(tradeId, reqDto);
+
+                assertThat(result).isNotNull();
+                verify(s3Service, times(1)).upload(any(MultipartFile.class));
+                verify(imageService, times(1)).saveImages(anyList());
+            }
+        }
+
+        @DisplayName("실패 케이스")
+        @Nested
+        class FailureCase {
+            @Test
+            @DisplayName("존재하지 않는 신고에 대해 이미지 업로드를 시도하면 예외가 발생한다")
+            void fail_uploadImages_whenTradeNotFound() {
+                Long tradeId = 39L;
+                MockMultipartFile image1 = createFile("image1");
+
+                UploadImagesForReportReqDto reqDto = new UploadImagesForReportReqDto(
+                        image1, null, null, null, null, null, null
+                );
+
+                given(reportRepository.findByEntityIdAndReportType(tradeId, ReportType.TRADE))
+                        .willReturn(Optional.empty());
+
+                assertThatThrownBy(() -> reportService.uploadImagesForTradeReport(tradeId, reqDto))
+                        .isInstanceOf(BusinessException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.REPORT_NOR_FOUND);
+            }
+
+            @Test
+            @DisplayName("S3 업로드 실패 시 예외가 발생하고 업로드된 이미지들이 삭제된다")
+            void fail_when_uploadFailureWithS3() {
+                Long tradeId = 1L;
+                Report report = createReport(tradeId);
+
+                MockMultipartFile image1 = createFile("image1");
+                MockMultipartFile image2 = createFile("image2");
+
+                UploadImagesForReportReqDto reqDto = new UploadImagesForReportReqDto(
+                        image1, image2, null, null, null, null, null
+                );
+
+                given(reportRepository.findByEntityIdAndReportType(tradeId, ReportType.TRADE))
+                        .willReturn(Optional.of(report));
+                given(s3Service.upload(any(MultipartFile.class)))
+                        .willReturn("test-url-1")
+                        .willThrow(new RuntimeException("S3 업로드 실패"));
+
+                assertThatThrownBy(() -> reportService.uploadImagesForTradeReport(tradeId, reqDto))
+                        .isInstanceOf(BusinessException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.IMAGE_UPLOAD_FAILED);
+
+                verify(s3Service, times(1)).deleteImage("test-url-1");
+            }
+
+            @Test
+            @DisplayName("이미지 저장 실패 시 예외가 발생하고 S3에 업로드된 이미지들이 삭제된다")
+            void fail_when_saveImagesFailure() {
+                Long tradeId = 1L;
+                Report report = createReport(tradeId);
+
+                MockMultipartFile image1 = createFile("image1");
+
+                UploadImagesForReportReqDto reqDto = new UploadImagesForReportReqDto(
+                        image1, null, null, null, null, null, null
+                );
+
+                given(reportRepository.findByEntityIdAndReportType(tradeId, ReportType.TRADE))
+                        .willReturn(Optional.of(report));
+                given(s3Service.upload(any(MultipartFile.class)))
+                        .willReturn("test-url-1");
+                doThrow(new RuntimeException("DB 저장 실패"))
+                        .when(imageService).saveImages(anyList());
+
+                assertThatThrownBy(() -> reportService.uploadImagesForTradeReport(tradeId, reqDto))
+                        .isInstanceOf(BusinessException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.FAIL_TO_SAVE_IMAGE);
+
+                verify(s3Service, times(1)).deleteImage("test-url-1");
+            }
+
+            @Test
+            @DisplayName("이미지 저장 실패 후 S3 삭제 과정에서 일부 이미지 삭제에 실패하는 경우")
+            void fail_partialDeleteFailure_inRollback() {
+                Long tradeId = 1L;
+                Report report = createReport(tradeId);
+
+                MockMultipartFile image1 = createFile("image1");
+                MockMultipartFile image2 = createFile("image2");
+
+                UploadImagesForReportReqDto reqDto = new UploadImagesForReportReqDto(
+                        image1, image2, null, null, null, null, null
+                );
+
+                given(reportRepository.findByEntityIdAndReportType(tradeId, ReportType.TRADE))
+                        .willReturn(Optional.of(report));
+                given(s3Service.upload(any(MultipartFile.class)))
+                        .willReturn("test-url-1")
+                        .willReturn("test-url-2");
+
+                doThrow(new RuntimeException("DB 저장 실패"))
+                        .when(imageService).saveImages(anyList());
+                doNothing()
+                        .doThrow(new RuntimeException("S3 이미지 삭제 실패"))
+                        .when(s3Service).deleteImage(anyString());
+
+                assertThatThrownBy(() -> reportService.uploadImagesForTradeReport(tradeId, reqDto))
+                        .isInstanceOf(BusinessException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.FAIL_TO_SAVE_IMAGE);
+
+                verify(s3Service, times(2)).deleteImage(anyString());
+            }
+
+        }
+    }
+
+
 
 
     @Nested

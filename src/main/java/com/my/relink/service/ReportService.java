@@ -39,7 +39,6 @@ public class ReportService {
     private final ExchangeItemService exchangeItemService;
     private final DateTimeUtil dateTimeUtil;
     private final ImageService imageService;
-    private final ExchangeItemRepository exchangeItemRepository;
     private final S3Service s3Service;
 
     @Transactional
