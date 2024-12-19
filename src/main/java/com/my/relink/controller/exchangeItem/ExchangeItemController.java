@@ -3,21 +3,25 @@ package com.my.relink.controller.exchangeItem;
 import com.my.relink.config.security.AuthUser;
 import com.my.relink.controller.exchangeItem.dto.req.ChoiceExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.req.CreateExchangeItemReqDto;
+import com.my.relink.controller.exchangeItem.dto.req.GetAllExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.req.UpdateExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetAllExchangeItemsRespDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemRespDto;
-import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.service.ExchangeItemService;
 import com.my.relink.util.api.ApiResult;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
+@Validated
 public class ExchangeItemController {
 
     private final ExchangeItemService exchangeItemService;
@@ -60,13 +64,8 @@ public class ExchangeItemController {
     }
 
     @GetMapping("/items/exchanges")
-    public ResponseEntity<ApiResult<GetAllExchangeItemsRespDto>> getAllExchangeItems(@RequestParam(value = "search", required = false) String search,
-                                                                                     @RequestParam(value = "deposit", required = false) String deposit,
-                                                                                     @RequestParam(value = "tradeStatus", required = false) TradeStatus tradeStatus,
-                                                                                     @RequestParam(value = "category", required = false) Long categoryId,
-                                                                                     @RequestParam(value = "page", required = false, defaultValue = "0") int page,
-                                                                                     @RequestParam(value = "size", required = false, defaultValue = "100") int size) {
-        GetAllExchangeItemsRespDto respDto = exchangeItemService.getAllExchangeItems(search, deposit, tradeStatus, categoryId, page, size);
+    public ResponseEntity<ApiResult<GetAllExchangeItemsRespDto>> getAllExchangeItems(@Valid @RequestBody GetAllExchangeItemReqDto reqDto) {
+        GetAllExchangeItemsRespDto respDto = exchangeItemService.getAllExchangeItems(reqDto);
         return new ResponseEntity<>(ApiResult.success(respDto), HttpStatus.OK);
     }
 
@@ -79,8 +78,8 @@ public class ExchangeItemController {
 
     @GetMapping("/items/exchanges/available")
     public ResponseEntity<ApiResult<GetExchangeItemRespDto>> getExchangeItemChoicePage(@AuthenticationPrincipal AuthUser authUser,
-                                                                                             @RequestParam(value = "page", required = false, defaultValue = "0") int page,
-                                                                                             @RequestParam(value = "size", required = false, defaultValue = "100") int size) {
+                                                                                       @RequestParam(value = "page", required = false, defaultValue = "0") @Min(0) int page,
+                                                                                       @RequestParam(value = "size", required = false, defaultValue = "100") @Min(1) @Max(100) int size) {
         GetExchangeItemRespDto respDto = exchangeItemService.getExchangeItemChoicePage(authUser.getId(), page, size);
         return new ResponseEntity<>(ApiResult.success(respDto), HttpStatus.OK);
     }
