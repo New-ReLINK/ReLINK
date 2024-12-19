@@ -54,10 +54,8 @@ public class ExchangeItemService {
     }
 
     public GetExchangeItemRespDto getExchangeItemsByUserId(Long userId, int page, int size) {
-        User user = userService.findByIdOrFail(userId);
         Pageable pageable = PageRequest.of(page - 1, size);
-
-        Page<ExchangeItem> items = exchangeItemRepository.findByUserId(user.getId(), pageable);
+        Page<ExchangeItem> items = exchangeItemRepository.findByUserIdWithUser(userId, pageable);
         if (items.isEmpty()) {
             return GetExchangeItemRespDto.empty(pageable);
         }
@@ -80,7 +78,7 @@ public class ExchangeItemService {
 
     public GetAllExchangeItemsRespDto getAllExchangeItems(GetAllExchangeItemReqDto reqDto) {
         Category category = (reqDto.getCategoryId() != null) ? getValidCategory(reqDto.getCategoryId()) : null;
-        Pageable pageable = PageRequest.of(reqDto.getPage() - 1, reqDto.getSize());
+        Pageable pageable = PageRequest.of(reqDto.getPage(), reqDto.getSize());
         Page<ExchangeItem> itemsPage = exchangeItemRepository.findAllByCriteria(reqDto.getSearch(),
                 reqDto.getTradeStatus(),
                 category,
@@ -126,9 +124,8 @@ public class ExchangeItemService {
     }
 
     public GetExchangeItemRespDto getExchangeItemChoicePage(Long userId, int page, int size) {
-        User user = userService.findByIdOrFail(userId);
         Pageable pageable = PageRequest.of(page, size);
-        Page<ExchangeItem> items = exchangeItemRepository.findAvailableItemsByUserId(user.getId(), pageable);
+        Page<ExchangeItem> items = exchangeItemRepository.findAvailableItemsByUserId(userId, pageable);
         if (items.isEmpty()) {
             return GetExchangeItemRespDto.empty(pageable);
         }
