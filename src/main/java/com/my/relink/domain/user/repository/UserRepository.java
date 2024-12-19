@@ -12,6 +12,8 @@ public interface UserRepository extends JpaRepository<User, Long>, CustomUserRep
 
     Optional<User> findByNickname(String nickname);
 
+    boolean existsByIdAndIsDeletedFalse(Long id);
+
     @Query("select u from User u where u.email = :email and u.isDeleted = false")
     Optional<User> findByEmailActiveUser(@Param("email") String email);
 }

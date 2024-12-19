@@ -1,5 +1,6 @@
 package com.my.relink.controller.point.dto.response;
 
+import com.my.relink.domain.point.pointHistory.repository.dto.PointUsageHistoryDto;
 import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.util.DateTimeUtil;
 import com.my.relink.util.page.PageResponse;
@@ -9,7 +10,6 @@ import java.time.LocalDateTime;
 
 @NoArgsConstructor
 @Getter
-@ToString
 public class PointUsageHistoryRespDto {
 
     private Long tradeId;
@@ -25,15 +25,14 @@ public class PointUsageHistoryRespDto {
     private String refundDateTime;
 
 
-    @Builder
-    public PointUsageHistoryRespDto(Long tradeId, String partnerExchangeItemName, String tradeStatus, Integer depositAmount, Integer refundAmount, String depositDateTime, String refundDateTime) {
-        this.tradeId = tradeId;
-        this.partnerExchangeItemName = partnerExchangeItemName;
-        this.tradeStatus = tradeStatus;
-        this.depositAmount = depositAmount;
-        this.refundAmount = refundAmount;
-        this.depositDateTime = depositDateTime;
-        this.refundDateTime = refundDateTime;
+    public PointUsageHistoryRespDto(PointUsageHistoryDto dto, DateTimeUtil dateTimeUtil) {
+        this.tradeId = dto.getTradeId();
+        this.partnerExchangeItemName = dto.getPartnerExchangeItemName();
+        this.tradeStatus = dto.getTradeStatus().toString();
+        this.depositAmount = dto.getDepositAmount();
+        this.refundAmount = dto.getRefundAmount();
+        this.depositDateTime = dateTimeUtil.getUsagePointHistoryFormattedTime(dto.getDepositDateTime());
+        this.refundDateTime = dateTimeUtil.getUsagePointHistoryFormattedTime(dto.getRefundDateTime());
     }
 
 }

@@ -1,8 +1,7 @@
 package com.my.relink.controller.donation;
 
 import com.my.relink.config.security.AuthUser;
-import com.my.relink.controller.donation.dto.resp.DonationItemDetailRespDto;
-import com.my.relink.controller.donation.dto.resp.DonationItemListRespDto;
+import com.my.relink.controller.donation.dto.resp.*;
 import com.my.relink.controller.donation.dto.req.DonationItemReqDto;
 import com.my.relink.controller.donation.dto.resp.DonationItemIdRespDto;
 import com.my.relink.controller.donation.dto.resp.DonationItemUserListRespDto;
@@ -58,4 +57,26 @@ public class DonationController {
 
         return ResponseEntity.ok(ApiResult.success(response));
     }
+
+    @GetMapping("/donations/{donationItemId}/completion")
+    public ResponseEntity<ApiResult<DonationCompleteItemDetailRespDto>> getCompletionDonationItem(
+            @PathVariable Long donationItemId,
+            @AuthenticationPrincipal AuthUser authUser){
+
+        DonationCompleteItemDetailRespDto response = donationItemService.getCompletionDonationItem(donationItemId, authUser.getId());
+
+        return ResponseEntity.ok(ApiResult.success(response));
+    }
+
+
+    @DeleteMapping("/users/items/donations/{itemId}")
+    public ResponseEntity<ApiResult<DonationItemIdRespDto>> deleteDonationItem(
+            @PathVariable Long itemId,
+            @AuthenticationPrincipal AuthUser authUser) {
+
+        DonationItemIdRespDto deletedItem = donationItemService.deleteDonationItem(itemId, authUser.getId());
+
+        return ResponseEntity.ok(ApiResult.success(deletedItem));
+    }
+
 }

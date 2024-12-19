@@ -1,10 +1,12 @@
 package com.my.relink.util.page;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import org.springframework.data.domain.Page;
 
 @Getter
+@Builder
 @AllArgsConstructor
 public class PageInfo {
 
