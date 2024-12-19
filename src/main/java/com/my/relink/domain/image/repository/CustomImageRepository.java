@@ -7,4 +7,6 @@ import java.util.List;
 
 public interface CustomImageRepository {
     List<Image> findImages(EntityType entityType, List<Long> entityIds);
+
+    List<Image> findFirstImages(EntityType entityType, List<Long> entityIds);
 }

@@ -1,5 +1,6 @@
 package com.my.relink.domain.review.repository;
 
+import com.my.relink.config.JpaConfig;
 import com.my.relink.config.TestConfig;
 import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.image.Image;
@@ -13,6 +14,7 @@ import com.my.relink.domain.trade.Trade;
 import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.domain.user.Address;
 import com.my.relink.domain.user.User;
+import com.my.relink.util.DateTimeUtil;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +31,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
-@Import(TestConfig.class)
+@Import({TestConfig.class, JpaConfig.class})
 class CustomReviewRepositoryImplTest {
 
     @Autowired
