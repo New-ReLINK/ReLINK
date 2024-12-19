@@ -69,6 +69,8 @@ public enum ErrorCode {
     ITEM_IN_EXCHANGE(HttpStatus.BAD_REQUEST.value(), "해당 상품이 거래중입니다."),
     DONATION_ITEM_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR.value(), "해당 기부 상품을 찾을 수 없습니다."),
     FAIL_TO_SAVE_IMAGE(HttpStatus.INTERNAL_SERVER_ERROR.value(), "이미지 저장에 실패했습니다"),
+    DONATION_ITEM_CANNOT_BE_DELETED(HttpStatus.BAD_REQUEST.value(), "검수중,검수완료,기부완료 된 물품은 삭제 할 수 없습니다."),
+
 
     ;
     private final int status;
