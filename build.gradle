@@ -15,6 +15,7 @@ war{
 
 bootWar{
     bootWar.enabled = false
+    archiveClassifier = ''
     archiveFileName = 'rerink.war'
 }
 
