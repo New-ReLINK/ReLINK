@@ -5,8 +5,6 @@ import com.my.relink.controller.trade.dto.request.AddressReqDto;
 import com.my.relink.controller.trade.dto.request.TrackingNumberReqDto;
 import com.my.relink.controller.trade.dto.request.TradeCancelReqDto;
 import com.my.relink.controller.trade.dto.response.*;
-import com.my.relink.domain.image.EntityType;
-import com.my.relink.domain.image.Image;
 import com.my.relink.domain.image.repository.ImageRepository;
 import com.my.relink.domain.item.donation.ItemQuality;
 import com.my.relink.domain.item.exchange.ExchangeItem;
@@ -36,10 +34,9 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import javax.swing.text.html.Option;
-import java.time.LocalDateTime;
 import java.util.Optional;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -605,6 +602,27 @@ class TradeServiceTest extends DummyObject {
 
         verify(userRepository).findById(authUser.getId());
         verifyNoInteractions(tradeRepository, imageService, dateTimeUtil);
+    }
+
+    @Test
+    @DisplayName("Trade 생성 성공")
+    void testCreateTrade_Success() {
+        ExchangeItem ownerItem = ExchangeItem.builder().id(100L).tradeStatus(TradeStatus.AVAILABLE).build();
+        ExchangeItem requesterItem = ExchangeItem.builder().id(200L).tradeStatus(TradeStatus.AVAILABLE).build();
+        User requester = User.builder().id(1L).build();
+
+        Trade expectedTrade = Trade.builder()
+                .id(1L)
+                .ownerExchangeItem(ownerItem)
+                .requesterExchangeItem(requesterItem)
+                .build();
+
+        when(tradeRepository.save(any(Trade.class))).thenReturn(expectedTrade);
+
+        Long tradeId = tradeService.createTrade(ownerItem, requesterItem, requester);
+
+        assertThat(tradeId).isEqualTo(1L);
+        verify(tradeRepository, times(1)).save(any(Trade.class));
     }
 
 }

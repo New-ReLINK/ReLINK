@@ -18,7 +18,6 @@ import com.my.relink.domain.point.Point;
 import com.my.relink.domain.point.repository.PointRepository;
 import com.my.relink.domain.trade.Trade;
 import com.my.relink.domain.trade.TradeStatus;
-import com.my.relink.domain.trade.repository.TradeRepository;
 import com.my.relink.domain.user.Role;
 import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.repository.UserRepository;
@@ -54,7 +53,8 @@ import static org.mockito.Mockito.*;
 class ExchangeItemServiceTest {
     @InjectMocks
     private ExchangeItemService exchangeItemService;
-
+    @Mock
+    private TradeService tradeService;
     @Mock
     private ExchangeItemRepository exchangeItemRepository;
     @Mock
@@ -63,10 +63,6 @@ class ExchangeItemServiceTest {
     private UserRepository userRepository;
     @Mock
     private PointRepository pointRepository;
-    @Mock
-    private TradeRepository tradeRepository;
-    @Mock
-    private TradeService tradeService;
     @Mock
     private ImageService imageService;
     @Mock
@@ -750,47 +746,71 @@ class ExchangeItemServiceTest {
     @Test
     @DisplayName("교환 요청 성공")
     void testChoiceExchangeItem_Success() {
-        System.out.println("테스트 시작");
         Long userId = 1L;
         Long itemFromOwnerId = 100L;
         Long itemFromRequesterId = 200L;
+
         User user = User.builder().id(userId).build();
+        ChoiceExchangeItemReqDto reqDto = new ChoiceExchangeItemReqDto(itemFromRequesterId);
+
         ExchangeItem itemFromOwner = ExchangeItem.builder()
                 .id(itemFromOwnerId)
                 .tradeStatus(TradeStatus.AVAILABLE)
                 .user(User.builder().id(2L).build())
                 .build();
+
         ExchangeItem itemFromRequester = ExchangeItem.builder()
                 .id(itemFromRequesterId)
                 .tradeStatus(TradeStatus.AVAILABLE)
                 .user(user)
                 .build();
 
-        when(exchangeItemRepository.findById(itemFromOwnerId)).thenReturn(Optional.of(itemFromOwner));
-        when(exchangeItemRepository.findById(itemFromRequesterId)).thenReturn(Optional.of(itemFromRequester));
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        System.out.println("tradeRepository 호출 전");
-        when(tradeRepository.save(any(Trade.class))).thenAnswer(invocation -> {
-            Trade trade = invocation.getArgument(0);
-            ReflectionTestUtils.setField(trade, "id", 1L);
-            return trade;
-        });
+        when(exchangeItemRepository.findById(eq(itemFromOwnerId))).thenReturn(Optional.of(itemFromOwner));
+        when(exchangeItemRepository.findById(eq(itemFromRequesterId))).thenReturn(Optional.of(itemFromRequester));
+        when(userRepository.findById(eq(userId))).thenReturn(Optional.of(user));
+        when(tradeService.createTrade(eq(itemFromOwner), eq(itemFromRequester), eq(user))).thenReturn(1L);
 
-        ChoiceExchangeItemReqDto reqDto = new ChoiceExchangeItemReqDto(itemFromRequesterId);
         Long tradeId = exchangeItemService.choiceExchangeItem(itemFromOwnerId, reqDto, userId);
 
         assertThat(tradeId).isEqualTo(1L);
-        verify(exchangeItemRepository, times(2)).findById(anyLong());
-        verify(tradeRepository, times(1)).save(any(Trade.class));
-        System.out.println("테스트 종료");
 
-        //when(exchangeItemRepository.save(any(ExchangeItem.class)))
-        //                .thenAnswer(invocation -> {
-        //                    ExchangeItem savedItem = invocation.getArgument(0);
-        //                    ReflectionTestUtils.setField(savedItem, "id", 1L);
-        //                    return savedItem;
-        //                });
-        //        Long savedId = exchangeItemService.createExchangeItem(reqDto, userId);
+        verify(exchangeItemRepository, times(1)).findById(eq(itemFromOwnerId));
+        verify(exchangeItemRepository, times(1)).findById(eq(itemFromRequesterId));
+        verify(tradeService, times(1)).createTrade(eq(itemFromOwner), eq(itemFromRequester), eq(user));
+    }
+
+    @Test
+    @DisplayName("교환 요청 실패 - 요청 직전 상대방의 상품이 교환중으로 변경")
+    void testChoiceExchangeItem_Fail_NotAvailable() {
+        Long itemId = 1L;
+        Long userId = 2L;
+        Long requesterItemId = 3L;
+        User owner = User.builder().id(1L).build();
+        User requester = User.builder().id(userId).build();
+        ExchangeItem itemFromOwner = ExchangeItem.builder()
+                .id(itemId)
+                .user(owner)
+                .tradeStatus(TradeStatus.IN_EXCHANGE)
+                .build();
+        ExchangeItem itemFromRequester = ExchangeItem.builder()
+                .id(requesterItemId)
+                .user(requester)
+                .tradeStatus(TradeStatus.AVAILABLE)
+                .build();
+        ChoiceExchangeItemReqDto reqDto = new ChoiceExchangeItemReqDto(requesterItemId);
+
+        when(exchangeItemRepository.findById(itemId)).thenReturn(Optional.of(itemFromOwner));
+        when(exchangeItemRepository.findById(requesterItemId)).thenReturn(Optional.of(itemFromRequester));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(requester));
+
+        BusinessException exception = assertThrows(
+                BusinessException.class,
+                () -> exchangeItemService.choiceExchangeItem(itemId, reqDto, userId)
+        );
+
+        assertEquals(ErrorCode.ITEM_NOT_AVAILABLE, exception.getErrorCode());
+        assertEquals("해당 상품이 교환가능 상태가 아닙니다.", exception.getMessage());
+        verify(tradeService, never()).createTrade(any(), any(), any());
     }
 
 }
