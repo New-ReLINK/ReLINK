@@ -9,6 +9,8 @@ import java.util.List;
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ToString
+@AllArgsConstructor
+@Builder
 public class TossPaymentRespDto {
 
     private String version; //객체 응답 버전

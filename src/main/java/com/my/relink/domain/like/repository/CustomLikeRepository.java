@@ -9,4 +9,6 @@ public interface CustomLikeRepository {
 
     @Transactional(readOnly = true)
     Page<LikeExchangeItemListRepositoryDto> findUserLikeExchangeItem(Long userId, Pageable pageable);
+
+    Boolean existsLike(Long itemId, Long userId);
 }

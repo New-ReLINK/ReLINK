@@ -59,6 +59,6 @@ public class LikeService {
     }
 
     public Boolean existsItemLike(Long itemId, Long userId) {
-        return likeRepository.existsByExchangeItem_IdAndUser_Id(itemId, userId);
+        return likeRepository.existsLike(itemId, userId);
     }
 }

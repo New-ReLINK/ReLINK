@@ -9,16 +9,20 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Optional;
+
 public interface ExchangeItemRepository extends JpaRepository<ExchangeItem, Long>, CustomExchangeItemRepository {
 
     long countByTradeStatusAndUserId(TradeStatus status, Long userId);
 
-    Page<ExchangeItem> findByUserId(Long id, Pageable pageable);
+    @Query("select ei from ExchangeItem ei join fetch ei.user where ei.id = :itemId and ei.isDeleted = false")
+    Optional<ExchangeItem> findByIdWithUser(@Param("itemId") Long itemId);
+
+    @Query("select ei from ExchangeItem ei join fetch ei.user where ei.user.id = :userId")
+    Page<ExchangeItem> findByUserIdWithUser(@Param("userId") Long userId, Pageable pageable);
 
     @Modifying(clearAutomatically = true)
     @Query("update ExchangeItem e set e.tradeStatus = com.my.relink.domain.trade.TradeStatus.UNAVAILABLE where e.user.id = :userId")
     void updateTradeStatusToUnavailable(@Param("userId") Long userId);
 
-    @Query("SELECT e FROM ExchangeItem e WHERE e.user.id = :userId AND e.tradeStatus = com.my.relink.domain.trade.TradeStatus.AVAILABLE ORDER BY e.modifiedAt DESC")
-    Page<ExchangeItem> findAvailableItemsByUserIdOrderByModifiedAt(@Param("userId") Long userId, Pageable pageable);
 }

@@ -37,7 +37,7 @@
             console.log(json);
             const encodedMessage = encodeURIComponent(json.message);
             const encodedCode = encodeURIComponent(json.code);
-            window.location.href = `/point-charge-fail?message=${encodedMessage}&code=${encodedCode}`;
+            window.location.href = `/charge-fail?message=${encodedMessage}&code=${encodedCode}`;
         }
 
         console.log(json);

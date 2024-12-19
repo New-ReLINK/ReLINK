@@ -3,8 +3,10 @@ package com.my.relink.service;
 
 import com.my.relink.controller.report.dto.request.ExchangeItemReportCreateReqDto;
 import com.my.relink.controller.report.dto.request.TradeReportCreateReqDto;
+import com.my.relink.controller.report.dto.response.ExchangeItemInfoRespDto;
 import com.my.relink.controller.report.dto.response.TradeInfoRespDto;
 import com.my.relink.domain.item.exchange.ExchangeItem;
+import com.my.relink.domain.item.exchange.repository.ExchangeItemRepository;
 import com.my.relink.domain.report.ReportType;
 import com.my.relink.domain.report.repository.ReportRepository;
 import com.my.relink.domain.trade.Trade;
@@ -26,6 +28,7 @@ public class ReportService {
     private final ExchangeItemService exchangeItemService;
     private final DateTimeUtil dateTimeUtil;
     private final ImageService imageService;
+    private final ExchangeItemRepository exchangeItemRepository;
 
     @Transactional
     public void createTradeReport(Long tradeId, Long userId, TradeReportCreateReqDto tradeReportCreateReqDto) {
@@ -59,10 +62,21 @@ public class ReportService {
         Trade trade = tradeService.findByIdFetchItemsAndUsersOrFail(tradeId);
         trade.validateAccess(userId);
         ExchangeItem exchangeItem = trade.getPartnerItem(userId);
-        String exchangeItemUrl = imageService.getExchangeItemUrl(exchangeItem);
+        String exchangeItemUrl = imageService.getExchangeItemThumbnailUrl(exchangeItem);
         return new TradeInfoRespDto(
                 exchangeItem,
                 exchangeItemUrl,
                 dateTimeUtil.getExchangeStartFormattedTime(trade.getCreatedAt()));
+    }
+
+    /**
+     * 신고 전 교환 상품 정보 조회
+     * @param itemId 교환 가능/교환 중인 상품 id
+     * @return 교환 상품 및 소유자 정보
+     */
+    public ExchangeItemInfoRespDto getExchangeItemInfoForReport(Long itemId) {
+        ExchangeItem exchangeItem = exchangeItemService.findByIdFetchUser(itemId);
+        String exchangeItemUrl = imageService.getExchangeItemThumbnailUrl(exchangeItem);
+        return new ExchangeItemInfoRespDto(exchangeItem, exchangeItemUrl);
     }
 }
