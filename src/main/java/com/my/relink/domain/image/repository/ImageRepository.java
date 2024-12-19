@@ -22,4 +22,7 @@ public interface ImageRepository extends JpaRepository<Image, Long>, CustomImage
 
     @Query("SELECT i.imageUrl FROM Image i WHERE i.entityType = :entityType AND i.entityId = :itemId")
     List<String> findImageUrlsByItemId(@Param("entityType") EntityType entityType, @Param("itemId") Long itemId);
+
+    @Query("SELECT COUNT(i) FROM Image i WHERE i.entityId = :entityId AND i.entityType = :entityType")
+    int countImages(@Param("entityId") Long entityId, @Param("entityType") EntityType entityType);
 }
