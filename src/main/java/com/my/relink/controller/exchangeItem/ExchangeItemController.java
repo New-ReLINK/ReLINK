@@ -75,8 +75,8 @@ public class ExchangeItemController {
 
     @GetMapping("/items/exchanges/available")
     public ResponseEntity<ApiResult<GetExchangeItemRespDto>> getExchangeItemChoicePage(@AuthenticationPrincipal AuthUser authUser,
-                                                                                             @RequestParam(value = "page", required = false, defaultValue = "0") @Min(0) int page,
-                                                                                             @RequestParam(value = "size", required = false, defaultValue = "100") @Min(1) @Max(100) int size) {
+                                                                                       @RequestParam(value = "page", required = false, defaultValue = "1") @Min(1) int page,
+                                                                                       @RequestParam(value = "size", required = false, defaultValue = "100") @Min(1) @Max(100) int size) {
         GetExchangeItemRespDto respDto = exchangeItemService.getExchangeItemChoicePage(authUser.getId(), page, size);
         return new ResponseEntity<>(ApiResult.success(respDto), HttpStatus.OK);
     }
