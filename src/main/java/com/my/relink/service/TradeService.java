@@ -1,5 +1,6 @@
 package com.my.relink.service;
 
+import com.my.relink.common.notification.NotificationPublisherService;
 import com.my.relink.config.security.AuthUser;
 import com.my.relink.controller.trade.dto.request.AddressReqDto;
 import com.my.relink.controller.trade.dto.request.TrackingNumberReqDto;
@@ -18,6 +19,7 @@ import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import com.my.relink.util.DateTimeUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.jmx.export.notification.NotificationPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +40,7 @@ public class TradeService {
     private final PointTransactionService pointTransactionService;
     private final DateTimeUtil dateTimeUtil;
     private final PointHistoryRepository pointHistoryRepository;
+    private final NotificationPublisherService notificationPublisherService;
 
     /**
      * [문의하기] -> 해당 채팅방의 거래 정보, 상품 정보, 상대 유저 정보 내리기
@@ -82,7 +85,6 @@ public class TradeService {
     }
 
     @Transactional
-
     public TradeRequestRespDto requestTrade(Long tradeId, AuthUser authUser) {
 
         User currentUser = userRepository.findById(authUser.getId())
@@ -117,6 +119,13 @@ public class TradeService {
             trade.updateTradeStatus(TradeStatus.IN_EXCHANGE);
             tradeRepository.save(trade);
         }
+
+        notificationPublisherService.createExchangeNotification(
+                currentUser.getId(),
+                trade.getOwnerExchangeItem().getName(),
+                trade.getRequester().getNickname(),
+                TradeStatus.IN_EXCHANGE
+        );
 
         return new TradeRequestRespDto(tradeId);
     }
@@ -157,6 +166,13 @@ public class TradeService {
             trade.updateTradeStatus(TradeStatus.AVAILABLE);
             tradeRepository.save(trade);
         }
+
+        notificationPublisherService.createExchangeNotification(
+                currentUser.getId(),
+                trade.getOwnerExchangeItem().getName(),
+                trade.getRequester().getNickname(),
+                TradeStatus.AVAILABLE
+        );
     }
 
     @Transactional
@@ -208,6 +224,13 @@ public class TradeService {
         pointTransactionService.restorePointsForAllTraders(trade, amount);
         tradeRepository.save(trade);
 
+        notificationPublisherService.createExchangeNotification(
+                currentUser.getId(),
+                trade.getOwnerExchangeItem().getName(),
+                trade.getRequester().getNickname(),
+                TradeStatus.EXCHANGED
+        );
+
         return new TradeCompleteRespDto(tradeId);
     }
 
@@ -229,6 +252,14 @@ public class TradeService {
             trade.updateTradeStatus(TradeStatus.IN_DELIVERY);
         }
         tradeRepository.save(trade);
+
+        notificationPublisherService.createExchangeNotification(
+                currentUser.getId(),
+                trade.getOwnerExchangeItem().getName(),
+                trade.getRequester().getNickname(),
+                TradeStatus.IN_DELIVERY
+        );
+
     }
 
     public TradeCompletionRespDto findCompleteTradeInfo(Long tradeId, AuthUser authUser) {
@@ -310,6 +341,20 @@ public class TradeService {
 
         trade.updateTradeCancelReason(reqDto.getTradeCancelReason(), reqDto.getTradeCancelDescription());
         tradeRepository.save(trade);
+
+        notificationPublisherService.createExchangeNotification(
+                currentUser.getId(),
+                trade.getOwnerExchangeItem().getName(),
+                trade.getRequester().getNickname(),
+                TradeStatus.CANCELED
+        );
+
+        notificationPublisherService.createExchangeNotification(
+                trade.getPartner(currentUser.getId()).getId(),
+                trade.getOwnerExchangeItem().getName(),
+                trade.getRequester().getNickname(),
+                TradeStatus.CANCELED
+        );
 
         return new TradeCancelRespDto(tradeId);
 
