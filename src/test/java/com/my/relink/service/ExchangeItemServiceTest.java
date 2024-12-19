@@ -35,10 +35,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.lang.reflect.Field;
@@ -735,5 +732,28 @@ class ExchangeItemServiceTest {
         assertEquals("해당 상품이 교환가능 상태가 아닙니다.", exception.getMessage());
     }
 
+    @Test
+    @DisplayName("교환할 내 물품 선택 페이지 조회 성공")
+    void testGetExchangeItemChoicePage_Success() {
+        Long userId = 1L;
+        int page = 1;
+        int size = 10;
+
+        User user = User.builder().id(userId).build();
+        ExchangeItem exchangeItem = mock(ExchangeItem.class);
+        Page<ExchangeItem> items = new PageImpl<>(List.of(exchangeItem));
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(exchangeItemRepository.findAvailableItemsByUserId(userId, PageRequest.of(page - 1, size))).thenReturn(items);
+        when(imageService.getFirstImagesByItemIds(any(), any())).thenReturn(Map.of(1L, "http://example.com/image.jpg"));
+        when(exchangeItem.getId()).thenReturn(1L);
+        when(exchangeItem.getCreatedAt()).thenReturn(LocalDateTime.now());
+
+        GetExchangeItemRespDto result = exchangeItemService.getExchangeItemChoicePage(userId, page, size);
+
+        assertThat(result.getContent()).isNotEmpty();
+        assertThat(result.getContent().get(0).getExchangeItemId()).isEqualTo(1L);
+        assertThat(result.getContent().get(0).getImageUrl()).isEqualTo("http://example.com/image.jpg");
+    }
 
 }

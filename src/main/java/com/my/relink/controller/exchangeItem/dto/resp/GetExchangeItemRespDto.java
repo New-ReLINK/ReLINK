@@ -22,25 +22,20 @@ import java.util.Map;
 public class GetExchangeItemRespDto {
     private List<GetExchangeItemRespDto> content;
     private PageInfo pageInfo;
-    // 공통
     private Long exchangeItemId;
     private String exchangeItemName;
     private String imageUrl;
     private TradeStatus tradeStatus;
-    // 교환 전 AVAILABLE
     private String desiredItem;
-    // 교환 전, 중 (AVAILABLE, IN_EXCHANGE)
     private String size;
-    // 교환 중, 완료 (IN_EXCHANGE, EXCHANGED)
     private String tradePartnerNickname;
     private Long tradeId;
-    // 교환 완료 EXCHANGED
     private LocalDate completedDate;
-    // 단건 조회 시
     private String description;
     private Category category;
     private ItemQuality itemQuality;
     private String brand;
+    private LocalDate createdAt;
 
     public static GetExchangeItemRespDto from(ExchangeItem item, Map<Long, Trade> tradeMap, Map<Long, String> imageMap) {
         Trade trade = item.getTradeStatus() == TradeStatus.AVAILABLE ? null : tradeMap.get(item.getId());
@@ -97,6 +92,18 @@ public class GetExchangeItemRespDto {
                 .desiredItem(exchangeItem.getDesiredItem())
                 .build();
     }
+    public static GetExchangeItemRespDto from(ExchangeItem item, Map<Long, String> imageMap) {
+        String imageUrl = imageMap.get(item.getId());
+        return GetExchangeItemRespDto.builder()
+                .exchangeItemId(item.getId())
+                .exchangeItemName(item.getName())
+                .size(item.getSize())
+                .imageUrl(imageUrl)
+                .desiredItem(item.getDesiredItem())
+                .createdAt(item.getCreatedAt().toLocalDate())
+                .build();
+    }
+
     public static GetExchangeItemRespDto empty(Pageable pageable) {
         return GetExchangeItemRespDto.builder()
                 .content(List.of())

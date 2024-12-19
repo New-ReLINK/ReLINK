@@ -9,7 +9,6 @@ import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemRespDto;
 import com.my.relink.domain.category.Category;
 import com.my.relink.domain.category.repository.CategoryRepository;
 import com.my.relink.domain.image.EntityType;
-import com.my.relink.domain.image.Image;
 import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.item.exchange.repository.ExchangeItemRepository;
 import com.my.relink.domain.point.Point;
@@ -17,7 +16,6 @@ import com.my.relink.domain.point.repository.PointRepository;
 import com.my.relink.domain.trade.Trade;
 import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.domain.user.User;
-import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -36,25 +34,25 @@ public class ExchangeItemService {
 
     private final ExchangeItemRepository exchangeItemRepository;
     private final CategoryRepository categoryRepository;
-    private final UserRepository userRepository;
     private final PointRepository pointRepository;
     private final UserTrustScoreService userTrustScoreService;
     private final TradeService tradeService;
     private final ImageService imageService;
     private final LikeService likeService;
     private final ChatService chatService;
+    private final UserService userService;
 
     @Transactional
     public long createExchangeItem(CreateExchangeItemReqDto reqDto, Long userId) {
         Category category = getValidCategory(reqDto.getCategoryId());
-        User user = getValidUser(userId);
+        User user = userService.findByIdOrFail(userId);
         validateDeposit(reqDto.getDeposit(), userId);
         ExchangeItem exchangeItem = reqDto.toEntity(category, user);
         return exchangeItemRepository.save(exchangeItem).getId();
     }
 
     public GetExchangeItemRespDto getExchangeItemsByUserId(Long userId, int page, int size) {
-        User user = getValidUser(userId);
+        User user = userService.findByIdOrFail(userId);
         Pageable pageable = PageRequest.of(page - 1, size);
 
         Page<ExchangeItem> items = exchangeItemRepository.findByUserId(user.getId(), pageable);
@@ -125,6 +123,20 @@ public class ExchangeItemService {
         return exchangeItem.getId();
     }
 
+    public GetExchangeItemRespDto getExchangeItemChoicePage(Long userId, int page, int size) {
+        User user = userService.findByIdOrFail(userId);
+        Pageable pageable = PageRequest.of(page, size);
+        Page<ExchangeItem> items = exchangeItemRepository.findAvailableItemsByUserId(user.getId(), pageable);
+        if (items.isEmpty()) {
+            return GetExchangeItemRespDto.empty(pageable);
+        }
+        List<Long> itemIds = items.getContent().stream().map(ExchangeItem::getId).toList();
+        Map<Long, String> imageMap = imageService.getFirstImagesByItemIds(EntityType.EXCHANGE_ITEM, itemIds);
+        Page<GetExchangeItemRespDto> content = items.map(item -> GetExchangeItemRespDto.from(item, imageMap));
+
+        return GetExchangeItemRespDto.of(content);
+    }
+
     // 삭제는 soft delete
     @Transactional
     public Long deleteExchangeItem(Long itemId, Long userId) {
@@ -158,12 +170,6 @@ public class ExchangeItemService {
         }
     }
 
-    // user 가져오기
-    public User getValidUser(Long userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-    }
-
     // category 가져오기
     public Category getValidCategory(Long categoryId) {
         return categoryRepository.findById(categoryId)
@@ -190,7 +196,7 @@ public class ExchangeItemService {
     }
 
 
-    public ExchangeItem findByIdFetchUser(Long itemId){
+    public ExchangeItem findByIdFetchUser(Long itemId) {
         return exchangeItemRepository.findByIdWithUser(itemId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EXCHANGE_ITEM_NOT_FOUND));
     }
