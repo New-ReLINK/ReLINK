@@ -1,13 +1,12 @@
 package com.my.relink.service;
 
+import com.my.relink.common.notification.NotificationPublisherService;
 import com.my.relink.config.security.AuthUser;
 import com.my.relink.controller.trade.dto.request.AddressReqDto;
 import com.my.relink.controller.trade.dto.request.TrackingNumberReqDto;
 import com.my.relink.controller.trade.dto.request.TradeCancelReqDto;
 import com.my.relink.controller.trade.dto.response.*;
-import com.my.relink.domain.image.repository.ImageRepository;
 import com.my.relink.domain.item.exchange.ExchangeItem;
-import com.my.relink.domain.item.exchange.repository.ExchangeItemRepository;
 import com.my.relink.domain.point.pointHistory.PointHistory;
 import com.my.relink.domain.point.pointHistory.repository.PointHistoryRepository;
 import com.my.relink.domain.trade.Trade;
@@ -38,10 +37,9 @@ public class TradeService {
     private final ImageService imageService;
     private final UserRepository userRepository;
     private final PointTransactionService pointTransactionService;
-    private final ExchangeItemRepository exchangeItemRepository;
-    private final ImageRepository imageRepository;
     private final DateTimeUtil dateTimeUtil;
     private final PointHistoryRepository pointHistoryRepository;
+    private final NotificationPublisherService notificationPublisherService;
 
     /**
      * [문의하기] -> 해당 채팅방의 거래 정보, 상품 정보, 상대 유저 정보 내리기
@@ -56,7 +54,7 @@ public class TradeService {
 
         trade.validateAccess(userId);
 
-        String requestedItemImageUrl = imageService.getExchangeItemUrl(trade.getRequesterExchangeItem());
+        String requestedItemImageUrl = imageService.getExchangeItemThumbnailUrl(trade.getRequesterExchangeItem());
         User partner = trade.getPartner(userId);
         int trustScoreOfPartner = userTrustScoreService.getTrustScore(partner);
 
@@ -79,8 +77,13 @@ public class TradeService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
     }
 
-    @Transactional
 
+    public Trade findByIdWithOwnerItemOrFail(Long tradeId) {
+        return tradeRepository.findByIdWithOwnerItem(tradeId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
+    }
+
+    @Transactional
     public TradeRequestRespDto requestTrade(Long tradeId, AuthUser authUser) {
 
         User currentUser = userRepository.findById(authUser.getId())
@@ -88,6 +91,18 @@ public class TradeService {
 
         Trade trade = tradeRepository.findById(tradeId).
                 orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
+
+        //거래 상대방이 탈퇴했을 때는 거래 취소 && 보증금 복원
+        User partnerUser = trade.getPartner(currentUser.getId());
+        boolean isPartnerDeleted = !userRepository.existsByIdAndIsDeletedFalse(partnerUser.getId());
+
+        if (isPartnerDeleted) {
+            pointTransactionService.restorePoints(tradeId, currentUser);
+            trade.updateTradeStatus(TradeStatus.CANCELED);
+            tradeRepository.save(trade);
+
+            throw new BusinessException(ErrorCode.USER_SECESSION);
+        }
 
         //차감 메서드 위임
         pointTransactionService.deductPoints(tradeId, currentUser);
@@ -104,6 +119,13 @@ public class TradeService {
             tradeRepository.save(trade);
         }
 
+        notificationPublisherService.createExchangeNotification(
+                currentUser.getId(),
+                trade.getOwnerExchangeItem().getName(),
+                trade.getRequester().getNickname(),
+                TradeStatus.IN_EXCHANGE
+        );
+
         return new TradeRequestRespDto(tradeId);
     }
 
@@ -115,6 +137,18 @@ public class TradeService {
 
         Trade trade = tradeRepository.findById(tradeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
+
+        //거래 상대방이 탈퇴했을 떄 거래 취소 && 보증금 복원
+        User partnerUser = trade.getPartner(currentUser.getId());
+        boolean isPartnerDeleted = !userRepository.existsByIdAndIsDeletedFalse(partnerUser.getId());
+
+        if (isPartnerDeleted) {
+            pointTransactionService.restorePoints(tradeId, currentUser);
+            trade.updateTradeStatus(TradeStatus.CANCELED);
+            tradeRepository.save(trade);
+
+            throw new BusinessException(ErrorCode.USER_SECESSION);
+        }
 
         //복원 메서드 위임
         pointTransactionService.restorePoints(tradeId, currentUser);
@@ -131,6 +165,13 @@ public class TradeService {
             trade.updateTradeStatus(TradeStatus.AVAILABLE);
             tradeRepository.save(trade);
         }
+
+        notificationPublisherService.createExchangeNotification(
+                currentUser.getId(),
+                trade.getOwnerExchangeItem().getName(),
+                trade.getRequester().getNickname(),
+                TradeStatus.AVAILABLE
+        );
     }
 
     @Transactional
@@ -182,6 +223,13 @@ public class TradeService {
         pointTransactionService.restorePointsForAllTraders(trade, amount);
         tradeRepository.save(trade);
 
+        notificationPublisherService.createExchangeNotification(
+                currentUser.getId(),
+                trade.getOwnerExchangeItem().getName(),
+                trade.getRequester().getNickname(),
+                TradeStatus.EXCHANGED
+        );
+
         return new TradeCompleteRespDto(tradeId);
     }
 
@@ -203,6 +251,14 @@ public class TradeService {
             trade.updateTradeStatus(TradeStatus.IN_DELIVERY);
         }
         tradeRepository.save(trade);
+
+        notificationPublisherService.createExchangeNotification(
+                currentUser.getId(),
+                trade.getOwnerExchangeItem().getName(),
+                trade.getRequester().getNickname(),
+                TradeStatus.IN_DELIVERY
+        );
+
     }
 
     public TradeCompletionRespDto findCompleteTradeInfo(Long tradeId, AuthUser authUser) {
@@ -215,15 +271,15 @@ public class TradeService {
         ExchangeItem myExchangeItem = trade.getMyExchangeItem(currentUser.getId());
         ExchangeItem partnerExchangeItem = trade.getPartnerExchangeItem(currentUser.getId());
 
-        String myImage = imageService.getExchangeItemUrl(myExchangeItem);
-        String partnerImage = imageService.getExchangeItemUrl(partnerExchangeItem);
+        String myImage = imageService.getExchangeItemThumbnailUrl(myExchangeItem);
+        String partnerImage = imageService.getExchangeItemThumbnailUrl(partnerExchangeItem);
 
         User partnerUser = partnerExchangeItem.getUser();
-      
+
         return TradeCompletionRespDto.from(myExchangeItem, partnerExchangeItem, myImage, partnerImage, partnerUser, trade, dateTimeUtil);
     }
-  
-      public Map<Long, Trade> getTradesByItemIds(List<Long> itemIds) {
+
+    public Map<Long, Trade> getTradesByItemIds(List<Long> itemIds) {
         List<Trade> trades = tradeRepository.findByExchangeItemIds(itemIds);
         return trades.stream()
                 .flatMap(trade -> List.of(
@@ -247,7 +303,7 @@ public class TradeService {
 
         User partnerUser = partnerExchangeItem.getUser();
 
-        String partnerImage = imageService.getExchangeItemUrl(partnerExchangeItem);
+        String partnerImage = imageService.getExchangeItemThumbnailUrl(partnerExchangeItem);
         String tradeStartedAt = dateTimeUtil.getTradeStatusFormattedTime(trade.getCreatedAt());
 
         return ViewTradeCancelRespDto.from(partnerUser, partnerExchangeItem, partnerImage, tradeStartedAt);
@@ -260,6 +316,7 @@ public class TradeService {
 
         Trade trade = tradeRepository.findById(tradeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
+
         //거래 상태 확인, 요청자 확인
         //보증금 환급 처리
         if (!trade.isTradeInExchange(trade) || !trade.isParticipant(currentUser.getId())) {
@@ -284,6 +341,20 @@ public class TradeService {
         trade.updateTradeCancelReason(reqDto.getTradeCancelReason(), reqDto.getTradeCancelDescription());
         tradeRepository.save(trade);
 
+        notificationPublisherService.createExchangeNotification(
+                currentUser.getId(),
+                trade.getOwnerExchangeItem().getName(),
+                trade.getRequester().getNickname(),
+                TradeStatus.CANCELED
+        );
+
+        notificationPublisherService.createExchangeNotification(
+                trade.getPartner(currentUser.getId()).getId(),
+                trade.getOwnerExchangeItem().getName(),
+                trade.getRequester().getNickname(),
+                TradeStatus.CANCELED
+        );
+
         return new TradeCancelRespDto(tradeId);
 
     }
@@ -297,19 +368,20 @@ public class TradeService {
 
         ExchangeItem partnerExchangeItem = trade.getPartnerExchangeItem(currentUser.getId());
         User partnerUser = partnerExchangeItem.getUser();
-        String partnerImage = imageService.getExchangeItemUrl(partnerExchangeItem);
+        String partnerImage = imageService.getExchangeItemThumbnailUrl(partnerExchangeItem);
         String completedAt = dateTimeUtil.getTradeStatusFormattedTime(trade.getModifiedAt());
 
         return ViewReviewRespDto.from(trade, partnerImage, partnerUser, partnerExchangeItem, completedAt);
 
     }
-    public Long getTradeIdByItemId (Long itemId) {
+
+    public Long getTradeIdByItemId(Long itemId) {
         return tradeRepository.findTradeIdByExchangeItemId(itemId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
     }
 
     @Transactional
-    public Long createTrade(ExchangeItem itemFromOwner, ExchangeItem itemFromRequester, User requester) {
+    public TradeIdRespDto createTrade(ExchangeItem itemFromOwner, ExchangeItem itemFromRequester, User requester) {
         Trade trade = Trade.builder()
                 .requester(requester)
                 .ownerExchangeItem(itemFromOwner)
@@ -321,7 +393,7 @@ public class TradeService {
                 .hasRequesterReceived(false)
                 .build();
         Trade savedTrade = tradeRepository.save(trade);
-        return savedTrade.getId();
+        return  new TradeIdRespDto(savedTrade.getId());
     }
 }
 

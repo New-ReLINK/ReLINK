@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface PointHistoryRepository extends JpaRepository<PointHistory, Long> {
+public interface PointHistoryRepository extends JpaRepository<PointHistory, Long>, PointHistoryCustomRepository {
     Optional<PointHistory> findFirstByTradeIdOrderByCreatedAtDesc(Long tradeId);
 
     @Query("SELECT ph FROM PointHistory ph " +
