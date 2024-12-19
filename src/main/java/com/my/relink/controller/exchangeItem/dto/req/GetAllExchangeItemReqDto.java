@@ -19,8 +19,8 @@ public class GetAllExchangeItemReqDto {
     private TradeStatus tradeStatus;
     private Long categoryId;
     @Builder.Default
-    @Min(value = 1, message = "page는 1 이상으로 입력되어야 합니다.")
-    private int page = 1;
+    @Min(value = 0, message = "page는 0 이상으로 입력되어야 합니다.")
+    private int page = 0;
     @Min(value = 1, message = "size는 1 이상으로 입력되어야합니다.")
     @Max(value = 100, message = "size는 100 이하로 입력되어야합니다.")
     @Builder.Default

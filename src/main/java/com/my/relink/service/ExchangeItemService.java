@@ -1,11 +1,13 @@
 package com.my.relink.service;
 
 import com.my.relink.chat.service.ChatService;
+import com.my.relink.controller.exchangeItem.dto.req.ChoiceExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.req.CreateExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.req.GetAllExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.req.UpdateExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetAllExchangeItemsRespDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemRespDto;
+import com.my.relink.controller.trade.dto.response.TradeIdRespDto;
 import com.my.relink.domain.category.Category;
 import com.my.relink.domain.category.repository.CategoryRepository;
 import com.my.relink.domain.image.EntityType;
@@ -52,10 +54,8 @@ public class ExchangeItemService {
     }
 
     public GetExchangeItemRespDto getExchangeItemsByUserId(Long userId, int page, int size) {
-        User user = userService.findByIdOrFail(userId);
         Pageable pageable = PageRequest.of(page - 1, size);
-
-        Page<ExchangeItem> items = exchangeItemRepository.findByUserId(user.getId(), pageable);
+        Page<ExchangeItem> items = exchangeItemRepository.findByUserIdWithUser(userId, pageable);
         if (items.isEmpty()) {
             return GetExchangeItemRespDto.empty(pageable);
         }
@@ -78,7 +78,7 @@ public class ExchangeItemService {
 
     public GetAllExchangeItemsRespDto getAllExchangeItems(GetAllExchangeItemReqDto reqDto) {
         Category category = (reqDto.getCategoryId() != null) ? getValidCategory(reqDto.getCategoryId()) : null;
-        Pageable pageable = PageRequest.of(reqDto.getPage() - 1, reqDto.getSize());
+        Pageable pageable = PageRequest.of(reqDto.getPage(), reqDto.getSize());
         Page<ExchangeItem> itemsPage = exchangeItemRepository.findAllByCriteria(reqDto.getSearch(),
                 reqDto.getTradeStatus(),
                 category,
@@ -124,9 +124,8 @@ public class ExchangeItemService {
     }
 
     public GetExchangeItemRespDto getExchangeItemChoicePage(Long userId, int page, int size) {
-        User user = userService.findByIdOrFail(userId);
         Pageable pageable = PageRequest.of(page, size);
-        Page<ExchangeItem> items = exchangeItemRepository.findAvailableItemsByUserId(user.getId(), pageable);
+        Page<ExchangeItem> items = exchangeItemRepository.findAvailableItemsByUserId(userId, pageable);
         if (items.isEmpty()) {
             return GetExchangeItemRespDto.empty(pageable);
         }
@@ -135,6 +134,15 @@ public class ExchangeItemService {
         Page<GetExchangeItemRespDto> content = items.map(item -> GetExchangeItemRespDto.from(item, imageMap));
 
         return GetExchangeItemRespDto.of(content);
+    }
+
+    public TradeIdRespDto choiceExchangeItem(Long itemId, ChoiceExchangeItemReqDto reqDto, Long userId) {
+        ExchangeItem itemFromOwner = findByIdFetchUser(itemId);
+        ExchangeItem itemFromRequester = findByIdFetchUser(reqDto.getItemId());
+        User user = userService.findByIdOrFail(userId);
+        itemFromRequester.validExchangeItemOwner(itemFromRequester.getUser().getId(), userId);
+        validExchangeItemTradeStatus(itemFromOwner.getTradeStatus());
+        return tradeService.createTrade(itemFromOwner, itemFromRequester, user);
     }
 
     // 삭제는 soft delete
@@ -200,4 +208,5 @@ public class ExchangeItemService {
         return exchangeItemRepository.findByIdWithUser(itemId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EXCHANGE_ITEM_NOT_FOUND));
     }
+
 }

@@ -1,11 +1,13 @@
 package com.my.relink.controller.exchangeItem;
 
 import com.my.relink.config.security.AuthUser;
+import com.my.relink.controller.exchangeItem.dto.req.ChoiceExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.req.CreateExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.req.GetAllExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.req.UpdateExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetAllExchangeItemsRespDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemRespDto;
+import com.my.relink.controller.trade.dto.response.TradeIdRespDto;
 import com.my.relink.service.ExchangeItemService;
 import com.my.relink.util.api.ApiResult;
 import jakarta.validation.Valid;
@@ -83,4 +85,11 @@ public class ExchangeItemController {
         return new ResponseEntity<>(ApiResult.success(respDto), HttpStatus.OK);
     }
 
+    @PostMapping("/items/exchanges/{itemId}/availble")
+    public ResponseEntity<ApiResult<TradeIdRespDto>> choiceExchangeItem(@PathVariable(value = "itemId") Long itemId,
+                                                                        @Valid @RequestBody ChoiceExchangeItemReqDto reqDto,
+                                                                        @AuthenticationPrincipal AuthUser authUser) {
+        TradeIdRespDto tradeId = exchangeItemService.choiceExchangeItem(itemId, reqDto, authUser.getId());
+        return new ResponseEntity<>(ApiResult.success(tradeId), HttpStatus.OK);
+    }
 }
