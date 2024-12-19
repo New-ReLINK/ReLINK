@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -82,5 +83,33 @@ public class ImageService {
 
     public List<String> getImageUrlsByItemId(EntityType entityType, Long itemId) {
         return imageRepository.findImageUrlsByItemId(entityType, itemId);
+    }
+
+    @Transactional
+    public List<Long> addExchangeItemImage(Long itemId, List<MultipartFile> files) {
+        validImageCount(itemId, files);
+        List<Long> savedImageIds = new ArrayList<>();
+        for (MultipartFile file : files) {
+            String imageUrl = s3Service.upload(file);
+            Image image = Image.builder()
+                    .imageUrl(imageUrl)
+                    .entityType(EntityType.EXCHANGE_ITEM)
+                    .entityId(itemId)
+                    .build();
+            Image savedImage = imageRepository.save(image);
+            savedImageIds.add(new ImageUserProfileCreateRespDto(savedImage).getId());
+        }
+        return savedImageIds;
+    }
+
+    public void validImageCount(Long itemId, List<MultipartFile> files) {
+        if (files == null || files.isEmpty()) {
+            throw new BusinessException(ErrorCode.NO_IMAGE_UPLOADED);
+        }
+        int maxImageCount = 5;
+        int existingImageCount = imageRepository.countImages(itemId, EntityType.EXCHANGE_ITEM);
+        if (existingImageCount + files.size() > maxImageCount) {
+            throw new BusinessException(ErrorCode.MAX_IMAGE_COUNT);
+        }
     }
 }

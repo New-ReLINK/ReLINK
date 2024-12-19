@@ -51,7 +51,9 @@ public enum ErrorCode {
     IMAGE_ACCESS_DENIED(HttpStatus.BAD_REQUEST.value(), "해당 이미지의 소유자와 다릅니다."),
     INVALID_FILE_URL(HttpStatus.BAD_REQUEST.value(), "파일 URL 이 비어있습니다."),
     ITEM_IN_EXCHANGE(HttpStatus.BAD_REQUEST.value(), "해당 상품이 거래중입니다."),
-    DONATION_ITEM_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR.value(), "해당 기부 상품을 찾을 수 없습니다.")
+    DONATION_ITEM_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR.value(), "해당 기부 상품을 찾을 수 없습니다."),
+    MAX_IMAGE_COUNT(HttpStatus.BAD_REQUEST.value(), "사진은 총 5장까지 등록 가능합니다."),
+    NO_IMAGE_UPLOADED(HttpStatus.BAD_REQUEST.value(), "사진이 업로드되지 않았습니다."),
 
     ;
 
