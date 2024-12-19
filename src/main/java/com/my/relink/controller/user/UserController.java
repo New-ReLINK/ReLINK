@@ -18,7 +18,7 @@ public class UserController {
 
     private final UserService userService;
 
-    @GetMapping("/hello")
+    @GetMapping("/auth/hello")
     public String home() {
         return "hello";
     }
