@@ -8,10 +8,12 @@ import com.my.relink.client.tosspayments.ex.TossPaymentException;
 import com.my.relink.client.tosspayments.feature.PaymentFeature;
 import com.my.relink.client.tosspayments.feature.PaymentStatus;
 import com.my.relink.controller.payment.dto.request.PaymentReqDto;
+import com.my.relink.controller.point.dto.response.PointChargeHistoryRespDto;
 import com.my.relink.domain.payment.Payment;
 import com.my.relink.domain.payment.PaymentCancelReason;
 import com.my.relink.domain.payment.PaymentType;
 import com.my.relink.domain.payment.repository.PaymentRepository;
+import com.my.relink.domain.payment.repository.dto.PointChargeHistoryDto;
 import com.my.relink.domain.point.Point;
 import com.my.relink.domain.point.pointHistory.PointHistory;
 import com.my.relink.domain.point.pointHistory.repository.PointHistoryRepository;
@@ -22,13 +24,14 @@ import com.my.relink.service.PointService;
 import com.my.relink.service.UserService;
 import com.my.relink.service.payment.dto.PaymentValidation;
 import com.my.relink.service.payment.ex.PaymentCancelFailException;
+import com.my.relink.util.DateTimeUtil;
+import com.my.relink.util.page.PageResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -46,7 +49,30 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final PointHistoryRepository pointHistoryRepository;
     private final PointService pointService;
+    private final DateTimeUtil dateTimeUtil;
     // TODO 구현 예정.  private final AlertService alertService;
+
+
+    public PageResponse<PointChargeHistoryRespDto> getPointChargeHistories(Long userId, int page, int size){
+        User user = userService.findByIdOrFail(userId);
+        List<PointChargeHistoryRespDto> content = convertToResponseDto(
+                paymentRepository.findPointChargeHistories(user, page, size)
+        );
+        return new PageResponse<>(
+                content,
+                paymentRepository.getPointChargePageInfo(user, page, size)
+        );
+    }
+
+
+    private List<PointChargeHistoryRespDto> convertToResponseDto(List<PointChargeHistoryDto> dtoList) {
+        return dtoList.stream()
+                .map(dto -> new PointChargeHistoryRespDto(
+                        dateTimeUtil.getUsagePointHistoryFormattedTime(dto.getChargedDateTime()),
+                        dto
+                ))
+                .toList();
+    }
 
 
     public TossPaymentRespDto confirmPayment(PaymentReqDto paymentReqDto){

@@ -3,6 +3,7 @@ package com.my.relink.domain.point.pointHistory.repository;
 import com.my.relink.controller.point.dto.response.PointUsageHistoryRespDto;
 import com.my.relink.domain.point.pointHistory.PointTransactionType;
 import com.my.relink.domain.point.pointHistory.QPointHistory;
+import com.my.relink.domain.point.pointHistory.repository.dto.PointUsageHistoryDto;
 import com.my.relink.domain.trade.QTrade;
 import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.domain.user.User;
@@ -30,20 +31,15 @@ import static com.querydsl.jpa.JPAExpressions.*;
 public class PointHistoryCustomRepositoryImpl implements PointHistoryCustomRepository{
 
     private final JPAQueryFactory queryFactory;
-    private final DateTimeUtil dateTimeUtil;
 
     @Override
-    public PageResponse<PointUsageHistoryRespDto> findPointUsageHistories(User user, int page, int size) {
+    public List<PointUsageHistoryDto> findPointUsageHistories(User user, int page, int size) {
         List<Long> tradeIdList = getTradeIdList(user, page, size);
-        List<Tuple> pointHistoryTuple = getPointHistoryTuple(tradeIdList, user);
-        List<PointUsageHistoryRespDto> contents = convertToDto(pointHistoryTuple, tradeIdList);
-        PageInfo pageInfo = getPointUsagePageInfo(user, page, size);
-
-        return new PageResponse<>(contents, pageInfo);
+        return getUsagePointDto(tradeIdList, user);
     }
 
 
-    private PageInfo getPointUsagePageInfo(User user, int page, int size){
+    public PageInfo getPointUsagePageInfo(User user, int page, int size){
         long totalCount = queryFactory
                 .select(pointHistory.trade.countDistinct())
                 .from(pointHistory)
@@ -63,38 +59,6 @@ public class PointHistoryCustomRepositoryImpl implements PointHistoryCustomRepos
                 totalCount,
                 page > 0,
                 page + 1 < totalPages);
-    }
-
-
-    private List<PointUsageHistoryRespDto> convertToDto(List<Tuple> pointHistoryTuple, List<Long> tradeIdList){
-        Map<Long, PointUsageHistoryRespDto> dtoMap = new LinkedHashMap<>();
-        for (Tuple tuple : pointHistoryTuple) {
-            Long tradeId = tuple.get(trade.id);
-            TradeStatus tradeStatus = tuple.get(trade.tradeStatus);
-            String itemName = tuple.get(Expressions.stringPath("itemName"));
-            PointTransactionType type = tuple.get(pointHistory.pointTransactionType);
-            Integer amount = tuple.get(pointHistory.amount);
-            LocalDateTime createdAt = tuple.get(pointHistory.createdAt);
-
-            PointUsageHistoryRespDto dto = dtoMap.computeIfAbsent(tradeId, k ->
-                    PointUsageHistoryRespDto.builder()
-                            .tradeId(tradeId)
-                            .tradeStatus(tradeStatus.getMessage())
-                            .partnerExchangeItemName(itemName)
-                            .build());
-
-            if(type == PointTransactionType.DEPOSIT){
-                dto.setDepositAmount(amount * -1);
-                dto.setDepositDateTime(dateTimeUtil.getUsagePointHistoryFormattedTime(createdAt));
-            } else {
-                dto.setRefundAmount(amount);
-                dto.setRefundDateTime(dateTimeUtil.getUsagePointHistoryFormattedTime(createdAt));
-            }
-        }
-
-        return tradeIdList.stream()
-                .map(dtoMap::get)
-                .toList();
     }
 
 
@@ -124,19 +88,33 @@ public class PointHistoryCustomRepositoryImpl implements PointHistoryCustomRepos
     }
 
 
-    private List<Tuple> getPointHistoryTuple(List<Long> tradeIdList, User user){
+    private List<PointUsageHistoryDto> getUsagePointDto(List<Long> tradeIdList, User user){
         return queryFactory
                 .select(
-                        trade.id,
-                        trade.tradeStatus,
-                        new CaseBuilder()
-                                .when(trade.requester.eq(user))
-                                .then(trade.ownerExchangeItem.name)
-                                .otherwise(trade.requesterExchangeItem.name).as("itemName"),
-                        pointHistory.pointTransactionType,
-                        pointHistory.amount,
-                        pointHistory.createdAt
-                )
+                        Projections.constructor(PointUsageHistoryDto.class,
+                                trade.id,
+                                new CaseBuilder()
+                                        .when(trade.requester.eq(user))
+                                        .then(trade.ownerExchangeItem.name)
+                                        .otherwise(trade.requesterExchangeItem.name),
+                                trade.tradeStatus,
+                                new CaseBuilder()
+                                        .when(pointHistory.pointTransactionType.eq(PointTransactionType.DEPOSIT))
+                                        .then(pointHistory.amount)
+                                        .otherwise((Integer) null),
+                                new CaseBuilder()
+                                        .when(pointHistory.pointTransactionType.eq(PointTransactionType.RETURN))
+                                        .then(pointHistory.amount)
+                                        .otherwise((Integer) null),
+                                new CaseBuilder()
+                                        .when(pointHistory.pointTransactionType.eq(PointTransactionType.DEPOSIT))
+                                        .then(pointHistory.createdAt)
+                                        .otherwise((LocalDateTime) null),
+                                new CaseBuilder()
+                                        .when(pointHistory.pointTransactionType.eq(PointTransactionType.RETURN))
+                                        .then(pointHistory.createdAt)
+                                        .otherwise((LocalDateTime) null)
+                        ))
                 .from(pointHistory)
                 .join(pointHistory.trade, trade)
                 .where(trade.id.in(tradeIdList))
