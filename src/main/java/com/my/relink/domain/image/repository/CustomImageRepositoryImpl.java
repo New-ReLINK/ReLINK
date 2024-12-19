@@ -23,4 +23,13 @@ public class CustomImageRepositoryImpl implements CustomImageRepository {
                 .orderBy(image.createdAt.asc())
                 .fetch();
     }
+
+    public List<Image> findFirstImages(EntityType entityType, List<Long> entityIds) {
+        QImage image = QImage.image;
+        return queryFactory.selectFrom(image)
+                .where(image.entityType.eq(entityType)
+                        .and(image.entityId.in(entityIds)))
+                .orderBy(image.entityId.asc(), image.createdAt.asc())
+                .fetch();
+    }
 }

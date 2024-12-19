@@ -3,6 +3,7 @@ package com.my.relink.service;
 import com.my.relink.config.security.AuthUser;
 import com.my.relink.controller.donation.dto.PagingInfo;
 import com.my.relink.controller.donation.dto.req.DonationItemReqDto;
+import com.my.relink.controller.donation.dto.resp.*;
 import com.my.relink.controller.donation.dto.resp.DonationItemDetailRespDto;
 import com.my.relink.controller.donation.dto.resp.DonationItemListRespDto;
 import com.my.relink.controller.donation.dto.resp.DonationItemIdRespDto;
@@ -12,6 +13,8 @@ import com.my.relink.domain.category.Category;
 import com.my.relink.domain.category.repository.CategoryRepository;
 import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.item.donation.DonationItem;
+import com.my.relink.domain.item.donation.RejectedReason;
+import com.my.relink.domain.item.donation.DonationStatus;
 import com.my.relink.domain.item.donation.RejectedReason;
 import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.repository.UserRepository;
@@ -23,6 +26,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -91,10 +95,49 @@ public class DonationItemService {
         DonationItem donationItem = donationItemRepository.findByIdWithCategory(itemId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.DONATION_ITEM_NOT_FOUND));
 
-        String imageUrl = imageService.getImageByItemId(EntityType.DONATION_ITEM, itemId);
+        String imageUrl = imageService.getDonationItemThumbnailUrl(EntityType.DONATION_ITEM, itemId);
 
         RejectedReason rejectedReason = donationItem.getRejectedReason();
 
         return DonationItemRejectionRespDto.fromEntity(donationItem, imageUrl, rejectedReason);
     }
+
+    public DonationCompleteItemDetailRespDto getCompletionDonationItem(Long itemId, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        DonationItem donationItem = donationItemRepository.findByIdWithCategory(itemId)
+                .orElseThrow(()->new BusinessException(ErrorCode.DONATION_ITEM_NOT_FOUND));
+
+        String imageUrl = imageService.getDonationItemThumbnailUrl(EntityType.DONATION_ITEM, itemId);
+        String certificateUrl = imageService.getDonationItemThumbnailUrl(EntityType.DONATION_CERTIFICATION, itemId);
+
+        return DonationCompleteItemDetailRespDto.fromEntity(donationItem, imageUrl, certificateUrl);
+    }
+
+    @Transactional
+    public DonationItemIdRespDto deleteDonationItem(Long itemId, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        DonationItem donationItem = donationItemRepository.findByIdWithCategory(itemId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.DONATION_ITEM_NOT_FOUND));
+
+        if (!donationItem.getUser().getId().equals(userId)) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS);
+        }
+
+        if (donationItem.getDonationStatus() == DonationStatus.UNDER_INSPECTION ||
+                donationItem.getDonationStatus() == DonationStatus.INSPECTION_COMPLETED ||
+                donationItem.getDonationStatus() == DonationStatus.DONATION_COMPLETED) {
+            throw new BusinessException(ErrorCode.DONATION_ITEM_CANNOT_BE_DELETED);
+        }
+
+        imageService.deleteImagesByEntityId(EntityType.DONATION_ITEM, itemId);
+
+        donationItemRepository.delete(donationItem);
+
+        return new DonationItemIdRespDto(itemId);
+    }
+
 }
