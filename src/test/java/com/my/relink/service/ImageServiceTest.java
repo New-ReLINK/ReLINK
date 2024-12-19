@@ -6,6 +6,9 @@ import com.my.relink.controller.image.dto.resp.ImageUserProfileDeleteRespDto;
 import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.image.Image;
 import com.my.relink.domain.image.repository.ImageRepository;
+import com.my.relink.domain.item.exchange.ExchangeItem;
+import com.my.relink.domain.item.exchange.repository.ExchangeItemRepository;
+import com.my.relink.domain.user.User;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import org.junit.jupiter.api.DisplayName;
@@ -32,6 +35,9 @@ class ImageServiceTest {
 
     @Mock
     private ImageRepository imageRepository;
+
+    @Mock
+    ExchangeItemRepository exchangeItemRepository;
 
     @Mock
     private S3Service s3Service;
@@ -160,6 +166,13 @@ class ImageServiceTest {
     void testAddExchangeItemImages_Success() {
         AtomicLong idGenerator = new AtomicLong(100);
         Long itemId = 1L;
+        Long userId = 2L;
+        ExchangeItem exchangeItem = ExchangeItem.builder()
+                .id(itemId)
+                .user(User.builder().id(userId).build())
+                .build();
+        when(exchangeItemRepository.findById(itemId)).thenReturn(Optional.of(exchangeItem));
+        when(imageRepository.countImages(itemId, EntityType.EXCHANGE_ITEM)).thenReturn(3);
         MultipartFile file1 = new MockMultipartFile("image1", "image1.png", "image/png", "mock1".getBytes());
         MultipartFile file2 = new MockMultipartFile("image2", "image2.png", "image/png", "mock2".getBytes());
         List<MultipartFile> files = List.of(file1, file2);
@@ -177,7 +190,7 @@ class ImageServiceTest {
                     .build();
         });
 
-        List<Long> response = imageService.addExchangeItemImage(itemId, files);
+        List<Long> response = imageService.addExchangeItemImage(itemId, files, userId);
 
         assertEquals(2, response.size());
         assertTrue(response.contains(101L));
@@ -188,6 +201,7 @@ class ImageServiceTest {
     @DisplayName("상품 이미지 등록 실패 - 이미 등록된 이미지가 업로드한 이미지 갯수의 합이 5개 초과")
     void testAddExchangeItemImages_Fail_MaxImageCount() {
         Long itemId = 1L;
+        Long userId = 2L;
         MultipartFile file1 = new MockMultipartFile("image1", "image1.png", "image/png", "mock1".getBytes());
         MultipartFile file2 = new MockMultipartFile("image2", "image2.png", "image/png", "mock2".getBytes());
         List<MultipartFile> files = List.of(file1, file2);
@@ -196,7 +210,7 @@ class ImageServiceTest {
 
         BusinessException exception = assertThrows(
                 BusinessException.class,
-                () -> imageService.addExchangeItemImage(itemId, files)
+                () -> imageService.addExchangeItemImage(itemId, files, userId)
         );
 
         assertEquals(ErrorCode.MAX_IMAGE_COUNT, exception.getErrorCode());
@@ -207,15 +221,62 @@ class ImageServiceTest {
     @DisplayName("상품 이미지 등록 실패 - 업로드된 이미지가 없는 경우")
     void testAddExchangeItemImages_Fail_NotUploadImage () {
         Long itemId = 1L;
+        Long userId = 2L;
         List<MultipartFile> files = Collections.emptyList();
 
         BusinessException exception = assertThrows(
                 BusinessException.class,
-                () -> imageService.addExchangeItemImage(itemId, files)
+                () -> imageService.addExchangeItemImage(itemId, files, userId)
         );
 
         assertEquals(ErrorCode.NO_IMAGE_UPLOADED, exception.getErrorCode());
         assertEquals("사진이 업로드되지 않았습니다.", exception.getMessage());
     }
 
+    @Test
+    @DisplayName("상품 이미지 삭제 성공")
+    void testDeleteExchangeItemImage_Success () {
+        Long itemId = 1L;
+        Long userId = 2L;
+        Long imageId = 3L;
+        User owner = User.builder().id(userId).nickname("Owner").build();
+        ExchangeItem item = ExchangeItem.builder().id(itemId).user(owner).build();
+        Image image = Image.builder()
+                .id(imageId)
+                .imageUrl("http://example.com/image.png")
+                .entityType(EntityType.EXCHANGE_ITEM)
+                .entityId(itemId)
+                .build();
+
+        when(exchangeItemRepository.findById(itemId)).thenReturn(Optional.of(item));
+        when(imageRepository.findByIdAndEntityIdAndEntityType(imageId, itemId, EntityType.EXCHANGE_ITEM)).thenReturn(Optional.of(image));
+        doNothing().when(s3Service).deleteImage(image.getImageUrl());
+        doNothing().when(imageRepository).delete(image);
+
+        Long deletedImageId = imageService.deleteExchangeItemImage(itemId, imageId, userId);
+
+        assertEquals(imageId, deletedImageId);
+        verify(s3Service, times(1)).deleteImage(image.getImageUrl());
+        verify(imageRepository, times(1)).delete(image);
+    }
+
+    @Test
+    @DisplayName("이미지 삭제 실패 - 상품 소유자가 아닌 경우")
+    void testDeleteExchangeItemImage_Fail_NotOwner() {
+        Long itemId = 1L;
+        Long userId = 3L;
+        Long imageId = 3L;
+        User owner = User.builder().id(2L).nickname("Owner").build();
+        ExchangeItem item = ExchangeItem.builder().id(itemId).user(owner).build();
+
+        when(exchangeItemRepository.findById(itemId)).thenReturn(Optional.of(item));
+
+        BusinessException exception = assertThrows(
+                BusinessException.class,
+                () -> imageService.deleteExchangeItemImage(itemId, imageId, userId)
+        );
+
+        assertEquals(ErrorCode.UNAUTHORIZED_ACCESS, exception.getErrorCode());
+        assertEquals("해당 상품의 소유자가 아닙니다", exception.getMessage());
+    }
 }
