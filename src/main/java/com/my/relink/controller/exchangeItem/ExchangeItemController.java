@@ -2,9 +2,10 @@ package com.my.relink.controller.exchangeItem;
 
 import com.my.relink.config.security.AuthUser;
 import com.my.relink.controller.exchangeItem.dto.req.CreateExchangeItemReqDto;
+import com.my.relink.controller.exchangeItem.dto.req.GetAllExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.req.UpdateExchangeItemReqDto;
+import com.my.relink.controller.exchangeItem.dto.resp.GetAllExchangeItemsRespDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemRespDto;
-import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemsRespDto;
 import com.my.relink.service.ExchangeItemService;
 import com.my.relink.util.api.ApiResult;
 import jakarta.validation.Valid;
@@ -28,10 +29,10 @@ public class ExchangeItemController {
     }
 
     @GetMapping("/users/items/exchanges")
-    public ResponseEntity<ApiResult<GetExchangeItemsRespDto>> getExchangeItemsByUserId(@AuthenticationPrincipal AuthUser authUSer,
-                                                                                       @RequestParam(value = "page", required = false, defaultValue = "0") int page,
-                                                                                       @RequestParam(value = "size", required = false, defaultValue = "100") int size) {
-        GetExchangeItemsRespDto exchangeItems = exchangeItemService.getExchangeItemsByUserId(authUSer.getId(), page, size);
+    public ResponseEntity<ApiResult<GetExchangeItemRespDto>> getExchangeItemsByUserId(@AuthenticationPrincipal AuthUser authUSer,
+                                                                                      @RequestParam(value = "page", required = false, defaultValue = "0") int page,
+                                                                                      @RequestParam(value = "size", required = false, defaultValue = "100") int size) {
+        GetExchangeItemRespDto exchangeItems = exchangeItemService.getExchangeItemsByUserId(authUSer.getId(), page, size);
         return new ResponseEntity<>(ApiResult.success(exchangeItems), HttpStatus.OK);
     }
 
@@ -55,6 +56,12 @@ public class ExchangeItemController {
                                                               @AuthenticationPrincipal AuthUser authUser) {
         Long exchangeItemId = exchangeItemService.deleteExchangeItem(itemId, authUser.getId());
         return new ResponseEntity<>(ApiResult.success(exchangeItemId), HttpStatus.OK);
+    }
+
+    @GetMapping("/items/exchanges")
+    public ResponseEntity<ApiResult<GetAllExchangeItemsRespDto>> getAllExchangeItems(@Valid @RequestBody GetAllExchangeItemReqDto reqDto) {
+        GetAllExchangeItemsRespDto respDto = exchangeItemService.getAllExchangeItems(reqDto);
+        return new ResponseEntity<>(ApiResult.success(respDto), HttpStatus.OK);
     }
 
 }

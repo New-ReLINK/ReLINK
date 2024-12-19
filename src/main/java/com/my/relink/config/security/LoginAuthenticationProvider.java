@@ -24,7 +24,7 @@ public class LoginAuthenticationProvider implements AuthenticationProvider {
         String email = loginAuthentication.getName();
         String password = (String) loginAuthentication.getCredentials();
 
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByEmailActiveUser(email)
                 .orElseThrow(() -> new SecurityFilterChainException(ErrorCode.USER_NOT_FOUND));
 
         if (!passwordEncoder.matches(password, user.getPassword())) {
