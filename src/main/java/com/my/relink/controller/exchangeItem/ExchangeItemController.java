@@ -9,6 +9,8 @@ import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemRespDto;
 import com.my.relink.service.ExchangeItemService;
 import com.my.relink.util.api.ApiResult;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -73,8 +75,8 @@ public class ExchangeItemController {
 
     @GetMapping("/items/exchanges/available")
     public ResponseEntity<ApiResult<GetExchangeItemRespDto>> getExchangeItemChoicePage(@AuthenticationPrincipal AuthUser authUser,
-                                                                                             @RequestParam(value = "page", required = false, defaultValue = "0") int page,
-                                                                                             @RequestParam(value = "size", required = false, defaultValue = "100") int size) {
+                                                                                             @RequestParam(value = "page", required = false, defaultValue = "0") @Min(0) int page,
+                                                                                             @RequestParam(value = "size", required = false, defaultValue = "100") @Min(1) @Max(100) int size) {
         GetExchangeItemRespDto respDto = exchangeItemService.getExchangeItemChoicePage(authUser.getId(), page, size);
         return new ResponseEntity<>(ApiResult.success(respDto), HttpStatus.OK);
     }
