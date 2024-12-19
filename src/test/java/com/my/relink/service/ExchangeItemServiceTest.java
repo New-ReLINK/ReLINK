@@ -1,15 +1,16 @@
 package com.my.relink.service;
 
 
+import com.my.relink.chat.service.ChatService;
 import com.my.relink.controller.exchangeItem.dto.req.CreateExchangeItemReqDto;
+import com.my.relink.controller.exchangeItem.dto.req.GetAllExchangeItemReqDto;
+import com.my.relink.controller.exchangeItem.dto.req.UpdateExchangeItemReqDto;
+import com.my.relink.controller.exchangeItem.dto.resp.GetAllExchangeItemsRespDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemRespDto;
-import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemsRespDto;
 import com.my.relink.domain.BaseEntity;
 import com.my.relink.domain.category.Category;
 import com.my.relink.domain.category.repository.CategoryRepository;
 import com.my.relink.domain.image.EntityType;
-import com.my.relink.domain.image.Image;
-import com.my.relink.domain.image.repository.ImageRepository;
 import com.my.relink.domain.item.donation.ItemQuality;
 import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.item.exchange.repository.ExchangeItemRepository;
@@ -17,20 +18,23 @@ import com.my.relink.domain.point.Point;
 import com.my.relink.domain.point.repository.PointRepository;
 import com.my.relink.domain.trade.Trade;
 import com.my.relink.domain.trade.TradeStatus;
-import com.my.relink.domain.trade.repository.TradeRepository;
 import com.my.relink.domain.user.Role;
 import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
+import com.my.relink.util.page.PageInfo;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -42,13 +46,15 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
-
+@ExtendWith(MockitoExtension.class)
 class ExchangeItemServiceTest {
     @InjectMocks
     private ExchangeItemService exchangeItemService;
@@ -65,11 +71,14 @@ class ExchangeItemServiceTest {
     private TradeService tradeService;
     @Mock
     private ImageService imageService;
+    @Mock
+    private LikeService likeService;
+    @Mock
+    private ChatService chatService;
+    @Mock
+    private UserTrustScoreService userTrustScoreService;
 
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-    }
+    private final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 
     @Test
     @DisplayName("내 교환상품 생성하기 성공")
@@ -188,9 +197,9 @@ class ExchangeItemServiceTest {
                 1L, "http://example.com/image1.jpg",
                 2L, "http://example.com/image2.jpg"
         );
-        when(imageService.getImagesByItemIds(EntityType.EXCHANGE_ITEM, List.of(1L, 2L)))
+        when(imageService.getFirstImagesByItemIds(EntityType.EXCHANGE_ITEM, List.of(1L, 2L)))
                 .thenReturn(imageMap);
-        GetExchangeItemsRespDto result = exchangeItemService.getExchangeItemsByUserId(userId1, 1, 10);
+        GetExchangeItemRespDto result = exchangeItemService.getExchangeItemsByUserId(userId1, 1, 10);
 
         assertThat(result).isNotNull();
         assertThat(result.getContent()).isInstanceOf(List.class);
@@ -230,15 +239,15 @@ class ExchangeItemServiceTest {
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(exchangeItemRepository.findByUserId(userId, pageable)).thenReturn(emptyPage);
 
-        GetExchangeItemsRespDto result = exchangeItemService.getExchangeItemsByUserId(userId, 1, 10);
+        GetExchangeItemRespDto result = exchangeItemService.getExchangeItemsByUserId(userId, 1, 10);
         assertThat(result).isNotNull();
         System.out.println("Result: " + result);
 
         List<GetExchangeItemRespDto> content = result.getContent();
         assertThat(content).isEmpty();
 
-        GetExchangeItemsRespDto.PageInfo pageInfo = result.getPageInfo();
-        assertThat(pageInfo.getTotalElements()).isEqualTo(0);
+        PageInfo pageInfo = result.getPageInfo();
+        assertThat(pageInfo.getTotalCount()).isEqualTo(0);
         assertThat(pageInfo.getTotalPages()).isEqualTo(0);
         assertThat(pageInfo.isHasPrevious()).isEqualTo(false);
         assertThat(pageInfo.isHasNext()).isEqualTo(false);
@@ -300,7 +309,7 @@ class ExchangeItemServiceTest {
                 .isDeleted(false)
                 .build();
         Mockito.when(exchangeItemRepository.findById(itemId)).thenReturn(Optional.of(exchangeItem));
-        BusinessException exception = Assertions.assertThrows(BusinessException.class, () -> {
+        BusinessException exception = assertThrows(BusinessException.class, () -> {
             exchangeItemService.getExchangeItemModifyPage(itemId, userId);
         });
         Assertions.assertEquals(ErrorCode.UNAUTHORIZED_ACCESS, exception.getErrorCode());
@@ -312,10 +321,273 @@ class ExchangeItemServiceTest {
         Long userId = 1L;
         Long itemId = 2L;
         Mockito.when(exchangeItemRepository.findById(itemId)).thenReturn(Optional.empty());
-        BusinessException exception = Assertions.assertThrows(BusinessException.class, () -> {
+        BusinessException exception = assertThrows(BusinessException.class, () -> {
             exchangeItemService.getExchangeItemModifyPage(itemId, userId);
         });
-        Assertions.assertEquals(ErrorCode.ITEM_NOT_FOUND, exception.getErrorCode());
+        Assertions.assertEquals(ErrorCode.EXCHANGE_ITEM_NOT_FOUND, exception.getErrorCode());
     }
 
+    @Test
+    @DisplayName("내 교환 상품 수정하기 성공")
+    void testUpdateExchangeItem_Success() {
+        Long userId = 1L;
+        Long itemId = 2L;
+        Category category = new Category("의류");
+        User user = User.builder().id(1L).build();
+        Point point = new Point(20000, user);
+        ExchangeItem exchangeItem = ExchangeItem.builder()
+                .id(itemId)
+                .name("Test Item")
+                .description("Test Description")
+                .category(category)
+                .itemQuality(ItemQuality.NEW)
+                .user(user)
+                .deposit(5000)
+                .size("M")
+                .brand("Test Brand")
+                .desiredItem("Test Desired Item")
+                .tradeStatus(TradeStatus.AVAILABLE)
+                .isDeleted(false)
+                .build();
+        UpdateExchangeItemReqDto reqDto = new UpdateExchangeItemReqDto(
+                "New Item Name",
+                "New Description",
+                1L,
+                ItemQuality.NEW,
+                "M",
+                "New Brand",
+                "New Desired Item",
+                10000
+        );
+        when(exchangeItemRepository.findById(itemId)).thenReturn(Optional.of(exchangeItem));
+        when(categoryRepository.findById(reqDto.getCategoryId())).thenReturn(Optional.of(category));
+        when(pointRepository.findByUserId(userId)).thenReturn(Optional.of(point));
+
+        Long updatedItemId = exchangeItemService.updateExchangeItem(itemId, reqDto, userId);
+
+        assertThat(updatedItemId).isEqualTo(itemId);
+        assertThat(exchangeItem.getName()).isEqualTo(reqDto.getName());
+        assertThat(exchangeItem.getDescription()).isEqualTo(reqDto.getDescription());
+        assertThat(exchangeItem.getCategory()).isEqualTo(category);
+        assertThat(exchangeItem.getItemQuality()).isEqualTo(reqDto.getItemQuality());
+        assertThat(exchangeItem.getSize()).isEqualTo(reqDto.getSize());
+        assertThat(exchangeItem.getBrand()).isEqualTo(reqDto.getBrand());
+        assertThat(exchangeItem.getDesiredItem()).isEqualTo(reqDto.getDesiredItem());
+        assertThat(exchangeItem.getDeposit()).isEqualTo(reqDto.getDeposit());
+
+
+    }
+
+    @Test
+    @DisplayName("내 교환 상품 수정하기 실패 - 보증금 0 미만")
+    void testUpdateExchangeItem_Fail_DepositLessZero() {
+        Long userId = 1L;
+        Long itemId = 2L;
+        Category category = new Category("의류");
+        User user = User.builder().id(1L).build();
+        ExchangeItem exchangeItem = ExchangeItem.builder()
+                .id(itemId)
+                .name("Test Item")
+                .description("Test Description")
+                .category(category)
+                .itemQuality(ItemQuality.NEW)
+                .user(user)
+                .deposit(5000)
+                .size("M")
+                .brand("Test Brand")
+                .desiredItem("Test Desired Item")
+                .tradeStatus(TradeStatus.AVAILABLE)
+                .isDeleted(false)
+                .build();
+        UpdateExchangeItemReqDto reqDto = new UpdateExchangeItemReqDto(
+                "New Item Name",
+                "New Description",
+                1L,
+                ItemQuality.NEW,
+                "M",
+                "New Brand",
+                "New Desired Item",
+                -1 // 보증금이 0 미만
+
+        );
+        when(exchangeItemRepository.findById(itemId)).thenReturn(Optional.of(exchangeItem));
+        when(categoryRepository.findById(reqDto.getCategoryId())).thenReturn(Optional.of(category));
+
+        assertThatThrownBy(() -> exchangeItemService.updateExchangeItem(itemId, reqDto, userId))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("보증금은 0원보다 작을 수 없습니다.");
+    }
+
+    @Test
+    @DisplayName("내 교환 상품 수정하기 실패 - 포인트가 보증금보다 작은 경우")
+    void testUpdateExchangeItem_Fail_PointLessThenDeposit() {
+        Long userId = 1L;
+        Long itemId = 2L;
+        Category category = new Category("의류");
+        User user = User.builder().id(1L).build();
+        Point point = new Point(5000, user);
+        ExchangeItem exchangeItem = ExchangeItem.builder()
+                .id(itemId)
+                .name("Test Item")
+                .description("Test Description")
+                .category(category)
+                .itemQuality(ItemQuality.NEW)
+                .user(user)
+                .deposit(5000)
+                .size("M")
+                .brand("Test Brand")
+                .desiredItem("Test Desired Item")
+                .tradeStatus(TradeStatus.AVAILABLE)
+                .isDeleted(false)
+                .build();
+        UpdateExchangeItemReqDto reqDto = new UpdateExchangeItemReqDto(
+                "New Item Name",
+                "New Description",
+                1L,
+                ItemQuality.NEW,
+                "M",
+                "New Brand",
+                "New Desired Item",
+                10000 // 요구 보증금이 보유 포인트보다 큼
+        );
+        when(exchangeItemRepository.findById(itemId)).thenReturn(Optional.of(exchangeItem));
+        when(categoryRepository.findById(reqDto.getCategoryId())).thenReturn(Optional.of(category));
+        when(pointRepository.findByUserId(userId)).thenReturn(Optional.of(point));
+
+        assertThatThrownBy(() -> exchangeItemService.updateExchangeItem(itemId, reqDto, userId))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("포인트가 부족합니다");
+    }
+
+    @Test
+    @DisplayName("내 교환 상품 삭제하기 성공")
+    void testDeleteExchangeItem_Success() {
+        Long userId = 1L;
+        Long itemId = 100L;
+        Long tradeId = 200L;
+        User user = User.builder().id(userId).build();
+        ExchangeItem exchangeItem = mock(ExchangeItem.class);
+
+        when(exchangeItemRepository.findById(itemId)).thenReturn(Optional.of(exchangeItem));
+        when(exchangeItem.getUser()).thenReturn(user);
+        when(exchangeItem.getId()).thenReturn(itemId);
+        when(tradeService.getTradeIdByItemId(itemId)).thenReturn(tradeId);
+
+        Long deletedItemId = exchangeItemService.deleteExchangeItem(itemId, userId);
+
+        assertThat(deletedItemId).isEqualTo(itemId);
+        verify(exchangeItem).validExchangeItemOwner(userId, userId);
+        verify(exchangeItem).delete();
+        verify(imageService, times(1)).deleteImagesByEntityId(EntityType.EXCHANGE_ITEM, itemId);
+        verify(likeService, times(1)).deleteLikesByExchangeItemId(itemId);
+        verify(chatService, times(1)).deleteChatsByTradeId(tradeId);
+    }
+
+    @Test
+    @DisplayName("내 교환 상품 삭제하기 실패 - 상품의 소유자가 아닌 경우 ")
+    void testDeleteExchangeItem_Fail_NotOwner() {
+        Long userId = 1L;
+        Long invalidUserId = 999L; // 잘못된 사용자 ID
+        Long itemId = 100L;
+        User ownerUser = User.builder().id(userId).build();
+        ExchangeItem exchangeItem = mock(ExchangeItem.class);
+
+        when(exchangeItemRepository.findById(itemId)).thenReturn(Optional.of(exchangeItem));
+        when(exchangeItem.getUser()).thenReturn(ownerUser);
+        doThrow(new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS))
+                .when(exchangeItem).validExchangeItemOwner(userId, invalidUserId);
+        BusinessException exception = assertThrows(BusinessException.class, () ->
+                exchangeItemService.deleteExchangeItem(itemId, invalidUserId));
+
+        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.UNAUTHORIZED_ACCESS);
+        verify(exchangeItem).validExchangeItemOwner(userId, invalidUserId);
+        verify(exchangeItem, never()).delete();
+        verify(imageService, never()).deleteImagesByEntityId(any(), anyLong());
+        verify(likeService, never()).deleteLikesByExchangeItemId(anyLong());
+        verify(chatService, never()).deleteChatsByTradeId(anyLong());
+    }
+
+    @Test
+    @DisplayName("내 교환 상품 삭제하기 실패 - 상품의 IN_EXCHANGE인 경우")
+    void testDeleteExchangeItem_Fail_InExchange() {
+        Long userId = 1L;
+        Long itemId = 100L;
+        ExchangeItem exchangeItem = mock(ExchangeItem.class);
+        User user = User.builder().id(userId).build();
+
+        when(exchangeItemRepository.findById(itemId)).thenReturn(Optional.of(exchangeItem));
+        when(exchangeItem.getTradeStatus()).thenReturn(TradeStatus.IN_EXCHANGE); // 거래 상태가 IN_EXCHANGE
+        when(exchangeItem.getUser()).thenReturn(user);
+        BusinessException exception = assertThrows(BusinessException.class,
+                () -> exchangeItemService.deleteExchangeItem(itemId, userId));
+
+        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.ITEM_IN_EXCHANGE);
+        verify(exchangeItem, never()).delete();
+        verify(imageService, never()).deleteImagesByEntityId(any(), anyLong());
+        verify(likeService, never()).deleteLikesByExchangeItemId(anyLong());
+        verify(chatService, never()).deleteChatsByTradeId(anyLong());
+    }
+
+    @Test
+    @DisplayName("교환상품 전체목록 조회 성공")
+    void testGetAllExchangeItems_Success() {
+        GetAllExchangeItemReqDto reqDto = GetAllExchangeItemReqDto.builder()
+                .search("shoes")
+                .deposit("desc")
+                .tradeStatus(TradeStatus.AVAILABLE)
+                .categoryId(1L)
+                .page(0)
+                .size(10)
+                .build();
+        Category category = mock(Category.class);
+        ExchangeItem exchangeItem = mock(ExchangeItem.class);
+        Page<ExchangeItem> exchangeItemsPage = new PageImpl<>(List.of(exchangeItem));
+
+        when(categoryRepository.findById(reqDto.getCategoryId())).thenReturn(Optional.of(category));
+        when(exchangeItemRepository.findAllByCriteria(
+                reqDto.getSearch(),
+                reqDto.getTradeStatus(),
+                category,
+                reqDto.getDeposit(),
+                PageRequest.of(reqDto.getPage(), reqDto.getSize())
+        )).thenReturn(exchangeItemsPage);
+        when(exchangeItem.getId()).thenReturn(100L);
+        when(exchangeItem.getName()).thenReturn("Nike Air Max");
+        when(exchangeItem.getUser()).thenReturn(User.builder().id(1L).nickname("JohnDoe").build());
+        when(imageService.getFirstImagesByItemIds(any(), any()))
+                .thenReturn(Map.of(100L, "http://example.com/image1.jpg"));
+        when(userTrustScoreService.getTrustScore(any())).thenReturn(85);
+
+        GetAllExchangeItemsRespDto result = exchangeItemService.getAllExchangeItems(reqDto);
+
+        assertThat(result.getContent()).isNotEmpty();
+        assertThat(result.getContent().get(0).getExchangeItemId()).isEqualTo(100L);
+        assertThat(result.getContent().get(0).getExchangeItemName()).isEqualTo("Nike Air Max");
+        assertThat(result.getContent().get(0).getImageUrl()).isEqualTo("http://example.com/image1.jpg");
+        assertThat(result.getContent().get(0).getOwnerNickname()).isEqualTo("JohnDoe");
+        assertThat(result.getContent().get(0).getOwnerTrustScore()).isEqualTo(85);
+
+        verify(categoryRepository, times(1)).findById(reqDto.getCategoryId());
+        verify(exchangeItemRepository, times(1)).findAllByCriteria(
+                reqDto.getSearch(),
+                reqDto.getTradeStatus(),
+                category,
+                reqDto.getDeposit(),
+                PageRequest.of(reqDto.getPage(), reqDto.getSize())
+        );
+        verify(imageService, times(1)).getFirstImagesByItemIds(any(), any());
+        verify(userTrustScoreService, times(1)).getTrustScore(any());
+    }
+
+    @Test
+    @DisplayName("교환상품 전체목록 조회 실패 - 보증금 기준 정렬 옵션에 해당되지 않은 값이 들어온 경우")
+    void testGetAllExchangeItems_Fail_INVALID_SORT_PARAMETER() {
+        GetAllExchangeItemReqDto dto = GetAllExchangeItemReqDto.builder()
+                .deposit("aasc")
+                .build();
+
+        Set<ConstraintViolation<GetAllExchangeItemReqDto>> violations = validator.validate(dto);
+        assertThat(violations).isNotEmpty();
+        assertThat(violations.iterator().next().getMessage()).isEqualTo("보증금 정렬 기준 값이 올바르지 않습니다.");
+    }
 }

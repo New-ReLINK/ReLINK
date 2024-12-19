@@ -27,6 +27,13 @@ public class DateTimeUtil {
     private static final DateTimeFormatter EXCHANGE_START_DATE_FORMAT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
+    private static final DateTimeFormatter USAGE_POINT_HISTORY_FORMATTER =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
+    public String getUsagePointHistoryFormattedTime(LocalDateTime createdAt){
+        return createdAt != null? createdAt.format(USAGE_POINT_HISTORY_FORMATTER) : "-";
+    }
+
     public String getExchangeStartFormattedTime(LocalDateTime createdAt){
         return createdAt != null? createdAt.format(EXCHANGE_START_DATE_FORMAT) : "-";
     }
