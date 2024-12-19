@@ -11,6 +11,7 @@ import com.my.relink.service.ReportService;
 import com.my.relink.util.api.ApiResult;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -22,9 +23,9 @@ public class ReportController {
     private final ReportService reportService;
 
 
-    @PostMapping("/trades/{tradeId}/report/images")
+    @PostMapping(value = "/trades/{tradeId}/report/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResult<UploadImagesForReportRespDto>> uploadTradeReportImages(@PathVariable("tradeId") Long tradeId,
-                                                                                           @ModelAttribute @Valid UploadImagesForReportReqDto uploadImagesForReportReqDto,){
+                                                                                           @ModelAttribute @Valid UploadImagesForReportReqDto uploadImagesForReportReqDto){
         return ResponseEntity.ok(ApiResult.success(reportService.uploadImagesForTradeReport(tradeId, uploadImagesForReportReqDto)));
     }
 
