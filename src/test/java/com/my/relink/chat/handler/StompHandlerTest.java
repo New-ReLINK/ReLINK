@@ -76,6 +76,26 @@ class StompHandlerTest {
     }
 
     @Test
+    @DisplayName("토큰 검증 예외 발생 시 예외를 던진다")
+    void preSend_throw_exception_when_jwt_exception_occurs() throws Exception{
+        String invalidToken = "Bearer " + "invalid_token";
+        StompHeaderAccessor accessor = createStompHeaderAccessor(
+                StompCommand.CONNECT,
+                invalidToken,
+                TradeStatus.EXCHANGED.getMessage());
+        Message<?> connectMessage = MessageBuilder.createMessage(new byte[0], accessor.getMessageHeaders());
+
+        Message<?> resultMessage = stompHandler.preSend(connectMessage, messageChannel);
+
+        StompHeaderAccessor resultAccessor = MessageHeaderAccessor.getAccessor(resultMessage, StompHeaderAccessor.class);
+        assertNotNull(resultAccessor);
+        assertEquals(StompCommand.ERROR, resultAccessor.getCommand());
+        assertEquals(String.valueOf(ErrorCode.INVALID_JWT_TOKEN.getStatus()), resultAccessor.getFirstNativeHeader("status"));
+    }
+
+
+
+    @Test
     @DisplayName("유효한 토큰과 진행중인 거래상태로 연결 시도시 성공한다")
     void preSend_connectWithValidToken_andActiveTradeStatus() throws Exception {
 
