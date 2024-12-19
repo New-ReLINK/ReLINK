@@ -22,14 +22,11 @@ import com.my.relink.ex.ErrorCode;
 import com.my.relink.util.DateTimeUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ProblemDetail;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -95,56 +92,66 @@ public class ReportService {
         return new ExchangeItemInfoRespDto(exchangeItem, exchangeItemUrl);
     }
 
+
     @Transactional
     public UploadImagesForReportRespDto uploadImagesForTradeReport(Long tradeId, UploadImagesForReportReqDto uploadImagesForReportReqDto) {
         Report report = reportRepository.findByEntityIdAndReportType(tradeId, ReportType.TRADE)
                 .orElseThrow(() -> new BusinessException(ErrorCode.REPORT_NOR_FOUND));
         List<Image> imageList = uploadImages(uploadImagesForReportReqDto, report);
-        try {
-            imageService.saveImages(imageList);
-        }catch (Exception e){
-            handleImageUploadFail(imageList);
-            //에러 던지기
-        }
+        saveTradeReportImages(imageList, report);
         return new UploadImagesForReportRespDto(report);
     }
 
-    private void handleImageUploadFail(List<Image> imageList){
+
+    private void saveTradeReportImages(List<Image> imageList, Report report){
+        try {
+            imageService.saveImages(imageList);
+        }catch (Exception e){
+            handleImagesUploadFail(imageList);
+            log.error("[거래 신고 이미지 저장 실패] reportId = {}, cause = {}", report.getId(), e.getMessage(), e);
+            throw new BusinessException(ErrorCode.FAIL_TO_SAVE_IMAGE);
+        }
+    }
+
+
+    private void handleImagesUploadFail(List<Image> imageList){
+        int failCount = 0;
         for (Image image : imageList) {
             try {
                 s3Service.deleteImage(image.getImageUrl());
             } catch (Exception e){
+                failCount++;
                 log.error("[이미지 삭제 실패] imageUrl = {}, cause = {}", image.getImageUrl(), e.getMessage(), e);
             }
         }
-
+        if (failCount > 0) {
+            log.error("[이미지 삭제 실패 수] total = {}, failedCount = {}", imageList.size(), failCount);
+        }
     }
+
 
     private List<Image> uploadImages(UploadImagesForReportReqDto uploadImagesForReportReqDto, Report report){
         List<Image> uploadedImages = new ArrayList<>();
 
-        Stream.of(
-                    uploadImagesForReportReqDto.getImage1(),
-                    uploadImagesForReportReqDto.getImage2(),
-                    uploadImagesForReportReqDto.getImage3(),
-                    uploadImagesForReportReqDto.getImage4(),
-                    uploadImagesForReportReqDto.getImage5(),
-                    uploadImagesForReportReqDto.getImage6(),
-                    uploadImagesForReportReqDto.getImage7())
-            .filter(Objects::nonNull)
-            .forEach(file -> {
-                try {
-                    String imageUrl = s3Service.upload(file);
-                    uploadedImages.add(Image.builder()
-                            .entityId(report.getId())
-                            .entityType(EntityType.REPORT)
-                            .imageUrl(imageUrl)
-                            .build());
-                } catch (Exception e) {
-                    handleImageUploadFail(uploadedImages);
-                    throw new BusinessException(ErrorCode.IMAGE_UPLOAD_FAILED);
-                }
-            });
+        try {
+            uploadImagesForReportReqDto.getNonNullImages()
+                    .forEach(file -> {
+                        try {
+                            String imageUrl = s3Service.upload(file);
+                            uploadedImages.add(Image.builder()
+                                    .entityId(report.getId())
+                                    .entityType(EntityType.REPORT)
+                                    .imageUrl(imageUrl)
+                                    .build());
+                        } catch (Exception e) {
+                            log.error("[거래 신고 이미지 업로드 실패] reportId = {}, cause = {}", report.getId(), e.getMessage(), e);
+                            throw new BusinessException(ErrorCode.IMAGE_UPLOAD_FAILED);
+                        }
+                    });
+        } catch (BusinessException e) {
+            handleImagesUploadFail(uploadedImages);
+            throw e;
+        }
 
         return uploadedImages;
     }
