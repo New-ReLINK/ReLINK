@@ -26,6 +26,12 @@ public class ImageService {
     private final ImageRepository imageRepository;
     private final S3Service s3Service;
 
+    @Transactional
+    public void saveImages(List<Image> imageList){
+        imageRepository.saveAll(imageList);
+    }
+
+
     public String getExchangeItemThumbnailUrl(ExchangeItem exchangeItem){
         return imageRepository.findTopByEntityIdAndEntityTypeOrderByCreatedAtAsc(
                         exchangeItem.getId(),
