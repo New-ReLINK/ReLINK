@@ -79,6 +79,12 @@ public class ImageService {
         imageRepository.deleteByEntityTypeAndEntityId(entityType, entityId);
     }
 
+    public String getDonationItemThumbnailUrl(EntityType entityType, Long itemId) {
+        return imageRepository.findTopByEntityIdAndEntityTypeOrderByCreatedAtAsc(itemId, entityType)
+                .map(Image::getImageUrl)
+                .orElse(null);
+    }
+
     public List<String> getImageUrlsByItemId(EntityType entityType, Long itemId) {
         return imageRepository.findImageUrlsByItemId(entityType, itemId);
     }

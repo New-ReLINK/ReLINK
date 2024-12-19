@@ -1,4 +1,4 @@
-package com.my.relink.chat.controller.dto;
+package com.my.relink.chat.controller.dto.response;
 
 import com.my.relink.domain.message.Message;
 import lombok.Getter;
