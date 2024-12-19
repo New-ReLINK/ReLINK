@@ -10,5 +10,6 @@ public enum EntityType {
     DONATION_ITEM,
     REPORT,
     MESSAGE,
+    TRADE,
     DONATION_CERTIFICATION
 }
