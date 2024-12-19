@@ -1,5 +1,7 @@
 package com.my.relink.service;
 
+import com.my.relink.chat.controller.dto.request.ChatImageReqDto;
+import com.my.relink.chat.controller.dto.response.ChatImageRespDto;
 import com.my.relink.config.s3.S3Service;
 import com.my.relink.controller.image.dto.resp.ImageUserProfileCreateRespDto;
 import com.my.relink.controller.image.dto.resp.ImageUserProfileDeleteRespDto;
@@ -7,6 +9,7 @@ import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.image.Image;
 import com.my.relink.domain.image.repository.ImageRepository;
 import com.my.relink.domain.item.exchange.ExchangeItem;
+import com.my.relink.domain.trade.Trade;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +28,19 @@ public class ImageService {
 
     private final ImageRepository imageRepository;
     private final S3Service s3Service;
+    private final TradeService tradeService;
+
+    @Transactional
+    public ChatImageRespDto saveImageForChat(Long tradeId, ChatImageReqDto chatImageReqDto) {
+        Trade trade = tradeService.findByIdOrFail(tradeId);
+        String imageUrl = s3Service.upload(chatImageReqDto.getImage());
+        Image image = imageRepository.save(Image.builder()
+                .imageUrl(imageUrl)
+                .entityType(EntityType.TRADE)
+                .entityId(trade.getId())
+                .build());
+        return new ChatImageRespDto(image);
+    }
 
 
     public String getExchangeItemThumbnailUrl(ExchangeItem exchangeItem){

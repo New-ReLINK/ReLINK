@@ -23,7 +23,6 @@ public class ChatService {
     private final MessageRepository messageRepository;
     private final TradeService tradeService;
     private final UserService userService;
-    private final S3Service s3Service;
 
     @Transactional
     public ChatMessageRespDto saveMessage(Long tradeId, ChatMessageReqDto chatMessageReqDto, Long senderId) {
@@ -38,7 +37,5 @@ public class ChatService {
     }
 
 
-    public ChatImageRespDto saveImageForChat(Long tradeId, ChatImageReqDto chatImageReqDto, Long userId) {
 
-    }
 }

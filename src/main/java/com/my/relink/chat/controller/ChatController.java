@@ -7,6 +7,7 @@ import com.my.relink.chat.controller.dto.response.ChatImageRespDto;
 import com.my.relink.chat.controller.dto.response.ChatMessageRespDto;
 import com.my.relink.chat.service.ChatService;
 import com.my.relink.config.security.AuthUser;
+import com.my.relink.service.ImageService;
 import com.my.relink.service.MessageService;
 import com.my.relink.util.api.ApiResult;
 import jakarta.validation.Valid;
@@ -30,7 +31,7 @@ public class ChatController {
 
     private final SimpMessageSendingOperations messagingTemplate;
     private final ChatService chatService;
-    private final MessageService messageService;
+    private final ImageService imageService;
 
     @MessageMapping("/chats/{tradeId}/message")
     public void handleMessage(@DestinationVariable("tradeId") Long tradeId,
@@ -45,9 +46,8 @@ public class ChatController {
 
     @PostMapping("/chats/{tradeId}/images")
     public ResponseEntity<ApiResult<ChatImageRespDto>> saveImageForChat(@PathVariable("tradeId") Long tradeId,
-                                                                        @ModelAttribute @Valid ChatImageReqDto chatImageReqDto,
-                                                                        @AuthenticationPrincipal AuthUser authUser){
-        return ResponseEntity.ok(ApiResult.success(messageService.saveImageForChat(tradeId, chatImageReqDto, authUser.getId())));
+                                                                        @ModelAttribute @Valid ChatImageReqDto chatImageReqDto){
+        return ResponseEntity.ok(ApiResult.success(imageService.saveImageForChat(tradeId, chatImageReqDto)));
     }
 
 }
