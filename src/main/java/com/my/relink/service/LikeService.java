@@ -57,4 +57,8 @@ public class LikeService {
     public void deleteLikesByExchangeItemId(Long itemId) {
         likeRepository.deleteByExchangeItemId(itemId);
     }
+
+    public Boolean existsItemLike(Long itemId, Long userId) {
+        return likeRepository.existsLike(itemId, userId);
+    }
 }

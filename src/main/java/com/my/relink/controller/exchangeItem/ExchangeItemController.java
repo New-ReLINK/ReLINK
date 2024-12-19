@@ -64,4 +64,11 @@ public class ExchangeItemController {
         return new ResponseEntity<>(ApiResult.success(respDto), HttpStatus.OK);
     }
 
+    @GetMapping("/items/exchanges/{itemId}")
+    public ResponseEntity<ApiResult<GetAllExchangeItemsRespDto>> getExchangeItemFromOwner(@PathVariable(value = "itemId") Long itemId,
+                                                                                          @AuthenticationPrincipal AuthUser authUser) {
+        GetAllExchangeItemsRespDto respDto = exchangeItemService.getExchangeItemFromOwner(itemId, authUser.getId());
+        return new ResponseEntity<>(ApiResult.success(respDto), HttpStatus.OK);
+    }
+
 }

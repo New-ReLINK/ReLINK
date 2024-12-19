@@ -86,4 +86,7 @@ public class ImageService {
                 .orElse(null);
     }
 
+    public List<String> getImageUrlsByItemId(EntityType entityType, Long itemId) {
+        return imageRepository.findImageUrlsByItemId(entityType, itemId);
+    }
 }
