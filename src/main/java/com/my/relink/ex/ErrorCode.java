@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 @Getter
 public enum ErrorCode {
     USER_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "해당 유저를 찾을 수 없습니다."),
+    USER_SECESSION(HttpStatus.NOT_FOUND.value(), "상대방이 탈퇴한 유저입니다."),
     TOKEN_NOT_FOUND(HttpStatus.UNAUTHORIZED.value(), "토큰 정보를 찾을 수 없습니다."),
     MISS_MATCHER_PASSWORD(HttpStatus.BAD_REQUEST.value(), "패스워드가 일치하지 않습니다."),
     JSON_PARSE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Json 파싱 중 오류가 발생했습니다."),
@@ -33,6 +34,8 @@ public enum ErrorCode {
     UNAUTHORIZED_ACCESS(HttpStatus.UNAUTHORIZED.value(), "해당 상품의 소유자가 아닙니다"),
     ITEM_NOT_AVAILABLE(HttpStatus.BAD_REQUEST.value(), "해당 상품이 교환가능 상태가 아닙니다."),
     INVALID_SORT_PARAMETER(HttpStatus.BAD_REQUEST.value(), "보증금 정렬 기준 값이 올바르지 않습니다."),
+    ACTIVE_TRADE_EXISTS(HttpStatus.BAD_REQUEST.value(), "진행 중인 거래가 존재합니다. 교환을 취소한 후에 탈퇴가 가능합니다."),
+
     EXCHANGE_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "해당 교환 상품을 찾을 수 없습니다"),
     NOTIFICATION_CREATE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR.value(), "알람 저장이 실패하였습니다."),
     NOTIFICATION_DELIVERY_FAILED(HttpStatus.INTERNAL_SERVER_ERROR.value(), "알림 발송에 실패하였습니다."),

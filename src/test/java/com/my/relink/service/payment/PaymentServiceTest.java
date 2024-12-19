@@ -6,9 +6,11 @@ import com.my.relink.client.tosspayments.dto.response.TossPaymentRespDto;
 import com.my.relink.client.tosspayments.feature.PaymentFeature;
 import com.my.relink.client.tosspayments.feature.PaymentStatus;
 import com.my.relink.controller.payment.dto.request.PaymentReqDto;
+import com.my.relink.controller.point.dto.response.PointChargeHistoryRespDto;
 import com.my.relink.domain.payment.Payment;
 import com.my.relink.domain.payment.PaymentCancelReason;
 import com.my.relink.domain.payment.repository.PaymentRepository;
+import com.my.relink.domain.payment.repository.dto.PointChargeHistoryDto;
 import com.my.relink.domain.point.Point;
 import com.my.relink.domain.point.pointHistory.PointHistory;
 import com.my.relink.domain.point.pointHistory.repository.PointHistoryRepository;
@@ -17,6 +19,10 @@ import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import com.my.relink.service.PointService;
 import com.my.relink.service.UserService;
+import com.my.relink.util.DateTimeUtil;
+import com.my.relink.util.page.PageInfo;
+import com.my.relink.util.page.PageResponse;
+import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -28,8 +34,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static com.my.relink.client.tosspayments.dto.response.TossPaymentRespDto.*;
@@ -37,6 +42,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -59,6 +65,126 @@ class PaymentServiceTest {
 
     @Mock
     private PointService pointService;
+
+    @Mock
+    private DateTimeUtil dateTimeUtil;
+
+
+    @DisplayName("포인트 충전 내역 조회 테스트")
+    @Nested
+    class GetPointChargeHistoriesTest {
+
+        @Mock
+        private UserService userService;
+        @Mock
+        private PaymentRepository paymentRepository;
+        @Mock
+        private DateTimeUtil dateTimeUtil;
+        @InjectMocks
+        private PaymentService paymentService;
+
+        private User user;
+        private final int PAGE = 0;
+        private final int SIZE = 10;
+
+        @BeforeEach
+        void setUp() {
+            user = User.builder()
+                    .id(1L)
+                    .email("test@test.com")
+                    .build();
+        }
+
+        @Nested
+        @DisplayName("성공 케이스")
+        class Success {
+            private List<PointChargeHistoryDto> dtoList;
+            private PageInfo pageInfo;
+
+            @Test
+            @DisplayName("포인트 충전 내역과 페이지 정보를 반환한다")
+            void success() {
+
+                dtoList = List.of(
+                        new PointChargeHistoryDto(
+                                LocalDateTime.now(),
+                                "CARD",
+                                null,
+                                10000,
+                                10000,
+                                "DONE"
+                        ),
+                        new PointChargeHistoryDto(
+                                LocalDateTime.now().minusDays(1),
+                                "CARD",
+                                null,
+                                20000,
+                                20000,
+                                "DONE"
+                        )
+                );
+
+                pageInfo = new PageInfo(1, 2L, false, false);
+
+                given(userService.findByIdOrFail(user.getId())).willReturn(user);
+                given(paymentRepository.findPointChargeHistories(user, PAGE, SIZE))
+                        .willReturn(dtoList);
+                given(paymentRepository.getPointChargePageInfo(user, PAGE, SIZE))
+                        .willReturn(pageInfo);
+                given(dateTimeUtil.getUsagePointHistoryFormattedTime(any()))
+                        .willReturn("2024.03.18 14:30");
+
+                PageResponse<PointChargeHistoryRespDto> result =
+                        paymentService.getPointChargeHistories(user.getId(), PAGE, SIZE);
+
+                assertThat(result).isNotNull();
+                assertThat(result.getContent()).hasSize(2);
+                assertThat(result.getPageInfo().getTotalPages()).isEqualTo(1);
+                assertThat(result.getPageInfo().getTotalCount()).isEqualTo(2L);
+
+                verify(userService).findByIdOrFail(user.getId());
+                verify(paymentRepository).findPointChargeHistories(user, PAGE, SIZE);
+                verify(paymentRepository).getPointChargePageInfo(user, PAGE, SIZE);
+            }
+
+            @Test
+            @DisplayName("충전 내역이 없는 경우 빈 내역과 페이지 정보를 반환한다")
+            void success_with_no_content() {
+
+                when(userService.findByIdOrFail(user.getId())).thenReturn(user);
+                when(paymentRepository.findPointChargeHistories(user, PAGE, SIZE))
+                        .thenReturn(Collections.emptyList());
+                when(paymentRepository.getPointChargePageInfo(user, PAGE, SIZE))
+                        .thenReturn(new PageInfo(0, 0L, false, false));
+
+                PageResponse<PointChargeHistoryRespDto> result =
+                        paymentService.getPointChargeHistories(user.getId(), PAGE, SIZE);
+
+
+                assertThat(result.getContent()).isEmpty();
+                assertThat(result.getPageInfo().getTotalCount()).isZero();
+                assertThat(result.getPageInfo().getTotalPages()).isZero();
+            }
+        }
+
+
+        @Test
+        @DisplayName("존재하지 않는 유저 id로 조회하면 예외가 발생한다")
+        void fail_when_userNotFound() {
+            when(userService.findByIdOrFail(anyLong()))
+                    .thenThrow(new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+            assertThatThrownBy(() ->
+                    paymentService.getPointChargeHistories(9L, PAGE, SIZE)
+            )
+                    .isInstanceOf(BusinessException.class)
+                    .hasFieldOrPropertyWithValue("errorCode", ErrorCode.USER_NOT_FOUND);
+        }
+
+
+    }
+
+
 
     @Nested
     @DisplayName("포인트 충전 테스트")
