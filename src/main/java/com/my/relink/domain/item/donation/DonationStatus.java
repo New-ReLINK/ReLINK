@@ -1,5 +1,8 @@
 package com.my.relink.domain.item.donation;
 
+import lombok.Getter;
+
+@Getter
 public enum DonationStatus {
     PENDING_REGISTRATION("접수 중"),
     REGISTRATION_COMPLETED("접수 완료"),
