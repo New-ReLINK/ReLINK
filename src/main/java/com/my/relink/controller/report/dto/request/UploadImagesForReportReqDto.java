@@ -1,8 +1,9 @@
 package com.my.relink.controller.report.dto.request;
 
-import jakarta.validation.constraints.NotNull;
+import com.my.relink.common.validation.ValidFile;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -12,7 +13,7 @@ import java.util.stream.Stream;
 @AllArgsConstructor
 @Getter
 public class UploadImagesForReportReqDto {
-    @NotNull(message = "이미지를 첨부해야 합니다")
+    @ValidFile(message = "이미지를 첨부해야 합니다")
     private MultipartFile image1;
     private MultipartFile image2;
     private MultipartFile image3;
@@ -31,6 +32,7 @@ public class UploadImagesForReportReqDto {
                         image6,
                         image7)
                 .filter(Objects::nonNull)
+                .filter(file -> StringUtils.hasText(file.getOriginalFilename()))
                 .toList();
     }
 }
