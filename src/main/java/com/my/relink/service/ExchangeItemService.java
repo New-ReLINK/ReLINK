@@ -127,7 +127,7 @@ public class ExchangeItemService {
     public GetExchangeItemRespDto getExchangeItemChoicePage(Long userId, int page, int size) {
         User user = getValidUser(userId);
         Pageable pageable = PageRequest.of(page - 1, size);
-        Page<ExchangeItem> items = exchangeItemRepository.findAvailableItemsByUserIdOrderByModifiedAt(user.getId(), pageable);
+        Page<ExchangeItem> items = exchangeItemRepository.findAvailableItemsByUserId(user.getId(), pageable);
         if (items.isEmpty()) {
             return GetExchangeItemRespDto.empty(pageable);
         }

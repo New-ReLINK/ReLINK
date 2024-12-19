@@ -744,7 +744,7 @@ class ExchangeItemServiceTest {
         Page<ExchangeItem> items = new PageImpl<>(List.of(exchangeItem));
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(exchangeItemRepository.findAvailableItemsByUserIdOrderByModifiedAt(userId, PageRequest.of(page - 1, size))).thenReturn(items);
+        when(exchangeItemRepository.findAvailableItemsByUserId(userId, PageRequest.of(page - 1, size))).thenReturn(items);
         when(imageService.getFirstImagesByItemIds(any(), any())).thenReturn(Map.of(1L, "http://example.com/image.jpg"));
         when(exchangeItem.getId()).thenReturn(1L);
         when(exchangeItem.getCreatedAt()).thenReturn(LocalDateTime.now());
