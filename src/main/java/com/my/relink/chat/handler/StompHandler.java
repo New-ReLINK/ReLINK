@@ -7,6 +7,7 @@ import com.my.relink.domain.trade.Trade;
 import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
+import com.my.relink.ex.SecurityFilterChainException;
 import com.my.relink.service.TradeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -137,7 +138,15 @@ public class StompHandler implements ChannelInterceptor {
      */
     private AuthUser validateToken(StompHeaderAccessor accessor){
         String tokenWithPrefix = accessor.getFirstNativeHeader(WebSocketHeader.AUTH_HEADER);
+        if(tokenWithPrefix == null){
+            throw new BusinessException(ErrorCode.TOKEN_NOT_FOUND);
+        }
         String token = tokenWithPrefix.replace(JwtProvider.TOKEN_PREFIX, "");
+        try{
+            jwtProvider.validateToken(token);
+        } catch (SecurityFilterChainException e){
+            throw new BusinessException(e.getErrorCode());
+        }
         return jwtProvider.getAuthUserForToken(token);
     }
 
