@@ -6,11 +6,11 @@ import com.my.relink.controller.user.dto.resp.*;
 import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.image.Image;
 import com.my.relink.domain.image.repository.ImageRepository;
-import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.item.exchange.repository.ExchangeItemRepository;
 import com.my.relink.domain.point.Point;
 import com.my.relink.domain.point.repository.PointRepository;
 import com.my.relink.domain.trade.TradeStatus;
+import com.my.relink.domain.trade.repository.TradeRepository;
 import com.my.relink.domain.user.Address;
 import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.repository.UserRepository;
@@ -48,6 +48,9 @@ class UserServiceTest extends DummyObject {
 
     @Mock
     private PointRepository pointRepository;
+
+    @Mock
+    private TradeRepository tradeRepository;
 
     @Mock
     private ExchangeItemRepository exchangeItemRepository;
@@ -462,6 +465,8 @@ class UserServiceTest extends DummyObject {
                 .build();
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(tradeRepository.existsByRequesterIdAndTradeStatus(user.getId(), TradeStatus.IN_EXCHANGE)).thenReturn(false);
+        when(tradeRepository.existsByRequesterIdAndTradeStatus(user.getId(), TradeStatus.IN_DELIVERY)).thenReturn(false);
         when(passwordEncoder.matches(any(), any())).thenReturn(true);
         when(userRepository.save(any(User.class))).thenReturn(user);
 
