@@ -98,7 +98,7 @@ public class ExchangeItemService {
     }
 
     public GetAllExchangeItemsRespDto getExchangeItemFromOwner(Long itemId, Long userId) {
-        ExchangeItem exchangeItem = findByIdOrFail(itemId);
+        ExchangeItem exchangeItem = findByIdFetchUser(itemId);
         validExchangeItemTradeStatus(exchangeItem.getTradeStatus());
         int trustScore = userTrustScoreService.getTrustScore(exchangeItem.getUser());
         List<String> imageUrls = imageService.getImageUrlsByItemId(EntityType.EXCHANGE_ITEM, itemId);
