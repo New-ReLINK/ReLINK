@@ -51,6 +51,9 @@ public class ChatService {
                     .build());
             return new ChatImageRespDto(image);
         } catch (Exception e){
+            if(e instanceof BusinessException){
+                throw e;
+            }
             log.error("[채팅 이미지 저장 실패] tradeId = {}, cause = {}", tradeId, e.getMessage(), e);
             handleImageFail(uploadedImageUrl, tradeId);
             throw new BusinessException(ErrorCode.FAIL_TO_SAVE_IMAGE);
