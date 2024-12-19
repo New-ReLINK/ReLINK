@@ -18,6 +18,11 @@ public class UserController {
 
     private final UserService userService;
 
+    @GetMapping("/hello")
+    public String home() {
+        return "hello";
+    }
+
     @PostMapping("/auth/signup")
     public ResponseEntity<ApiResult<UserCreateRespDto>> signup(@Valid @RequestBody UserCreateReqDto dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResult.success(userService.register(dto)));
