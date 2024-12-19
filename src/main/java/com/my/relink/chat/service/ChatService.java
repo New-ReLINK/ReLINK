@@ -4,16 +4,19 @@ import com.my.relink.chat.controller.dto.request.ChatImageReqDto;
 import com.my.relink.chat.controller.dto.request.ChatMessageReqDto;
 import com.my.relink.chat.controller.dto.response.ChatImageRespDto;
 import com.my.relink.chat.controller.dto.response.ChatMessageRespDto;
+import com.my.relink.common.notification.NotificationPublisherService;
 import com.my.relink.config.s3.S3Service;
 import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.image.Image;
 import com.my.relink.domain.image.repository.ImageRepository;
 import com.my.relink.domain.message.Message;
 import com.my.relink.domain.message.repository.MessageRepository;
+import com.my.relink.domain.notification.chat.ChatStatus;
 import com.my.relink.domain.trade.Trade;
 import com.my.relink.domain.user.User;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
+import com.my.relink.service.NotificationService;
 import com.my.relink.service.TradeService;
 import com.my.relink.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +36,7 @@ public class ChatService {
     private final UserService userService;
     private final S3Service s3Service;
     private final ImageRepository imageRepository;
+    private final NotificationPublisherService notificationPublisherService;
 
     @Transactional
     public ChatImageRespDto saveImageForChat(Long tradeId, ChatImageReqDto chatImageReqDto) {
@@ -67,8 +71,15 @@ public class ChatService {
     @Transactional
     public ChatMessageRespDto saveMessage(Long tradeId, ChatMessageReqDto chatMessageReqDto, Long senderId) {
         User sender = userService.findByIdOrFail(senderId);
-        Trade trade = tradeService.findByIdOrFail(tradeId);
+        Trade trade = tradeService.findByIdWithOwnerItemOrFail(tradeId);
         Message message = messageRepository.save(chatMessageReqDto.toEntity(trade, sender));
+        notificationPublisherService.crateChatNotification(
+                senderId,
+                message.getContent(),
+                sender.getNickname(),
+                trade.getOwnerExchangeItem().getName(),
+                ChatStatus.NEW_CHAT
+        );
         return new ChatMessageRespDto(message);
     }
 
