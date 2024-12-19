@@ -28,6 +28,7 @@ public class CustomLikeRepositoryImpl implements CustomLikeRepository {
 
     private final JPAQueryFactory jpaQueryFactory;
     private final QUser likedUser = new QUser("likedUser");
+    private static final QLike like = QLike.like;
 
     @Override
     public Page<LikeExchangeItemListRepositoryDto> findUserLikeExchangeItem(Long userId, Pageable pageable) {
@@ -78,7 +79,6 @@ public class CustomLikeRepositoryImpl implements CustomLikeRepository {
     }
 
     public Boolean existsLike(Long itemId, Long userId) {
-        QLike like = QLike.like;
         return jpaQueryFactory
                 .selectOne()
                 .from(like)
