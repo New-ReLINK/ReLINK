@@ -20,9 +20,12 @@ public class DonationController {
     private final DonationItemService donationItemService;
 
     @PostMapping("/item/donation")
-    public ResponseEntity<ApiResult<DonationItemIdRespDto>> createDonationItem(@AuthenticationPrincipal AuthUser authUser,
-                                                                               @RequestBody @Valid DonationItemReqDto request) {
+    public ResponseEntity<ApiResult<DonationItemIdRespDto>> createDonationItem(
+            @AuthenticationPrincipal AuthUser authUser,
+            @RequestBody @Valid DonationItemReqDto request) {
+
         DonationItemIdRespDto response = donationItemService.createDonationItem(request, authUser);
+
         return new ResponseEntity<>(ApiResult.success(response), HttpStatus.CREATED);
     }
 
@@ -54,6 +57,16 @@ public class DonationController {
             @AuthenticationPrincipal AuthUser authUser) {
 
         DonationItemDetailRespDto response = donationItemService.getDonationItem(itemId, authUser.getId());
+
+        return ResponseEntity.ok(ApiResult.success(response));
+    }
+
+    @GetMapping("/donations/{donationItemId}/rejection")
+    public ResponseEntity<ApiResult<DonationItemRejectionRespDto>> getRejectionItem (
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long donationItemId
+    ) {
+        DonationItemRejectionRespDto response = donationItemService.getRejectionItem(donationItemId, authUser.getId());
 
         return ResponseEntity.ok(ApiResult.success(response));
     }

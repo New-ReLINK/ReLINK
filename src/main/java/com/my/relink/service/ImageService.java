@@ -33,6 +33,7 @@ public class ImageService {
                 .map(Image::getImageUrl)
                 .orElse(null);
     }
+
     public Map<Long, String> getImagesByItemIds(EntityType entityType, List<Long> itemIds) {
         List<Image> images = imageRepository.findImages(entityType, itemIds);
         return images.stream()
