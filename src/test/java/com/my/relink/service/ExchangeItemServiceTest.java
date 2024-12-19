@@ -24,6 +24,7 @@ import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import com.my.relink.util.page.PageInfo;
+import com.my.relink.util.page.PageResponse;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -536,9 +537,11 @@ class ExchangeItemServiceTest {
                 .deposit("desc")
                 .tradeStatus(TradeStatus.AVAILABLE)
                 .categoryId(1L)
-                .page(0)
+                .page(1)
                 .size(10)
                 .build();
+
+        PageRequest pageable = PageRequest.of(reqDto.getPage() - 1, reqDto.getSize());
         Category category = mock(Category.class);
         ExchangeItem exchangeItem = mock(ExchangeItem.class);
         Page<ExchangeItem> exchangeItemsPage = new PageImpl<>(List.of(exchangeItem));
@@ -549,7 +552,7 @@ class ExchangeItemServiceTest {
                 reqDto.getTradeStatus(),
                 category,
                 reqDto.getDeposit(),
-                PageRequest.of(reqDto.getPage(), reqDto.getSize())
+                pageable
         )).thenReturn(exchangeItemsPage);
         when(exchangeItem.getId()).thenReturn(100L);
         when(exchangeItem.getName()).thenReturn("Nike Air Max");
@@ -568,13 +571,7 @@ class ExchangeItemServiceTest {
         assertThat(result.getContent().get(0).getOwnerTrustScore()).isEqualTo(85);
 
         verify(categoryRepository, times(1)).findById(reqDto.getCategoryId());
-        verify(exchangeItemRepository, times(1)).findAllByCriteria(
-                reqDto.getSearch(),
-                reqDto.getTradeStatus(),
-                category,
-                reqDto.getDeposit(),
-                PageRequest.of(reqDto.getPage(), reqDto.getSize())
-        );
+        verify(exchangeItemRepository, times(1)).findAllByCriteria(any(), any(), any(), anyString(), any());
         verify(imageService, times(1)).getFirstImagesByItemIds(any(), any());
         verify(userTrustScoreService, times(1)).getTrustScore(any());
     }

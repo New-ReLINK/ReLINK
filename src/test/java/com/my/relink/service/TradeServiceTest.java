@@ -1,5 +1,6 @@
 package com.my.relink.service;
 
+import com.my.relink.common.notification.NotificationPublisherService;
 import com.my.relink.config.security.AuthUser;
 import com.my.relink.controller.review.dto.request.ReviewReqDto;
 import com.my.relink.controller.review.dto.resp.ReviewRespDto;
@@ -61,6 +62,9 @@ class TradeServiceTest extends DummyObject {
     private DateTimeUtil dateTimeUtil;
     @Mock
     private ReviewRepository reviewRepository;
+
+    @Mock
+    private NotificationPublisherService notificationPublisherService;
 
     @InjectMocks
     private TradeService tradeService;
@@ -171,9 +175,9 @@ class TradeServiceTest extends DummyObject {
         Trade trade = mockTrade(mockOwnerUser(), currentUser);
 
         when(userRepository.findById(authUser.getId())).thenReturn(Optional.of(currentUser));
-        Mockito.when(userRepository.existsByIdAndIsDeletedFalse(authUser.getId())).thenReturn(true);
+        when(userRepository.existsByIdAndIsDeletedFalse(authUser.getId())).thenReturn(true);
         when(tradeRepository.findById(tradeId)).thenReturn(Optional.of(trade));
-
+        doNothing().when(notificationPublisherService).createExchangeNotification(anyLong(), any(), anyString(), any());
         // when
         tradeService.cancelTradeRequest(tradeId, authUser);
 
