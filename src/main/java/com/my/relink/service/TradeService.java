@@ -85,10 +85,17 @@ public class TradeService {
         Trade trade = tradeRepository.findById(tradeId).
                 orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
 
-        //거래 상대방이 탈퇴했을 때는 교환 신청 취소 가능
-//        if(!userRepository.existsByIdAndIsDeletedFalse(trade.getPartner(currentUser.getId()).getId())) {
-//            throw new BusinessException(ErrorCode.USER_SECESSION);
-//        }
+        //거래 상대방이 탈퇴했을 때는 거래 취소 && 보증금 복원
+        User partnerUser = trade.getPartner(currentUser.getId());
+        boolean isPartnerDeleted = !userRepository.existsByIdAndIsDeletedFalse(partnerUser.getId());
+
+        if(isPartnerDeleted){
+            pointTransactionService.restorePoints(tradeId, currentUser);
+            trade.updateTradeStatus(TradeStatus.CANCELED);
+            tradeRepository.save(trade);
+
+            throw new BusinessException(ErrorCode.USER_SECESSION);
+        }
 
         //차감 메서드 위임
         pointTransactionService.deductPoints(tradeId, currentUser);
@@ -117,8 +124,15 @@ public class TradeService {
         Trade trade = tradeRepository.findById(tradeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
 
-        //거래 상대방이 탈퇴했을 떄
-        if(!userRepository.existsByIdAndIsDeletedFalse(trade.getPartner(currentUser.getId()).getId())) {
+        //거래 상대방이 탈퇴했을 떄 거래 취소 && 보증금 복원
+        User partnerUser = trade.getPartner(currentUser.getId());
+        boolean isPartnerDeleted = !userRepository.existsByIdAndIsDeletedFalse(partnerUser.getId());
+
+        if(isPartnerDeleted){
+            pointTransactionService.restorePoints(tradeId, currentUser);
+            trade.updateTradeStatus(TradeStatus.CANCELED);
+            tradeRepository.save(trade);
+
             throw new BusinessException(ErrorCode.USER_SECESSION);
         }
 
