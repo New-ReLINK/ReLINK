@@ -56,13 +56,23 @@ public class ImageController {
     @PostMapping("/items/exchanges/{itemId}/images")
     public ResponseEntity<ApiResult<List<Long>>> addExchangeItemImage(
             @PathVariable(value = "itemId") Long itemId,
-            @RequestParam List<MultipartFile> files
+            @RequestParam List<MultipartFile> files,
+            @AuthenticationPrincipal AuthUser authUser
     ) {
         if (files == null || files.isEmpty()) {
             throw new BusinessException(ErrorCode.NO_IMAGE_UPLOADED);
         }
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(ApiResult.success(imageService.addExchangeItemImage(itemId, files)));
+                .body(ApiResult.success(imageService.addExchangeItemImage(itemId, files, authUser.getId())));
+    }
+
+    @DeleteMapping("/items/exchanges/{itemId}/images/{imageId}")
+    public ResponseEntity<ApiResult<Long>> deleteExchangeItemImage(@PathVariable(value = "itemId") Long itemId,
+                                                                   @PathVariable(value = "imageId") Long imageId,
+                                                                   @AuthenticationPrincipal AuthUser authUser) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResult.success(imageService.deleteExchangeItemImage(itemId, imageId, authUser.getId())));
     }
 }

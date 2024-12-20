@@ -8,6 +8,7 @@ import com.my.relink.domain.image.Image;
 import com.my.relink.domain.image.repository.ImageRepository;
 import com.my.relink.domain.item.donation.repository.DonationItemRepository;
 import com.my.relink.domain.item.exchange.ExchangeItem;
+import com.my.relink.domain.item.exchange.repository.ExchangeItemRepository;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ public class ImageService {
 
     private final ImageRepository imageRepository;
     private final DonationItemRepository donationItemRepository;
+    private final ExchangeItemRepository exchangeItemRepository;
     private final S3Service s3Service;
 
     public String getExchangeItemThumbnailUrl(ExchangeItem exchangeItem){
@@ -124,8 +126,9 @@ public class ImageService {
     }
 
     @Transactional
-    public List<Long> addExchangeItemImage(Long itemId, List<MultipartFile> files) {
+    public List<Long> addExchangeItemImage(Long itemId, List<MultipartFile> files, Long userId) {
         validImageCount(itemId, files);
+        validItemOwner(itemId, userId);
         List<Long> savedImageIds = new ArrayList<>();
         for (MultipartFile file : files) {
             String imageUrl = s3Service.upload(file);
@@ -138,6 +141,24 @@ public class ImageService {
             savedImageIds.add(new ImageUserProfileCreateRespDto(savedImage).getId());
         }
         return savedImageIds;
+    }
+
+    @Transactional
+    public Long deleteExchangeItemImage(Long itemId, Long imageId, Long userId) {
+        validItemOwner(itemId, userId);
+        Image image = imageRepository.findByIdAndEntityIdAndEntityType(imageId, itemId, EntityType.EXCHANGE_ITEM)
+                .orElseThrow(() -> new BusinessException(ErrorCode.IMAGE_NOT_FOUND));
+        s3Service.deleteImage(image.getImageUrl());
+        imageRepository.delete(image);
+        return imageId;
+    }
+
+    public void validItemOwner(Long itemId, Long userId) {
+        ExchangeItem exchangeItem = exchangeItemRepository.findById(itemId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ITEM_NOT_FOUND));
+        if (!exchangeItem.getUser().getId().equals(userId)) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS);
+        }
     }
 
     public void validImageCount(Long itemId, List<MultipartFile> files) {
