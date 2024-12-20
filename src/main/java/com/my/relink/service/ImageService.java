@@ -6,6 +6,8 @@ import com.my.relink.controller.image.dto.resp.ImageUserProfileDeleteRespDto;
 import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.image.Image;
 import com.my.relink.domain.image.repository.ImageRepository;
+import com.my.relink.domain.item.donation.DonationItem;
+import com.my.relink.domain.item.donation.DonationStatus;
 import com.my.relink.domain.item.donation.repository.DonationItemRepository;
 import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.ex.BusinessException;
@@ -121,5 +123,37 @@ public class ImageService {
             }
         }
         return uploadedImageIds;
+    }
+
+    @Transactional
+    public Long deleteDonationItemImage(Long itemId, Long imageId, Long userId) {
+        validItemOwner(itemId, userId);
+
+        Image image = imageRepository.findByIdAndEntityIdAndEntityType(imageId, itemId, EntityType.DONATION_ITEM)
+                .orElseThrow(() -> new BusinessException(ErrorCode.IMAGE_NOT_FOUND));
+
+        DonationItem donationItem = donationItemRepository.findById(itemId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ITEM_NOT_FOUND));
+
+        if (donationItem.getDonationStatus() == DonationStatus.UNDER_INSPECTION ||
+                donationItem.getDonationStatus() == DonationStatus.INSPECTION_COMPLETED ||
+                donationItem.getDonationStatus() == DonationStatus.DONATION_COMPLETED) {
+            throw new BusinessException(ErrorCode.DONATION_ITEM_CANNOT_BE_DELETED);
+        }
+
+        s3Service.deleteImage(image.getImageUrl());
+
+        imageRepository.delete(image);
+
+        return imageId;
+    }
+
+    public void validItemOwner(Long itemId, Long userId) {
+        DonationItem donationItem = donationItemRepository.findById(itemId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ITEM_NOT_FOUND));
+
+        if (!donationItem.getUser().getId().equals(userId)) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS);
+        }
     }
 }

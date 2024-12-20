@@ -50,4 +50,15 @@ public class ImageController {
                 .status(HttpStatus.CREATED)
                 .body(ApiResult.success(imageService.addDonationItemImage(authUser.getId(), itemId, files)));
     }
+
+    @DeleteMapping("/users/items/donations/{itemId}")
+    public ResponseEntity<ApiResult<Long>> deleteDonationItemImage(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable(value = "itemId") Long itemId,
+            @PathVariable Long imageId
+    ){
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResult.success(imageService.deleteDonationItemImage(authUser.getId(), itemId, imageId)));
+    }
 }
