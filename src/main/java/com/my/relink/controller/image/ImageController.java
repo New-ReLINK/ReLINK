@@ -3,6 +3,8 @@ package com.my.relink.controller.image;
 import com.my.relink.config.security.AuthUser;
 import com.my.relink.controller.image.dto.resp.ImageUserProfileCreateRespDto;
 import com.my.relink.controller.image.dto.resp.ImageUserProfileDeleteRespDto;
+import com.my.relink.ex.BusinessException;
+import com.my.relink.ex.ErrorCode;
 import com.my.relink.service.ImageService;
 import com.my.relink.util.api.ApiResult;
 import lombok.RequiredArgsConstructor;
@@ -45,6 +47,9 @@ public class ImageController {
             @PathVariable(value = "itemId") Long itemId,
             @RequestParam List<MultipartFile> files
     ) {
+        if (files == null || files.isEmpty()) {
+            throw new BusinessException(ErrorCode.NO_IMAGE_UPLOADED);
+        }
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResult.success(imageService.addExchangeItemImage(itemId, files)));

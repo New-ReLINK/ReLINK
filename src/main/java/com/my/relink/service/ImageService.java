@@ -109,9 +109,6 @@ public class ImageService {
     }
 
     public void validImageCount(Long itemId, List<MultipartFile> files) {
-        if (files == null || files.isEmpty()) {
-            throw new BusinessException(ErrorCode.NO_IMAGE_UPLOADED);
-        }
         int maxImageCount = 5;
         int existingImageCount = imageRepository.countImages(itemId, EntityType.EXCHANGE_ITEM);
         if (existingImageCount + files.size() > maxImageCount) {

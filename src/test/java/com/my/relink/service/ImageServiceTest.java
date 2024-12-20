@@ -203,19 +203,4 @@ class ImageServiceTest {
         assertEquals("사진은 총 5장까지 등록 가능합니다.", exception.getMessage());
     }
 
-    @Test
-    @DisplayName("상품 이미지 등록 실패 - 업로드된 이미지가 없는 경우")
-    void testAddExchangeItemImages_Fail_NotUploadImage () {
-        Long itemId = 1L;
-        List<MultipartFile> files = Collections.emptyList();
-
-        BusinessException exception = assertThrows(
-                BusinessException.class,
-                () -> imageService.addExchangeItemImage(itemId, files)
-        );
-
-        assertEquals(ErrorCode.NO_IMAGE_UPLOADED, exception.getErrorCode());
-        assertEquals("사진이 업로드되지 않았습니다.", exception.getMessage());
-    }
-
 }
