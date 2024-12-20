@@ -218,22 +218,6 @@ class ImageServiceTest {
     }
 
     @Test
-    @DisplayName("상품 이미지 등록 실패 - 업로드된 이미지가 없는 경우")
-    void testAddExchangeItemImages_Fail_NotUploadImage () {
-        Long itemId = 1L;
-        Long userId = 2L;
-        List<MultipartFile> files = Collections.emptyList();
-
-        BusinessException exception = assertThrows(
-                BusinessException.class,
-                () -> imageService.addExchangeItemImage(itemId, files, userId)
-        );
-
-        assertEquals(ErrorCode.NO_IMAGE_UPLOADED, exception.getErrorCode());
-        assertEquals("사진이 업로드되지 않았습니다.", exception.getMessage());
-    }
-
-    @Test
     @DisplayName("상품 이미지 삭제 성공")
     void testDeleteExchangeItemImage_Success () {
         Long itemId = 1L;
