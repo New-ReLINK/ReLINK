@@ -126,6 +126,31 @@ public class ImageService {
     }
 
     @Transactional
+    public List<Long> addExchangeItemImage(Long itemId, List<MultipartFile> files) {
+        validImageCount(itemId, files);
+        List<Long> savedImageIds = new ArrayList<>();
+        for (MultipartFile file : files) {
+            String imageUrl = s3Service.upload(file);
+            Image image = Image.builder()
+                    .imageUrl(imageUrl)
+                    .entityType(EntityType.EXCHANGE_ITEM)
+                    .entityId(itemId)
+                    .build();
+            Image savedImage = imageRepository.save(image);
+            savedImageIds.add(new ImageUserProfileCreateRespDto(savedImage).getId());
+        }
+        return savedImageIds;
+    }
+
+    public void validImageCount(Long itemId, List<MultipartFile> files) {
+        int maxImageCount = 5;
+        int existingImageCount = imageRepository.countImages(itemId, EntityType.EXCHANGE_ITEM);
+        if (existingImageCount + files.size() > maxImageCount) {
+            throw new BusinessException(ErrorCode.MAX_IMAGE_COUNT);
+        }
+    }
+
+    @Transactional
     public Long deleteDonationItemImage(Long itemId, Long imageId, Long userId) {
         validItemOwner(itemId, userId);
 

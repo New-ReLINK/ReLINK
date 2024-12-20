@@ -724,9 +724,9 @@ class TradeServiceTest extends DummyObject {
 
         when(tradeRepository.save(any(Trade.class))).thenReturn(expectedTrade);
 
-        TradeIdRespDto tradeId = tradeService.createTrade(ownerItem, requesterItem, requester);
+        TradeIdRespDto respDto = tradeService.createTrade(ownerItem, requesterItem, requester);
 
-        assertThat(tradeId).isEqualTo(1L);
+        assertThat(respDto.getTradeId()).isEqualTo(1L);
         verify(tradeRepository, times(1)).save(any(Trade.class));
     }
 
