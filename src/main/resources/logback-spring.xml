@@ -40,17 +40,34 @@
         </encoder>
     </appender>
 
-    <appender name="ELASTICSEARCH" class="com.your.package.ElasticsearchAppender">
+    <!-- Logstash Appender -->
+    <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+        <destination>localhost:5000</destination>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <includeContext>true</includeContext>
+            <includeMdc>true</includeMdc>
+            <customFields>{"application":"ReLINK"}</customFields>
+        </encoder>
+        <!-- WARN 이상 레벨은 파일에 저장하지 않고 Logstash로만 보냄 -->
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>WARN</level>
         </filter>
+    </appender>
+
+    <!-- 비동기 처리를 위한 Async Appender -->
+    <appender name="ASYNC_LOGSTASH" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="LOGSTASH" />
+        <queueSize>512</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <includeCallerData>true</includeCallerData>
+        <neverBlock>true</neverBlock>
     </appender>
 
     <!-- Logger 설정 -->
     <root level="INFO">
         <appender-ref ref="CONSOLE" />
         <appender-ref ref="FILE" />
-        <appender-ref ref="ELASTICSEARCH" />
+        <appender-ref ref="ASYNC_LOGSTASH" />
     </root>
 
 </configuration>
