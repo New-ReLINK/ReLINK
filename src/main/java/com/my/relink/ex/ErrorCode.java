@@ -70,6 +70,8 @@ public enum ErrorCode {
     DONATION_ITEM_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR.value(), "해당 기부 상품을 찾을 수 없습니다."),
     FAIL_TO_SAVE_IMAGE(HttpStatus.INTERNAL_SERVER_ERROR.value(), "이미지 저장에 실패했습니다"),
     DONATION_ITEM_CANNOT_BE_DELETED(HttpStatus.BAD_REQUEST.value(), "검수중,검수완료,기부완료 된 물품은 삭제 할 수 없습니다."),
+    MAX_IMAGE_COUNT(HttpStatus.BAD_REQUEST.value(), "사진은 총 5장까지 등록 가능합니다."),
+    NO_IMAGE_UPLOADED(HttpStatus.BAD_REQUEST.value(), "사진이 업로드되지 않았습니다."),
 
 
     ;
