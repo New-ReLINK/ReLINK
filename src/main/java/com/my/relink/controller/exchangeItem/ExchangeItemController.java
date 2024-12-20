@@ -85,7 +85,7 @@ public class ExchangeItemController {
         return new ResponseEntity<>(ApiResult.success(respDto), HttpStatus.OK);
     }
 
-    @PostMapping("/items/exchanges/{itemId}/availble")
+    @PostMapping("/items/exchanges/{itemId}/available")
     public ResponseEntity<ApiResult<TradeIdRespDto>> choiceExchangeItem(@PathVariable(value = "itemId") Long itemId,
                                                                         @Valid @RequestBody ChoiceExchangeItemReqDto reqDto,
                                                                         @AuthenticationPrincipal AuthUser authUser) {
