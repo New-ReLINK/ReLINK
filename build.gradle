@@ -2,10 +2,16 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.4.0'
     id 'io.spring.dependency-management' version '1.1.6'
+    id 'war'
 }
 
 group = 'com.my'
 version = '0.0.1-SNAPSHOT'
+
+war{
+    war.enabled = true
+    archiveFileName = 'rerink.war'
+}
 
 java {
     toolchain {
@@ -65,6 +71,8 @@ dependencies {
     // logstash logback encoder
     implementation 'net.logstash.logback:logstash-logback-encoder:7.4'
 
+    // embedded tomcat
+    providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
 
 }
 
