@@ -42,6 +42,17 @@ public class ImageController {
                 .body(ApiResult.success(imageService.deleteUserProfile(authUser.getId(), imageId)));
     }
 
+    @PostMapping("/items/donations/{itemId}/images")
+    public ResponseEntity<ApiResult<List<Long>>> registerDonationItemImage(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable(value = "itemId") Long itemId,
+            @RequestParam List<MultipartFile> files
+    ){
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(ApiResult.success(imageService.addDonationItemImage(authUser.getId(), itemId, files)));
+    }
+
     @PostMapping("/items/exchanges/{itemId}/images")
     public ResponseEntity<ApiResult<List<Long>>> addExchangeItemImage(
             @PathVariable(value = "itemId") Long itemId,
