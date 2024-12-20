@@ -68,7 +68,6 @@ public enum ErrorCode {
     MAX_IMAGE_COUNT(HttpStatus.BAD_REQUEST.value(), "사진은 총 5장까지 등록 가능합니다."),
     NO_IMAGE_UPLOADED(HttpStatus.BAD_REQUEST.value(), "사진이 업로드되지 않았습니다."),
 
-
     ;
     private final int status;
     private final String message;

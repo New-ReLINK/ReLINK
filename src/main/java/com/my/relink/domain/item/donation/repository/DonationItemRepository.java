@@ -33,4 +33,6 @@ public interface DonationItemRepository extends JpaRepository<DonationItem, Long
 
     @Query("SELECT d FROM DonationItem d JOIN FETCH d.category WHERE d.id = :id")
     Optional<DonationItem> findByIdWithCategory(@Param("id") Long id);
+
+    boolean existsByIdAndUserId(Long itemId, Long userId);
 }

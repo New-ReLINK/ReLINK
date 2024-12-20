@@ -6,6 +6,7 @@ import com.my.relink.controller.image.dto.resp.ImageUserProfileDeleteRespDto;
 import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.image.Image;
 import com.my.relink.domain.image.repository.ImageRepository;
+import com.my.relink.domain.item.donation.repository.DonationItemRepository;
 import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.item.exchange.repository.ExchangeItemRepository;
 import com.my.relink.ex.BusinessException;
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
 public class ImageService {
 
     private final ImageRepository imageRepository;
+    private final DonationItemRepository donationItemRepository;
     private final ExchangeItemRepository exchangeItemRepository;
     private final S3Service s3Service;
 
@@ -94,6 +96,36 @@ public class ImageService {
     }
 
     @Transactional
+    public List<Long> addDonationItemImage(Long userId, Long itemId, List<MultipartFile> files) {
+        if (!donationItemRepository.existsByIdAndUserId(itemId, userId)) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS);
+        }
+
+        long imageCount = imageRepository.countImages(itemId, EntityType.DONATION_ITEM);
+
+        if (imageCount + files.size() > 5) {
+            throw new BusinessException(ErrorCode.MAX_IMAGE_COUNT);
+        }
+
+        List<Long> uploadedImageIds = new ArrayList<>();
+        for (MultipartFile file : files) {
+            if (file != null && !file.isEmpty()) {
+                String imageUrl = s3Service.upload(file);
+
+                Image image = Image.builder()
+                        .imageUrl(imageUrl)
+                        .entityType(EntityType.DONATION_ITEM)
+                        .entityId(itemId)
+                        .build();
+
+                Image savedImage = imageRepository.save(image);
+                uploadedImageIds.add(savedImage.getId());
+            }
+        }
+        return uploadedImageIds;
+    }
+
+    @Transactional
     public List<Long> addExchangeItemImage(Long itemId, List<MultipartFile> files, Long userId) {
         validImageCount(itemId, files);
         validItemOwner(itemId, userId);
@@ -130,15 +162,10 @@ public class ImageService {
     }
 
     public void validImageCount(Long itemId, List<MultipartFile> files) {
-        if (files == null || files.isEmpty()) {
-            throw new BusinessException(ErrorCode.NO_IMAGE_UPLOADED);
-        }
         int maxImageCount = 5;
         int existingImageCount = imageRepository.countImages(itemId, EntityType.EXCHANGE_ITEM);
         if (existingImageCount + files.size() > maxImageCount) {
             throw new BusinessException(ErrorCode.MAX_IMAGE_COUNT);
         }
     }
-
-
 }
