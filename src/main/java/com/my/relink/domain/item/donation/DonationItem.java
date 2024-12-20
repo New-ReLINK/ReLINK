@@ -99,4 +99,12 @@ public class DonationItem extends BaseEntity {
         this.disposalType = disposalType;
     }
 
+    public void updateStatus(DisposalType disposalType) {
+        this.disposalType = disposalType;
+    }
+
+    public void updateReturnAddress(Address address) {
+        this.returnAddress = address;
+    }
+
 }

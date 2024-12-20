@@ -18,7 +18,8 @@ public interface ExchangeItemRepository extends JpaRepository<ExchangeItem, Long
     @Query("select ei from ExchangeItem ei join fetch ei.user where ei.id = :itemId and ei.isDeleted = false")
     Optional<ExchangeItem> findByIdWithUser(@Param("itemId") Long itemId);
 
-    Page<ExchangeItem> findByUserId(Long id, Pageable pageable);
+    @Query("select ei from ExchangeItem ei join fetch ei.user where ei.user.id = :userId")
+    Page<ExchangeItem> findByUserIdWithUser(@Param("userId") Long userId, Pageable pageable);
 
     @Modifying(clearAutomatically = true)
     @Query("update ExchangeItem e set e.tradeStatus = com.my.relink.domain.trade.TradeStatus.UNAVAILABLE where e.user.id = :userId")
