@@ -1,13 +1,21 @@
 package com.my.relink.service;
 
+import com.my.relink.config.s3.S3Service;
+import com.my.relink.controller.image.dto.resp.ImageUserProfileCreateRespDto;
+import com.my.relink.controller.image.dto.resp.ImageUserProfileDeleteRespDto;
 import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.image.Image;
 import com.my.relink.domain.image.repository.ImageRepository;
+import com.my.relink.domain.item.donation.repository.DonationItemRepository;
 import com.my.relink.domain.item.exchange.ExchangeItem;
+import com.my.relink.ex.BusinessException;
+import com.my.relink.ex.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -18,8 +26,10 @@ import java.util.stream.Collectors;
 public class ImageService {
 
     private final ImageRepository imageRepository;
+    private final DonationItemRepository donationItemRepository;
+    private final S3Service s3Service;
 
-    public String getExchangeItemUrl(ExchangeItem exchangeItem) {
+    public String getExchangeItemThumbnailUrl(ExchangeItem exchangeItem){
         return imageRepository.findTopByEntityIdAndEntityTypeOrderByCreatedAtAsc(
                         exchangeItem.getId(),
                         EntityType.EXCHANGE_ITEM)
@@ -33,4 +43,108 @@ public class ImageService {
                 .collect(Collectors.toMap(Image::getEntityId, Image::getImageUrl));
     }
 
+    public Map<Long, String> getFirstImagesByItemIds(EntityType entityType, List<Long> itemIds) {
+        List<Image> images = imageRepository.findFirstImages(entityType, itemIds);
+        return images.stream()
+                .collect(Collectors.toMap(Image::getEntityId, Image::getImageUrl));
+    }
+
+    @Transactional
+    public ImageUserProfileCreateRespDto addUserProfile(Long userId, MultipartFile file) {
+        imageRepository.findTopByEntityIdAndEntityTypeOrderByCreatedAtAsc(userId, EntityType.USER)
+                .ifPresent(image -> {
+                    throw new BusinessException(ErrorCode.ALREADY_IMAGE_FILE);
+                });
+
+        String imageUrl = s3Service.upload(file);
+
+        Image image = Image.builder()
+                .imageUrl(imageUrl)
+                .entityType(EntityType.USER)
+                .entityId(userId)
+                .build();
+
+        Image savedImage = imageRepository.save(image);
+        return new ImageUserProfileCreateRespDto(savedImage);
+    }
+
+    @Transactional
+    public ImageUserProfileDeleteRespDto deleteUserProfile(Long userId, Long imageId) {
+        Image image = imageRepository.findByIdAndEntityIdAndEntityType(imageId, userId, EntityType.USER)
+                .orElseThrow(() -> new BusinessException(ErrorCode.IMAGE_NOT_FOUND));
+
+        s3Service.deleteImage(image.getImageUrl());
+        imageRepository.delete(image);
+
+        return new ImageUserProfileDeleteRespDto(imageId);
+    }
+
+    public void deleteImagesByEntityId(EntityType entityType, Long entityId) {
+        imageRepository.deleteByEntityTypeAndEntityId(entityType, entityId);
+    }
+
+    public String getDonationItemThumbnailUrl(EntityType entityType, Long itemId) {
+        return imageRepository.findTopByEntityIdAndEntityTypeOrderByCreatedAtAsc(itemId, entityType)
+                .map(Image::getImageUrl)
+                .orElse(null);
+    }
+
+    public List<String> getImageUrlsByItemId(EntityType entityType, Long itemId) {
+        return imageRepository.findImageUrlsByItemId(entityType, itemId);
+    }
+
+    @Transactional
+    public List<Long> addDonationItemImage(Long userId, Long itemId, List<MultipartFile> files) {
+        if (!donationItemRepository.existsByIdAndUserId(itemId, userId)) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS);
+        }
+
+        long imageCount = imageRepository.countImages(itemId, EntityType.DONATION_ITEM);
+
+        if (imageCount + files.size() > 5) {
+            throw new BusinessException(ErrorCode.MAX_IMAGE_COUNT);
+        }
+
+        List<Long> uploadedImageIds = new ArrayList<>();
+        for (MultipartFile file : files) {
+            if (file != null && !file.isEmpty()) {
+                String imageUrl = s3Service.upload(file);
+
+                Image image = Image.builder()
+                        .imageUrl(imageUrl)
+                        .entityType(EntityType.DONATION_ITEM)
+                        .entityId(itemId)
+                        .build();
+
+                Image savedImage = imageRepository.save(image);
+                uploadedImageIds.add(savedImage.getId());
+            }
+        }
+        return uploadedImageIds;
+    }
+
+    @Transactional
+    public List<Long> addExchangeItemImage(Long itemId, List<MultipartFile> files) {
+        validImageCount(itemId, files);
+        List<Long> savedImageIds = new ArrayList<>();
+        for (MultipartFile file : files) {
+            String imageUrl = s3Service.upload(file);
+            Image image = Image.builder()
+                    .imageUrl(imageUrl)
+                    .entityType(EntityType.EXCHANGE_ITEM)
+                    .entityId(itemId)
+                    .build();
+            Image savedImage = imageRepository.save(image);
+            savedImageIds.add(new ImageUserProfileCreateRespDto(savedImage).getId());
+        }
+        return savedImageIds;
+    }
+
+    public void validImageCount(Long itemId, List<MultipartFile> files) {
+        int maxImageCount = 5;
+        int existingImageCount = imageRepository.countImages(itemId, EntityType.EXCHANGE_ITEM);
+        if (existingImageCount + files.size() > maxImageCount) {
+            throw new BusinessException(ErrorCode.MAX_IMAGE_COUNT);
+        }
+    }
 }

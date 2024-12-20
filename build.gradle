@@ -2,10 +2,16 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.4.0'
     id 'io.spring.dependency-management' version '1.1.6'
+    id 'war'
 }
 
 group = 'com.my'
 version = '0.0.1-SNAPSHOT'
+
+war{
+    war.enabled = true
+    archiveFileName = 'rerink.war'
+}
 
 java {
     toolchain {
@@ -50,8 +56,20 @@ dependencies {
     annotationProcessor 'jakarta.annotation:jakarta.annotation-api'
     annotationProcessor 'jakarta.persistence:jakarta.persistence-api'
 
+    // spring retry
+    implementation 'org.springframework.retry:spring-retry'
+
     // env
     implementation 'me.paulschwarz:spring-dotenv:4.0.0'
+
+    // aws
+    implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
+
+    //thymeleaf
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+
+    // embedded tomcat
+    providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
 }
 
 tasks.named('test') {

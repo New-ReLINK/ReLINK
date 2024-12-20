@@ -6,8 +6,12 @@ import com.my.relink.controller.user.dto.resp.*;
 import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.image.Image;
 import com.my.relink.domain.image.repository.ImageRepository;
+import com.my.relink.domain.item.exchange.ExchangeItem;
+import com.my.relink.domain.item.exchange.repository.ExchangeItemRepository;
 import com.my.relink.domain.point.Point;
 import com.my.relink.domain.point.repository.PointRepository;
+import com.my.relink.domain.trade.TradeStatus;
+import com.my.relink.domain.trade.repository.TradeRepository;
 import com.my.relink.domain.user.Address;
 import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.repository.UserRepository;
@@ -45,6 +49,12 @@ class UserServiceTest extends DummyObject {
 
     @Mock
     private PointRepository pointRepository;
+
+    @Mock
+    private ExchangeItemRepository exchangeItemRepository;
+
+    @Mock
+    private TradeRepository tradeRepository;
 
     @Test
     @DisplayName("정상적인 회원가입 성공")
@@ -248,21 +258,24 @@ class UserServiceTest extends DummyObject {
     @DisplayName("회원 탈퇴 시 유저정보를 찾을 수 없는 경우 USER_NOT_FOUND Exception 이 발생한다.")
     void notFoundUserFailTest() {
         // given
+        Long userId = 1L;
         UserDeleteReqDto reqDto = UserDeleteReqDto.builder()
                 .email("test@example.com")
                 .password("password1234")
                 .build();
 
-        when(userRepository.findByEmail(reqDto.getEmail())).thenReturn(Optional.empty());
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
         // when & then
-        assertThrows(BusinessException.class, () -> userService.deleteUser(reqDto));
-        verify(userRepository, times(1)).findByEmail(any());
+        assertThrows(BusinessException.class, () -> userService.deleteUser(userId, reqDto));
+        verify(userRepository, times(1)).findById(any());
     }
 
     @Test
     @DisplayName("회원 탈퇴 시 비밀번호가 맞지 않는 경우 MISS_MATCH_PASSWORD Exception 이 발생한다.")
     void missMatchPasswordFailTest() {
         // given
+        Long userId = 1L;
+
         UserDeleteReqDto reqDto = UserDeleteReqDto.builder()
                 .email("test@example.com")
                 .password("password1234")
@@ -274,17 +287,19 @@ class UserServiceTest extends DummyObject {
                 .nickname("testNickname")
                 .build();
 
-        when(userRepository.findByEmail(reqDto.getEmail())).thenReturn(Optional.of(user));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
         // when & then
-        assertThrows(BusinessException.class, () -> userService.deleteUser(reqDto));
-        verify(userRepository, times(1)).findByEmail(any());
+        assertThrows(BusinessException.class, () -> userService.deleteUser(userId, reqDto));
+        verify(userRepository, times(1)).findById(any());
     }
 
     @Test
     @DisplayName("회원 탈퇴 시 비밀번호와 이메일이 일치하는 경우 isDeleted 가 True 가 된다.")
     void signOutSuccessTest() {
         // given
+        Long userId = 1L;
+
         UserDeleteReqDto reqDto = UserDeleteReqDto.builder()
                 .email("test@example.com")
                 .password("password1234")
@@ -295,14 +310,16 @@ class UserServiceTest extends DummyObject {
                 .password("password1234")
                 .build();
 
-        when(userRepository.findByEmail(reqDto.getEmail())).thenReturn(Optional.of(user));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(passwordEncoder.matches(any(), any())).thenReturn(true);
+        when(tradeRepository.existsByRequesterIdAndTradeStatus(user.getId(), TradeStatus.IN_EXCHANGE)).thenReturn(false);
+        when(tradeRepository.existsByRequesterIdAndTradeStatus(user.getId(), TradeStatus.IN_DELIVERY)).thenReturn(false);
 
         // when
-        userService.deleteUser(reqDto);
+        userService.deleteUser(userId, reqDto);
 
         // then
-        verify(userRepository, times(1)).findByEmail(any());
+        verify(userRepository, times(1)).findById(any());
         verify(passwordEncoder, times(1)).matches(any(), any());
     }
 
@@ -431,5 +448,38 @@ class UserServiceTest extends DummyObject {
         // when & then
         assertThrows(BusinessException.class, () -> userService.findUserPoint(userId));
         verify(userRepository, times(1)).findById(any());
+    }
+
+    @Test
+    @DisplayName("회원 탈퇴시 회원이 등록한 교환아이템들을 전부 교환 불가 상태로 변경한다.")
+    void deleteUserWithExchangeItemStatusToUnavailableSuccessTest() {
+        // given
+        Long userId = 1L;
+
+        UserDeleteReqDto reqDto = UserDeleteReqDto.builder()
+                .email("test@example.com")
+                .password("test")
+                .build();
+
+        User user = User.builder()
+                .id(1L)
+                .name("test")
+                .password("test")
+                .build();
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches(any(), any())).thenReturn(true);
+        when(userRepository.save(any(User.class))).thenReturn(user);
+
+        doNothing().when(exchangeItemRepository).updateTradeStatusToUnavailable(user.getId());
+
+        // when
+        userService.deleteUser(userId, reqDto);
+
+        // then
+        verify(userRepository, times(1)).findById(any());
+        verify(passwordEncoder, times(1)).matches(any(), any());
+        verify(userRepository, times(1)).save(any());
+        verify(exchangeItemRepository, times(1)).updateTradeStatusToUnavailable(any());
     }
 }

@@ -24,4 +24,8 @@ public class ApiResult<T> {
     public static <T> ApiResult<T> error(T errorData, ErrorCode errorCode) {
         return new ApiResult<>(errorData, false, new ApiError(errorCode.getMessage(), errorCode.getStatus()));
     }
+
+    public static <T>ApiResult<T> error(String message, int status){
+        return new ApiResult<>(null, false, new ApiError(message, status));
+    }
 }

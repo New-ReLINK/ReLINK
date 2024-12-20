@@ -1,40 +1,41 @@
 package com.my.relink.controller.exchangeItem.dto.resp;
 
+import com.my.relink.domain.category.Category;
+import com.my.relink.domain.item.donation.ItemQuality;
 import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.trade.Trade;
 import com.my.relink.domain.trade.TradeStatus;
-import com.my.relink.domain.category.Category;
-import com.my.relink.domain.item.donation.ItemQuality;
+import com.my.relink.util.page.PageInfo;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 
 @Getter
 @Builder
 @ToString
 public class GetExchangeItemRespDto {
-    // 공통
+    private List<GetExchangeItemRespDto> content;
+    private PageInfo pageInfo;
     private Long exchangeItemId;
     private String exchangeItemName;
     private String imageUrl;
     private TradeStatus tradeStatus;
-    // 교환 전 AVAILABLE
     private String desiredItem;
-    // 교환 전, 중 (AVAILABLE, IN_EXCHANGE)
     private String size;
-    // 교환 중, 완료 (IN_EXCHANGE, EXCHANGED)
     private String tradePartnerNickname;
     private Long tradeId;
-    // 교환 완료 EXCHANGED
     private LocalDate completedDate;
-    // 단건 조회 시
     private String description;
     private Category category;
     private ItemQuality itemQuality;
     private String brand;
+    private LocalDate createdAt;
 
     public static GetExchangeItemRespDto from(ExchangeItem item, Map<Long, Trade> tradeMap, Map<Long, String> imageMap) {
         Trade trade = item.getTradeStatus() == TradeStatus.AVAILABLE ? null : tradeMap.get(item.getId());
@@ -89,6 +90,36 @@ public class GetExchangeItemRespDto {
                 .size(exchangeItem.getSize())
                 .brand(exchangeItem.getBrand())
                 .desiredItem(exchangeItem.getDesiredItem())
+                .build();
+    }
+    public static GetExchangeItemRespDto from(ExchangeItem item, Map<Long, String> imageMap) {
+        String imageUrl = imageMap.get(item.getId());
+        return GetExchangeItemRespDto.builder()
+                .exchangeItemId(item.getId())
+                .exchangeItemName(item.getName())
+                .size(item.getSize())
+                .imageUrl(imageUrl)
+                .desiredItem(item.getDesiredItem())
+                .createdAt(item.getCreatedAt().toLocalDate())
+                .build();
+    }
+
+    public static GetExchangeItemRespDto empty(Pageable pageable) {
+        return GetExchangeItemRespDto.builder()
+                .content(List.of())
+                .pageInfo(PageInfo.builder()
+                        .totalCount(0)
+                        .totalPages(0)
+                        .hasPrevious(pageable.getPageNumber() > 0)
+                        .hasNext(false)
+                        .build())
+                .build();
+    }
+
+    public static GetExchangeItemRespDto of(Page<GetExchangeItemRespDto> itemsPage) {
+        return GetExchangeItemRespDto.builder()
+                .content(itemsPage.getContent())
+                .pageInfo(PageInfo.from(itemsPage))
                 .build();
     }
 }

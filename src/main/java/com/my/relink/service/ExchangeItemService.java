@@ -1,8 +1,13 @@
 package com.my.relink.service;
 
+import com.my.relink.chat.service.ChatService;
+import com.my.relink.controller.exchangeItem.dto.req.ChoiceExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.req.CreateExchangeItemReqDto;
+import com.my.relink.controller.exchangeItem.dto.req.GetAllExchangeItemReqDto;
+import com.my.relink.controller.exchangeItem.dto.req.UpdateExchangeItemReqDto;
+import com.my.relink.controller.exchangeItem.dto.resp.GetAllExchangeItemsRespDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemRespDto;
-import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemsRespDto;
+import com.my.relink.controller.trade.dto.response.TradeIdRespDto;
 import com.my.relink.domain.category.Category;
 import com.my.relink.domain.category.repository.CategoryRepository;
 import com.my.relink.domain.image.EntityType;
@@ -11,8 +16,8 @@ import com.my.relink.domain.item.exchange.repository.ExchangeItemRepository;
 import com.my.relink.domain.point.Point;
 import com.my.relink.domain.point.repository.PointRepository;
 import com.my.relink.domain.trade.Trade;
+import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.domain.user.User;
-import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +25,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -30,36 +36,37 @@ public class ExchangeItemService {
 
     private final ExchangeItemRepository exchangeItemRepository;
     private final CategoryRepository categoryRepository;
-    private final UserRepository userRepository;
     private final PointRepository pointRepository;
+    private final UserTrustScoreService userTrustScoreService;
     private final TradeService tradeService;
     private final ImageService imageService;
+    private final LikeService likeService;
+    private final ChatService chatService;
+    private final UserService userService;
 
+    @Transactional
     public long createExchangeItem(CreateExchangeItemReqDto reqDto, Long userId) {
         Category category = getValidCategory(reqDto.getCategoryId());
-        User user = getValidUser(userId);
-        // 보증금에 대한 유효성 검사
+        User user = userService.findByIdOrFail(userId);
         validateDeposit(reqDto.getDeposit(), userId);
         ExchangeItem exchangeItem = reqDto.toEntity(category, user);
         return exchangeItemRepository.save(exchangeItem).getId();
     }
 
-    public GetExchangeItemsRespDto getExchangeItemsByUserId(Long userId, int page, int size) {
-        User user = getValidUser(userId);
+    public GetExchangeItemRespDto getExchangeItemsByUserId(Long userId, int page, int size) {
         Pageable pageable = PageRequest.of(page - 1, size);
-
-        Page<ExchangeItem> items = exchangeItemRepository.findByUserId(user.getId(), pageable);
+        Page<ExchangeItem> items = exchangeItemRepository.findByUserIdWithUser(userId, pageable);
         if (items.isEmpty()) {
-            return GetExchangeItemsRespDto.empty(pageable);
+            return GetExchangeItemRespDto.empty(pageable);
         }
 
         List<Long> itemIds = items.getContent().stream().map(ExchangeItem::getId).toList();
         Map<Long, Trade> tradeMap = tradeService.getTradesByItemIds(itemIds);
-        Map<Long, String> imageMap = imageService.getImagesByItemIds(EntityType.EXCHANGE_ITEM, itemIds);
+        Map<Long, String> imageMap = imageService.getFirstImagesByItemIds(EntityType.EXCHANGE_ITEM, itemIds);
 
         Page<GetExchangeItemRespDto> content = items.map(item -> GetExchangeItemRespDto.from(item, tradeMap, imageMap));
 
-        return GetExchangeItemsRespDto.of(content);
+        return GetExchangeItemRespDto.of(content);
     }
 
     public GetExchangeItemRespDto getExchangeItemModifyPage(Long itemId, Long userId) {
@@ -69,10 +76,106 @@ public class ExchangeItemService {
         return GetExchangeItemRespDto.from(exchangeItem);
     }
 
-    // user 가져오기
-    public User getValidUser(Long userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+    public GetAllExchangeItemsRespDto getAllExchangeItems(GetAllExchangeItemReqDto reqDto) {
+        Category category = (reqDto.getCategoryId() != null) ? getValidCategory(reqDto.getCategoryId()) : null;
+        Pageable pageable = PageRequest.of(reqDto.getPage(), reqDto.getSize());
+        Page<ExchangeItem> itemsPage = exchangeItemRepository.findAllByCriteria(reqDto.getSearch(),
+                reqDto.getTradeStatus(),
+                category,
+                reqDto.getDeposit(),
+                pageable);
+        List<Long> itemIds = itemsPage.getContent().stream().map(ExchangeItem::getId).toList();
+        Map<Long, String> imageMap = imageService.getFirstImagesByItemIds(EntityType.EXCHANGE_ITEM, itemIds);
+
+        Page<GetAllExchangeItemsRespDto> content = itemsPage.map(item -> {
+            int trustScore = userTrustScoreService.getTrustScore(item.getUser());
+            return GetAllExchangeItemsRespDto.fromAllItems(item, imageMap, trustScore);
+        });
+
+        return GetAllExchangeItemsRespDto.of(content);
+    }
+
+    public GetAllExchangeItemsRespDto getExchangeItemFromOwner(Long itemId, Long userId) {
+        ExchangeItem exchangeItem = findByIdFetchUser(itemId);
+        validExchangeItemTradeStatus(exchangeItem.getTradeStatus());
+        int trustScore = userTrustScoreService.getTrustScore(exchangeItem.getUser());
+        List<String> imageUrls = imageService.getImageUrlsByItemId(EntityType.EXCHANGE_ITEM, itemId);
+        Boolean like = likeService.existsItemLike(itemId, userId);
+        return GetAllExchangeItemsRespDto.fromItem(exchangeItem, imageUrls, trustScore, like);
+    }
+
+    @Transactional
+    public Long updateExchangeItem(Long itemId, UpdateExchangeItemReqDto reqDto, Long userId) {
+        ExchangeItem exchangeItem = findByIdOrFail(itemId);
+        validExchangeItemTradeStatus(exchangeItem.getTradeStatus());
+        Category category = getValidCategory(reqDto.getCategoryId());
+        validateDeposit(reqDto.getDeposit(), userId);
+        exchangeItem.update(
+                reqDto.getName(),
+                reqDto.getDescription(),
+                category,
+                reqDto.getItemQuality(),
+                reqDto.getSize(),
+                reqDto.getBrand(),
+                reqDto.getDesiredItem(),
+                reqDto.getDeposit()
+        );
+        return exchangeItem.getId();
+    }
+
+    public GetExchangeItemRespDto getExchangeItemChoicePage(Long userId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<ExchangeItem> items = exchangeItemRepository.findAvailableItemsByUserId(userId, pageable);
+        if (items.isEmpty()) {
+            return GetExchangeItemRespDto.empty(pageable);
+        }
+        List<Long> itemIds = items.getContent().stream().map(ExchangeItem::getId).toList();
+        Map<Long, String> imageMap = imageService.getFirstImagesByItemIds(EntityType.EXCHANGE_ITEM, itemIds);
+        Page<GetExchangeItemRespDto> content = items.map(item -> GetExchangeItemRespDto.from(item, imageMap));
+
+        return GetExchangeItemRespDto.of(content);
+    }
+
+    public TradeIdRespDto choiceExchangeItem(Long itemId, ChoiceExchangeItemReqDto reqDto, Long userId) {
+        ExchangeItem itemFromOwner = findByIdFetchUser(itemId);
+        ExchangeItem itemFromRequester = findByIdFetchUser(reqDto.getItemId());
+        User user = userService.findByIdOrFail(userId);
+        itemFromRequester.validExchangeItemOwner(itemFromRequester.getUser().getId(), userId);
+        validExchangeItemTradeStatus(itemFromOwner.getTradeStatus());
+        return tradeService.createTrade(itemFromOwner, itemFromRequester, user);
+    }
+
+    // 삭제는 soft delete
+    @Transactional
+    public Long deleteExchangeItem(Long itemId, Long userId) {
+        ExchangeItem exchangeItem = findByIdOrFail(itemId);
+        exchangeItem.validExchangeItemOwner(exchangeItem.getUser().getId(), userId);
+        validDeleteExchangeItemTradeStatus(exchangeItem.getTradeStatus());
+        exchangeItem.delete();
+        deleteRelatedEntities(exchangeItem.getId());
+        return exchangeItem.getId();
+    }
+
+    // 연관된 image, like, chat 삭제
+    private void deleteRelatedEntities(Long itemId) {
+        imageService.deleteImagesByEntityId(EntityType.EXCHANGE_ITEM, itemId);
+        likeService.deleteLikesByExchangeItemId(itemId);
+        Long tradeId = tradeService.getTradeIdByItemId(itemId);
+        chatService.deleteChatsByTradeId(tradeId);
+    }
+
+    // 상품의 거래 상태 확인(수정 시)
+    public void validExchangeItemTradeStatus(TradeStatus tradeStatus) {
+        if (tradeStatus != TradeStatus.AVAILABLE) {
+            throw new BusinessException(ErrorCode.ITEM_NOT_AVAILABLE);
+        }
+    }
+
+    // 상품의 거래 상태 확인(삭제 시)
+    public void validDeleteExchangeItemTradeStatus(TradeStatus tradeStatus) {
+        if (tradeStatus == TradeStatus.IN_EXCHANGE) {
+            throw new BusinessException(ErrorCode.ITEM_IN_EXCHANGE);
+        }
     }
 
     // category 가져오기
@@ -99,4 +202,11 @@ public class ExchangeItemService {
         return exchangeItemRepository.findById(itemId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EXCHANGE_ITEM_NOT_FOUND));
     }
+
+
+    public ExchangeItem findByIdFetchUser(Long itemId) {
+        return exchangeItemRepository.findByIdWithUser(itemId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.EXCHANGE_ITEM_NOT_FOUND));
+    }
+
 }
