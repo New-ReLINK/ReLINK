@@ -63,10 +63,13 @@ public enum ErrorCode {
     INVALID_FILE_URL(HttpStatus.BAD_REQUEST.value(), "파일 URL 이 비어있습니다."),
     ITEM_IN_EXCHANGE(HttpStatus.BAD_REQUEST.value(), "해당 상품이 거래중입니다."),
     DONATION_ITEM_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR.value(), "해당 기부 상품을 찾을 수 없습니다."),
+    REPORT_NOR_FOUND(HttpStatus.NOT_FOUND.value(), "해당 신고를 찾을 수 없습니다"),
+    IMAGE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR.value(), "외부 스토리지 이미지 업로드에 실패했습니다"),
     FAIL_TO_SAVE_IMAGE(HttpStatus.INTERNAL_SERVER_ERROR.value(), "이미지 저장에 실패했습니다"),
     DONATION_ITEM_CANNOT_BE_DELETED(HttpStatus.BAD_REQUEST.value(), "검수중,검수완료,기부완료 된 물품은 삭제 할 수 없습니다."),
     MAX_IMAGE_COUNT(HttpStatus.BAD_REQUEST.value(), "사진은 총 5장까지 등록 가능합니다."),
     NO_IMAGE_UPLOADED(HttpStatus.BAD_REQUEST.value(), "사진이 업로드되지 않았습니다."),
+
 
     ;
     private final int status;
