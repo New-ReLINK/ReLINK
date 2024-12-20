@@ -6,6 +6,7 @@ import com.my.relink.controller.image.dto.resp.ImageUserProfileDeleteRespDto;
 import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.image.Image;
 import com.my.relink.domain.image.repository.ImageRepository;
+import com.my.relink.domain.item.donation.repository.DonationItemRepository;
 import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -24,6 +26,7 @@ import java.util.stream.Collectors;
 public class ImageService {
 
     private final ImageRepository imageRepository;
+    private final DonationItemRepository donationItemRepository;
     private final S3Service s3Service;
 
     public String getExchangeItemThumbnailUrl(ExchangeItem exchangeItem){
@@ -88,5 +91,35 @@ public class ImageService {
 
     public List<String> getImageUrlsByItemId(EntityType entityType, Long itemId) {
         return imageRepository.findImageUrlsByItemId(entityType, itemId);
+    }
+
+    @Transactional
+    public List<Long> addDonationItemImage(Long userId, Long itemId, List<MultipartFile> files) {
+        if (!donationItemRepository.existsByIdAndUserId(itemId, userId)) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS);
+        }
+
+        long imageCount = imageRepository.countImages(itemId, EntityType.DONATION_ITEM);
+
+        if (imageCount + files.size() > 5) {
+            throw new BusinessException(ErrorCode.MAX_IMAGE_COUNT);
+        }
+
+        List<Long> uploadedImageIds = new ArrayList<>();
+        for (MultipartFile file : files) {
+            if (file != null && !file.isEmpty()) {
+                String imageUrl = s3Service.upload(file);
+
+                Image image = Image.builder()
+                        .imageUrl(imageUrl)
+                        .entityType(EntityType.DONATION_ITEM)
+                        .entityId(itemId)
+                        .build();
+
+                Image savedImage = imageRepository.save(image);
+                uploadedImageIds.add(savedImage.getId());
+            }
+        }
+        return uploadedImageIds;
     }
 }
