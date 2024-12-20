@@ -150,8 +150,9 @@ public class ImageService {
         }
     }
 
+
     @Transactional
-    public Long deleteDonationItemImage(Long itemId, Long imageId, Long userId) {
+    public ImageUserProfileDeleteRespDto deleteDonationItemImage(Long userId, Long itemId, Long imageId) {
         validItemOwner(itemId, userId);
 
         Image image = imageRepository.findByIdAndEntityIdAndEntityType(imageId, itemId, EntityType.DONATION_ITEM)
@@ -160,20 +161,14 @@ public class ImageService {
         DonationItem donationItem = donationItemRepository.findById(itemId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ITEM_NOT_FOUND));
 
-        if (donationItem.getDonationStatus() == DonationStatus.UNDER_INSPECTION ||
-                donationItem.getDonationStatus() == DonationStatus.INSPECTION_COMPLETED ||
-                donationItem.getDonationStatus() == DonationStatus.DONATION_COMPLETED) {
-            throw new BusinessException(ErrorCode.DONATION_ITEM_CANNOT_BE_DELETED);
-        }
-
         s3Service.deleteImage(image.getImageUrl());
 
         imageRepository.delete(image);
 
-        return imageId;
+        return new ImageUserProfileDeleteRespDto(imageId);
     }
 
-    public void validItemOwner(Long itemId, Long userId) {
+    private void validItemOwner(Long itemId, Long userId) {
         DonationItem donationItem = donationItemRepository.findById(itemId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ITEM_NOT_FOUND));
 
@@ -181,4 +176,5 @@ public class ImageService {
             throw new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS);
         }
     }
+
 }

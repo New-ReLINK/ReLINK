@@ -66,8 +66,8 @@ public class ImageController {
                 .body(ApiResult.success(imageService.addExchangeItemImage(itemId, files)));
     }
 
-    @DeleteMapping("/users/items/donations/{itemId}")
-    public ResponseEntity<ApiResult<Long>> deleteDonationItemImage(
+    @DeleteMapping("/items/donations/{itemId}/images/{imageId}")
+    public ResponseEntity<ApiResult<ImageUserProfileDeleteRespDto>> deleteDonationItemImage(
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable(value = "itemId") Long itemId,
             @PathVariable Long imageId
