@@ -12,6 +12,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 public class ImageController {
@@ -36,5 +38,16 @@ public class ImageController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ApiResult.success(imageService.deleteUserProfile(authUser.getId(), imageId)));
+    }
+
+    @PostMapping("/items/donations/{itemId}/images")
+    public ResponseEntity<ApiResult<List<Long>>> registerDonationItemImage(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable(value = "itemId") Long itemId,
+            @RequestParam List<MultipartFile> files
+    ){
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(ApiResult.success(imageService.addDonationItemImage(authUser.getId(), itemId, files)));
     }
 }
