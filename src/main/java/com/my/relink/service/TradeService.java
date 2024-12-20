@@ -19,7 +19,6 @@ import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import com.my.relink.util.DateTimeUtil;
 import lombok.RequiredArgsConstructor;
-import org.springframework.jmx.export.notification.NotificationPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -79,7 +78,7 @@ public class TradeService {
     }
 
 
-    public Trade findByIdWithOwnerItemOrFail(Long tradeId){
+    public Trade findByIdWithOwnerItemOrFail(Long tradeId) {
         return tradeRepository.findByIdWithOwnerItem(tradeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
     }
@@ -97,7 +96,7 @@ public class TradeService {
         User partnerUser = trade.getPartner(currentUser.getId());
         boolean isPartnerDeleted = !userRepository.existsByIdAndIsDeletedFalse(partnerUser.getId());
 
-        if(isPartnerDeleted){
+        if (isPartnerDeleted) {
             pointTransactionService.restorePoints(tradeId, currentUser);
             trade.updateTradeStatus(TradeStatus.CANCELED);
             tradeRepository.save(trade);
@@ -143,7 +142,7 @@ public class TradeService {
         User partnerUser = trade.getPartner(currentUser.getId());
         boolean isPartnerDeleted = !userRepository.existsByIdAndIsDeletedFalse(partnerUser.getId());
 
-        if(isPartnerDeleted){
+        if (isPartnerDeleted) {
             pointTransactionService.restorePoints(tradeId, currentUser);
             trade.updateTradeStatus(TradeStatus.CANCELED);
             tradeRepository.save(trade);
@@ -375,9 +374,26 @@ public class TradeService {
         return ViewReviewRespDto.from(trade, partnerImage, partnerUser, partnerExchangeItem, completedAt);
 
     }
-    public Long getTradeIdByItemId (Long itemId) {
+
+    public Long getTradeIdByItemId(Long itemId) {
         return tradeRepository.findTradeIdByExchangeItemId(itemId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
+    }
+
+    @Transactional
+    public TradeIdRespDto createTrade(ExchangeItem itemFromOwner, ExchangeItem itemFromRequester, User requester) {
+        Trade trade = Trade.builder()
+                .requester(requester)
+                .ownerExchangeItem(itemFromOwner)
+                .requesterExchangeItem(itemFromRequester)
+                .tradeStatus(TradeStatus.AVAILABLE)
+                .hasOwnerRequested(false)
+                .hasRequesterRequested(false)
+                .hasOwnerReceived(false)
+                .hasRequesterReceived(false)
+                .build();
+        Trade savedTrade = tradeRepository.save(trade);
+        return  new TradeIdRespDto(savedTrade.getId());
     }
 }
 

@@ -1,5 +1,6 @@
 package com.my.relink.service;
 
+import com.my.relink.common.notification.NotificationPublisherService;
 import com.my.relink.config.security.AuthUser;
 import com.my.relink.controller.review.dto.request.ReviewReqDto;
 import com.my.relink.controller.review.dto.resp.ReviewRespDto;
@@ -7,6 +8,7 @@ import com.my.relink.controller.trade.dto.request.AddressReqDto;
 import com.my.relink.controller.trade.dto.request.TrackingNumberReqDto;
 import com.my.relink.controller.trade.dto.request.TradeCancelReqDto;
 import com.my.relink.controller.trade.dto.response.*;
+import com.my.relink.domain.image.repository.ImageRepository;
 import com.my.relink.domain.item.donation.ItemQuality;
 import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.point.Point;
@@ -40,6 +42,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.util.Optional;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -61,6 +64,8 @@ class TradeServiceTest extends DummyObject {
     private DateTimeUtil dateTimeUtil;
     @Mock
     private ReviewRepository reviewRepository;
+    @Mock
+    private NotificationPublisherService notificationPublisherService;
 
     @InjectMocks
     private TradeService tradeService;
@@ -152,7 +157,12 @@ class TradeServiceTest extends DummyObject {
         Mockito.when(userRepository.findById(authUser.getId())).thenReturn(Optional.of(currentUser));
         Mockito.when(userRepository.existsByIdAndIsDeletedFalse(authUser.getId())).thenReturn(true);
         Mockito.when(tradeRepository.findById(tradeId)).thenReturn(Optional.of(trade));
-
+        Mockito.doNothing().when(notificationPublisherService).createExchangeNotification(
+                currentUser.getId(),
+                trade.getOwnerExchangeItem().getName(),
+                trade.getRequester().getNickname(),
+                TradeStatus.IN_EXCHANGE
+        );
         // when
         TradeRequestRespDto result = tradeService.requestTrade(tradeId, authUser);
 
@@ -173,7 +183,12 @@ class TradeServiceTest extends DummyObject {
         when(userRepository.findById(authUser.getId())).thenReturn(Optional.of(currentUser));
         Mockito.when(userRepository.existsByIdAndIsDeletedFalse(authUser.getId())).thenReturn(true);
         when(tradeRepository.findById(tradeId)).thenReturn(Optional.of(trade));
-
+        Mockito.doNothing().when(notificationPublisherService).createExchangeNotification(
+                currentUser.getId(),
+                trade.getOwnerExchangeItem().getName(),
+                trade.getRequester().getNickname(),
+                trade.getTradeStatus()
+        );
         // when
         tradeService.cancelTradeRequest(tradeId, authUser);
 
@@ -241,9 +256,13 @@ class TradeServiceTest extends DummyObject {
 
         when(userRepository.findById(requester.getId())).thenReturn(Optional.of(requester));
         when(tradeRepository.findById(tradeId)).thenReturn(Optional.of(trade));
-
-        // Mock PointTransactionService
         doNothing().when(pointTransactionService).restorePointsForAllTraders(trade, 10000);
+        Mockito.doNothing().when(notificationPublisherService).createExchangeNotification(
+                requester.getId(),
+                trade.getOwnerExchangeItem().getName(),
+                trade.getRequester().getNickname(),
+                TradeStatus.EXCHANGED
+        );
 
         // When
         TradeCompleteRespDto response = tradeService.completeTrade(tradeId, new AuthUser(requester.getId(), "test@email.com", Role.USER));
@@ -268,6 +287,12 @@ class TradeServiceTest extends DummyObject {
 
         when(userRepository.findById(requester.getId())).thenReturn(Optional.of(requester));
         when(tradeRepository.findById(tradeId)).thenReturn(Optional.of(trade));
+        Mockito.doNothing().when(notificationPublisherService).createExchangeNotification(
+                requester.getId(),
+                trade.getOwnerExchangeItem().getName(),
+                trade.getRequester().getNickname(),
+                TradeStatus.IN_DELIVERY
+        );
 
         // When
         tradeService.getExchangeItemTrackingNumber(tradeId, reqDto, new AuthUser(requester.getId(), "test@email.com", Role.USER));
@@ -293,6 +318,12 @@ class TradeServiceTest extends DummyObject {
 
         when(userRepository.findById(requester.getId())).thenReturn(Optional.of(requester));
         when(tradeRepository.findById(tradeId)).thenReturn(Optional.of(trade));
+        Mockito.doNothing().when(notificationPublisherService).createExchangeNotification(
+                requester.getId(),
+                trade.getOwnerExchangeItem().getName(),
+                trade.getRequester().getNickname(),
+                TradeStatus.IN_DELIVERY
+        );
 
         // When
         tradeService.getExchangeItemTrackingNumber(tradeId, reqDto, new AuthUser(requester.getId(), "test@email.com", Role.USER));
@@ -318,7 +349,12 @@ class TradeServiceTest extends DummyObject {
 
         when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
         when(tradeRepository.findById(tradeId)).thenReturn(Optional.of(trade));
-
+        Mockito.doNothing().when(notificationPublisherService).createExchangeNotification(
+                owner.getId(),
+                trade.getOwnerExchangeItem().getName(),
+                trade.getRequester().getNickname(),
+                TradeStatus.IN_DELIVERY
+        );
         // When
         tradeService.getExchangeItemTrackingNumber(tradeId, reqDto, new AuthUser(owner.getId(), "test@email.com", Role.USER));
 
@@ -513,6 +549,18 @@ class TradeServiceTest extends DummyObject {
         Mockito.when(tradeRepository.findById(tradeId)).thenReturn(Optional.of(trade));
         Mockito.when(pointHistoryRepository.findFirstByTradeIdAndUserIdByCreatedAtDesc(tradeId, requester.getId())).thenReturn(Optional.of(myPointHistory));
         Mockito.when(pointHistoryRepository.findFirstByTradeIdAndUserIdByCreatedAtDesc(tradeId, owner.getId())).thenReturn(Optional.of(partnerPointHistory));
+        Mockito.doNothing().when(notificationPublisherService).createExchangeNotification(
+                requester.getId(),
+                trade.getOwnerExchangeItem().getName(),
+                trade.getRequester().getNickname(),
+                TradeStatus.CANCELED
+        );
+        Mockito.doNothing().when(notificationPublisherService).createExchangeNotification(
+                owner.getId(),
+                trade.getOwnerExchangeItem().getName(),
+                trade.getRequester().getNickname(),
+                TradeStatus.CANCELED
+        );
 
         TradeCancelReqDto reqDto = new TradeCancelReqDto(TradeCancelReason.NO_RESPONSE, "연락이 없어요");
 
@@ -659,6 +707,27 @@ class TradeServiceTest extends DummyObject {
         assertEquals(ErrorCode.TRADE_NOT_COMPLETE, exception.getErrorCode());
 
         verify(userRepository).findById(authUser.getId());
+    }
+
+    @Test
+    @DisplayName("Trade 생성 성공")
+    void testCreateTrade_Success() {
+        ExchangeItem ownerItem = ExchangeItem.builder().id(100L).tradeStatus(TradeStatus.AVAILABLE).build();
+        ExchangeItem requesterItem = ExchangeItem.builder().id(200L).tradeStatus(TradeStatus.AVAILABLE).build();
+        User requester = User.builder().id(1L).build();
+
+        Trade expectedTrade = Trade.builder()
+                .id(1L)
+                .ownerExchangeItem(ownerItem)
+                .requesterExchangeItem(requesterItem)
+                .build();
+
+        when(tradeRepository.save(any(Trade.class))).thenReturn(expectedTrade);
+
+        TradeIdRespDto tradeId = tradeService.createTrade(ownerItem, requesterItem, requester);
+
+        assertThat(tradeId).isEqualTo(1L);
+        verify(tradeRepository, times(1)).save(any(Trade.class));
     }
 
 }

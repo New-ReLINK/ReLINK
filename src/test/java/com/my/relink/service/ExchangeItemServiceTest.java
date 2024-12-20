@@ -2,11 +2,13 @@ package com.my.relink.service;
 
 
 import com.my.relink.chat.service.ChatService;
+import com.my.relink.controller.exchangeItem.dto.req.ChoiceExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.req.CreateExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.req.GetAllExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.req.UpdateExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetAllExchangeItemsRespDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemRespDto;
+import com.my.relink.controller.trade.dto.response.TradeIdRespDto;
 import com.my.relink.domain.BaseEntity;
 import com.my.relink.domain.category.Category;
 import com.my.relink.domain.category.repository.CategoryRepository;
@@ -35,10 +37,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.lang.reflect.Field;
@@ -56,7 +55,8 @@ import static org.mockito.Mockito.*;
 class ExchangeItemServiceTest {
     @InjectMocks
     private ExchangeItemService exchangeItemService;
-
+    @Mock
+    private TradeService tradeService;
     @Mock
     private ExchangeItemRepository exchangeItemRepository;
     @Mock
@@ -66,13 +66,13 @@ class ExchangeItemServiceTest {
     @Mock
     private PointRepository pointRepository;
     @Mock
-    private TradeService tradeService;
-    @Mock
     private ImageService imageService;
     @Mock
     private LikeService likeService;
     @Mock
     private ChatService chatService;
+    @Mock
+    private UserService userService;
     @Mock
     private UserTrustScoreService userTrustScoreService;
 
@@ -97,13 +97,11 @@ class ExchangeItemServiceTest {
         User user = new User("tester", "testUser", "test@mail.com", "1234", "010-1234-5678", Role.USER);
         Point point = new Point(20000, user);
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(category));
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(pointRepository.findByUserId(userId)).thenReturn(Optional.of(point));
         when(exchangeItemRepository.save(any(ExchangeItem.class)))
                 .thenAnswer(invocation -> {
                     ExchangeItem savedItem = invocation.getArgument(0);
                     ReflectionTestUtils.setField(savedItem, "id", 1L);
-                    System.out.println("Saved ExchangeItem: " + savedItem);
                     return savedItem;
                 });
         Long savedId = exchangeItemService.createExchangeItem(reqDto, userId);
@@ -127,9 +125,7 @@ class ExchangeItemServiceTest {
                 false
         );
         Category category = new Category("의류");
-        User user = new User("tester", "testUser", "test@mail.com", "1234", "010-1234-5678", Role.USER);
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(category));
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         assertThatThrownBy(() -> exchangeItemService.createExchangeItem(reqDto, userId))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("보증금은 0원보다 작을 수 없습니다.");
@@ -154,7 +150,6 @@ class ExchangeItemServiceTest {
         User user = new User("tester", "testUser", "test@mail.com", "1234", "010-1234-5678", Role.USER);
         Point point = new Point(10000, user);
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(category));
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(pointRepository.findByUserId(userId)).thenReturn(Optional.of(point));
         assertThatThrownBy(() -> exchangeItemService.createExchangeItem(reqDto, userId))
                 .isInstanceOf(BusinessException.class)
@@ -168,14 +163,13 @@ class ExchangeItemServiceTest {
         Long userId2 = 2L;
         User user1 = User.builder().id(userId1).nickname("User1").build();
         User user2 = User.builder().id(userId2).nickname("User2").build();
-        when(userRepository.findById(userId1)).thenReturn(Optional.of(user1));
         ExchangeItem item1 = ExchangeItem.builder().id(1L).name("Item1").user(user1).desiredItem("desiredItem1").tradeStatus(TradeStatus.AVAILABLE).build();
         ExchangeItem item2 = ExchangeItem.builder().id(2L).name("Item2").user(user1).desiredItem("desiredItem2").tradeStatus(TradeStatus.EXCHANGED).build();
         ExchangeItem item3 = ExchangeItem.builder().id(3L).name("Item3").user(user2).desiredItem("desiredItem3").tradeStatus(TradeStatus.EXCHANGED).build();
         List<ExchangeItem> exchangeItems = List.of(item1, item2);
         Pageable pageable = PageRequest.of(0, 10);
         Page<ExchangeItem> page = new PageImpl<>(exchangeItems, pageable, exchangeItems.size());
-        when(exchangeItemRepository.findByUserId(userId1, pageable)).thenReturn(page);
+        when(exchangeItemRepository.findByUserIdWithUser(userId1, pageable)).thenReturn(page);
         Trade trade1 = Trade.builder()
                 .id(1L)
                 .ownerExchangeItem(item2)
@@ -234,8 +228,7 @@ class ExchangeItemServiceTest {
         Pageable pageable = PageRequest.of(0, 10);
         Page<ExchangeItem> emptyPage = Page.empty(pageable);
 
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(exchangeItemRepository.findByUserId(userId, pageable)).thenReturn(emptyPage);
+        when(exchangeItemRepository.findByUserIdWithUser(userId, pageable)).thenReturn(emptyPage);
 
         GetExchangeItemRespDto result = exchangeItemService.getExchangeItemsByUserId(userId, 1, 10);
         assertThat(result).isNotNull();
@@ -552,6 +545,7 @@ class ExchangeItemServiceTest {
         when(exchangeItem.getId()).thenReturn(100L);
         when(exchangeItem.getName()).thenReturn("Nike Air Max");
         when(exchangeItem.getUser()).thenReturn(User.builder().id(1L).nickname("JohnDoe").build());
+        when(exchangeItem.getTradeStatus()).thenReturn(TradeStatus.AVAILABLE);
         when(imageService.getFirstImagesByItemIds(any(), any()))
                 .thenReturn(Map.of(100L, "http://example.com/image1.jpg"));
         when(userTrustScoreService.getTrustScore(any())).thenReturn(85);
@@ -619,7 +613,7 @@ class ExchangeItemServiceTest {
             throw new RuntimeException("Reflection failed", e);
         }
 
-        when(exchangeItemRepository.findById(itemId)).thenReturn(Optional.of(exchangeItem));
+        when(exchangeItemRepository.findByIdWithUser(itemId)).thenReturn(Optional.of(exchangeItem));
         when(userTrustScoreService.getTrustScore(any())).thenReturn(90);
         when(imageService.getImageUrlsByItemId(any(), any())).thenReturn(Arrays.asList("img1.jpg", "img2.jpg"));
         when(likeService.existsItemLike(itemId, userId)).thenReturn(true);
@@ -672,7 +666,7 @@ class ExchangeItemServiceTest {
             throw new RuntimeException("Reflection failed", e);
         }
 
-        when(exchangeItemRepository.findById(itemId)).thenReturn(Optional.of(exchangeItem));
+        when(exchangeItemRepository.findByIdWithUser(itemId)).thenReturn(Optional.of(exchangeItem));
         when(userTrustScoreService.getTrustScore(any())).thenReturn(90);
         when(imageService.getImageUrlsByItemId(any(), any())).thenReturn(Collections.emptyList());
         when(likeService.existsItemLike(itemId, userId)).thenReturn(true);
@@ -725,7 +719,7 @@ class ExchangeItemServiceTest {
             throw new RuntimeException("Reflection failed", e);
         }
 
-        when(exchangeItemRepository.findById(itemId)).thenReturn(Optional.of(exchangeItem));
+        when(exchangeItemRepository.findByIdWithUser(itemId)).thenReturn(Optional.of(exchangeItem));
 
         BusinessException exception = assertThrows(BusinessException.class, () -> {
             exchangeItemService.getExchangeItemFromOwner(itemId, userId);
@@ -735,5 +729,95 @@ class ExchangeItemServiceTest {
         assertEquals("해당 상품이 교환가능 상태가 아닙니다.", exception.getMessage());
     }
 
+    @Test
+    @DisplayName("교환할 내 물품 선택 페이지 조회 성공")
+    void testGetExchangeItemChoicePage_Success() {
+        Long userId = 1L;
+        int page = 0;
+        int size = 10;
+
+        ExchangeItem exchangeItem = mock(ExchangeItem.class);
+        Page<ExchangeItem> items = new PageImpl<>(List.of(exchangeItem));
+
+        when(exchangeItemRepository.findAvailableItemsByUserId(userId, PageRequest.of(page, size))).thenReturn(items);
+        when(imageService.getFirstImagesByItemIds(any(), any())).thenReturn(Map.of(1L, "http://example.com/image.jpg"));
+        when(exchangeItem.getId()).thenReturn(1L);
+        when(exchangeItem.getCreatedAt()).thenReturn(LocalDateTime.now());
+
+        GetExchangeItemRespDto result = exchangeItemService.getExchangeItemChoicePage(userId, page, size);
+
+        assertThat(result.getContent()).isNotEmpty();
+        assertThat(result.getContent().get(0).getExchangeItemId()).isEqualTo(1L);
+        assertThat(result.getContent().get(0).getImageUrl()).isEqualTo("http://example.com/image.jpg");
+    }
+
+    @Test
+    @DisplayName("교환 요청 성공")
+    void testChoiceExchangeItem_Success() {
+        Long userId = 1L;
+        Long itemFromOwnerId = 100L;
+        Long itemFromRequesterId = 200L;
+
+        User user = User.builder().id(userId).build();
+        ChoiceExchangeItemReqDto reqDto = new ChoiceExchangeItemReqDto(itemFromRequesterId);
+
+        ExchangeItem itemFromOwner = ExchangeItem.builder()
+                .id(itemFromOwnerId)
+                .tradeStatus(TradeStatus.AVAILABLE)
+                .user(User.builder().id(2L).build())
+                .build();
+
+        ExchangeItem itemFromRequester = ExchangeItem.builder()
+                .id(itemFromRequesterId)
+                .tradeStatus(TradeStatus.AVAILABLE)
+                .user(user)
+                .build();
+
+        when(exchangeItemRepository.findByIdWithUser(eq(itemFromOwnerId))).thenReturn(Optional.of(itemFromOwner));
+        when(exchangeItemRepository.findByIdWithUser(eq(itemFromRequesterId))).thenReturn(Optional.of(itemFromRequester));
+        when(userService.findByIdOrFail(eq(userId))).thenReturn(user); // Mock 설정
+        when(tradeService.createTrade(eq(itemFromOwner), eq(itemFromRequester), eq(user))).thenReturn(new TradeIdRespDto(1L));
+
+        TradeIdRespDto tradeId = exchangeItemService.choiceExchangeItem(itemFromOwnerId, reqDto, userId);
+
+        assertThat(tradeId.getTradeId()).isEqualTo(1L);
+
+        verify(exchangeItemRepository, times(1)).findByIdWithUser(eq(itemFromOwnerId));
+        verify(exchangeItemRepository, times(1)).findByIdWithUser(eq(itemFromRequesterId));
+        verify(userService, times(1)).findByIdOrFail(eq(userId));
+        verify(tradeService, times(1)).createTrade(eq(itemFromOwner), eq(itemFromRequester), eq(user));
+    }
+
+    @Test
+    @DisplayName("교환 요청 실패 - 요청 직전 상대방의 상품이 교환중으로 변경")
+    void testChoiceExchangeItem_Fail_NotAvailable() {
+        Long itemId = 1L;
+        Long userId = 2L;
+        Long requesterItemId = 3L;
+        User owner = User.builder().id(1L).build();
+        User requester = User.builder().id(userId).build();
+        ExchangeItem itemFromOwner = ExchangeItem.builder()
+                .id(itemId)
+                .user(owner)
+                .tradeStatus(TradeStatus.IN_EXCHANGE)
+                .build();
+        ExchangeItem itemFromRequester = ExchangeItem.builder()
+                .id(requesterItemId)
+                .user(requester)
+                .tradeStatus(TradeStatus.AVAILABLE)
+                .build();
+        ChoiceExchangeItemReqDto reqDto = new ChoiceExchangeItemReqDto(requesterItemId);
+        when(exchangeItemRepository.findByIdWithUser(itemId)).thenReturn(Optional.of(itemFromOwner));
+        when(exchangeItemRepository.findByIdWithUser(requesterItemId)).thenReturn(Optional.of(itemFromRequester));
+
+        BusinessException exception = assertThrows(
+                BusinessException.class,
+                () -> exchangeItemService.choiceExchangeItem(itemId, reqDto, userId)
+        );
+
+        assertEquals(ErrorCode.ITEM_NOT_AVAILABLE, exception.getErrorCode());
+        assertEquals("해당 상품이 교환가능 상태가 아닙니다.", exception.getMessage());
+        verify(tradeService, never()).createTrade(any(), any(), any());
+    }
 
 }

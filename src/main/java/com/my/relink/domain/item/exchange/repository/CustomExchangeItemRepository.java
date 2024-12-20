@@ -8,4 +8,5 @@ import org.springframework.data.domain.Pageable;
 
 public interface CustomExchangeItemRepository {
     Page<ExchangeItem> findAllByCriteria(String search, TradeStatus tradeStatus, Category category, String deposit, Pageable pageable);
+    Page<ExchangeItem> findAvailableItemsByUserId(Long userId, Pageable pageable);
 }
