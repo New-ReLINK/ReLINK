@@ -11,6 +11,7 @@ import com.my.relink.domain.item.exchange.repository.ExchangeItemRepository;
 import com.my.relink.domain.point.Point;
 import com.my.relink.domain.point.repository.PointRepository;
 import com.my.relink.domain.trade.TradeStatus;
+import com.my.relink.domain.trade.repository.TradeRepository;
 import com.my.relink.domain.user.Address;
 import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.repository.UserRepository;
@@ -51,6 +52,9 @@ class UserServiceTest extends DummyObject {
 
     @Mock
     private ExchangeItemRepository exchangeItemRepository;
+
+    @Mock
+    private TradeRepository tradeRepository;
 
     @Test
     @DisplayName("정상적인 회원가입 성공")
@@ -308,6 +312,8 @@ class UserServiceTest extends DummyObject {
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(passwordEncoder.matches(any(), any())).thenReturn(true);
+        when(tradeRepository.existsByRequesterIdAndTradeStatus(user.getId(), TradeStatus.IN_EXCHANGE)).thenReturn(false);
+        when(tradeRepository.existsByRequesterIdAndTradeStatus(user.getId(), TradeStatus.IN_DELIVERY)).thenReturn(false);
 
         // when
         userService.deleteUser(userId, reqDto);
