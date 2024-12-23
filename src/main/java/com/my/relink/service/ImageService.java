@@ -7,6 +7,8 @@ import com.my.relink.controller.image.dto.resp.ImageUserProfileDeleteRespDto;
 import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.image.Image;
 import com.my.relink.domain.image.repository.ImageRepository;
+import com.my.relink.domain.item.donation.DonationItem;
+import com.my.relink.domain.item.donation.DonationStatus;
 import com.my.relink.domain.item.donation.repository.DonationItemRepository;
 import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.item.exchange.repository.ExchangeItemRepository;
@@ -169,4 +171,23 @@ public class ImageService {
             throw new BusinessException(ErrorCode.MAX_IMAGE_COUNT);
         }
     }
+
+
+    @Transactional
+    public ImageUserProfileDeleteRespDto deleteDonationItemImage(Long userId, Long itemId, Long imageId) {
+        validItemOwner(itemId, userId);
+
+        Image image = imageRepository.findByIdAndEntityIdAndEntityType(imageId, itemId, EntityType.DONATION_ITEM)
+                .orElseThrow(() -> new BusinessException(ErrorCode.IMAGE_NOT_FOUND));
+
+        DonationItem donationItem = donationItemRepository.findById(itemId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ITEM_NOT_FOUND));
+
+        s3Service.deleteImage(image.getImageUrl());
+
+        imageRepository.delete(image);
+
+        return new ImageUserProfileDeleteRespDto(imageId);
+    }
+
 }
