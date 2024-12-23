@@ -1,6 +1,7 @@
 package com.my.relink.service;
 
 import com.my.relink.config.s3.S3Service;
+import com.my.relink.controller.image.dto.resp.ImageIdRespDto;
 import com.my.relink.controller.image.dto.resp.ImageUserProfileCreateRespDto;
 import com.my.relink.controller.image.dto.resp.ImageUserProfileDeleteRespDto;
 import com.my.relink.domain.image.EntityType;
@@ -237,9 +238,9 @@ class ImageServiceTest {
         doNothing().when(s3Service).deleteImage(image.getImageUrl());
         doNothing().when(imageRepository).delete(image);
 
-        Long deletedImageId = imageService.deleteExchangeItemImage(itemId, imageId, userId);
+        ImageIdRespDto deletedImageId = imageService.deleteExchangeItemImage(itemId, imageId, userId);
 
-        assertEquals(imageId, deletedImageId);
+        assertEquals(imageId, deletedImageId.getImageId());
         verify(s3Service, times(1)).deleteImage(image.getImageUrl());
         verify(imageRepository, times(1)).delete(image);
     }

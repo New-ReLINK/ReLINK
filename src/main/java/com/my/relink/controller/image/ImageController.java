@@ -1,6 +1,7 @@
 package com.my.relink.controller.image;
 
 import com.my.relink.config.security.AuthUser;
+import com.my.relink.controller.image.dto.resp.ImageIdRespDto;
 import com.my.relink.controller.image.dto.resp.ImageUserProfileCreateRespDto;
 import com.my.relink.controller.image.dto.resp.ImageUserProfileDeleteRespDto;
 import com.my.relink.ex.BusinessException;
@@ -68,9 +69,9 @@ public class ImageController {
     }
 
     @DeleteMapping("/items/exchanges/{itemId}/images/{imageId}")
-    public ResponseEntity<ApiResult<Long>> deleteExchangeItemImage(@PathVariable(value = "itemId") Long itemId,
-                                                                   @PathVariable(value = "imageId") Long imageId,
-                                                                   @AuthenticationPrincipal AuthUser authUser) {
+    public ResponseEntity<ApiResult<ImageIdRespDto>> deleteExchangeItemImage(@PathVariable(value = "itemId") Long itemId,
+                                                                             @PathVariable(value = "imageId") Long imageId,
+                                                                             @AuthenticationPrincipal AuthUser authUser) {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ApiResult.success(imageService.deleteExchangeItemImage(itemId, imageId, authUser.getId())));

@@ -1,6 +1,7 @@
 package com.my.relink.service;
 
 import com.my.relink.config.s3.S3Service;
+import com.my.relink.controller.image.dto.resp.ImageIdRespDto;
 import com.my.relink.controller.image.dto.resp.ImageUserProfileCreateRespDto;
 import com.my.relink.controller.image.dto.resp.ImageUserProfileDeleteRespDto;
 import com.my.relink.domain.image.EntityType;
@@ -144,13 +145,14 @@ public class ImageService {
     }
 
     @Transactional
-    public Long deleteExchangeItemImage(Long itemId, Long imageId, Long userId) {
+    public ImageIdRespDto deleteExchangeItemImage(Long itemId, Long imageId, Long userId) {
         validItemOwner(itemId, userId);
         Image image = imageRepository.findByIdAndEntityIdAndEntityType(imageId, itemId, EntityType.EXCHANGE_ITEM)
                 .orElseThrow(() -> new BusinessException(ErrorCode.IMAGE_NOT_FOUND));
         s3Service.deleteImage(image.getImageUrl());
         imageRepository.delete(image);
-        return imageId;
+        ImageIdRespDto respDto = new ImageIdRespDto(imageId);
+        return respDto;
     }
 
     public void validItemOwner(Long itemId, Long userId) {
