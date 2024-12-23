@@ -151,8 +151,7 @@ public class ImageService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.IMAGE_NOT_FOUND));
         s3Service.deleteImage(image.getImageUrl());
         imageRepository.delete(image);
-        ImageIdRespDto respDto = new ImageIdRespDto(imageId);
-        return respDto;
+        return new ImageIdRespDto(imageId);
     }
 
     public void validItemOwner(Long itemId, Long userId) {
