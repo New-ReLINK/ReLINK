@@ -773,16 +773,16 @@ class ExchangeItemServiceTest {
                 .user(user)
                 .build();
 
-        when(exchangeItemRepository.findByIdWithUser(eq(itemFromOwnerId))).thenReturn(Optional.of(itemFromOwner));
+        when(exchangeItemRepository.findById(eq(itemFromOwnerId))).thenReturn(Optional.of(itemFromOwner));
         when(exchangeItemRepository.findByIdWithUser(eq(itemFromRequesterId))).thenReturn(Optional.of(itemFromRequester));
-        when(userService.findByIdOrFail(eq(userId))).thenReturn(user); // Mock 설정
+        when(userService.findByIdOrFail(eq(userId))).thenReturn(user);
         when(tradeService.createTrade(eq(itemFromOwner), eq(itemFromRequester), eq(user))).thenReturn(new TradeIdRespDto(1L));
 
         TradeIdRespDto tradeId = exchangeItemService.choiceExchangeItem(itemFromOwnerId, reqDto, userId);
 
         assertThat(tradeId.getTradeId()).isEqualTo(1L);
 
-        verify(exchangeItemRepository, times(1)).findByIdWithUser(eq(itemFromOwnerId));
+        verify(exchangeItemRepository, times(1)).findById(eq(itemFromOwnerId));
         verify(exchangeItemRepository, times(1)).findByIdWithUser(eq(itemFromRequesterId));
         verify(userService, times(1)).findByIdOrFail(eq(userId));
         verify(tradeService, times(1)).createTrade(eq(itemFromOwner), eq(itemFromRequester), eq(user));
@@ -807,7 +807,7 @@ class ExchangeItemServiceTest {
                 .tradeStatus(TradeStatus.AVAILABLE)
                 .build();
         ChoiceExchangeItemReqDto reqDto = new ChoiceExchangeItemReqDto(requesterItemId);
-        when(exchangeItemRepository.findByIdWithUser(itemId)).thenReturn(Optional.of(itemFromOwner));
+        when(exchangeItemRepository.findById(itemId)).thenReturn(Optional.of(itemFromOwner));
         when(exchangeItemRepository.findByIdWithUser(requesterItemId)).thenReturn(Optional.of(itemFromRequester));
 
         BusinessException exception = assertThrows(
