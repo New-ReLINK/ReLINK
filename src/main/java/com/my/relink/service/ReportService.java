@@ -15,12 +15,14 @@ import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import com.my.relink.util.DateTimeUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class ReportService {
 
     private final TradeService tradeService;
@@ -75,6 +77,7 @@ public class ReportService {
      * @return 교환 상품 및 소유자 정보
      */
     public ExchangeItemInfoRespDto getExchangeItemInfoForReport(Long itemId) {
+        log.info("신고 전 교환 상품 정보 조회: itemId = {}", itemId);
         ExchangeItem exchangeItem = exchangeItemService.findByIdFetchUser(itemId);
         String exchangeItemUrl = imageService.getExchangeItemThumbnailUrl(exchangeItem);
         return new ExchangeItemInfoRespDto(exchangeItem, exchangeItemUrl);
