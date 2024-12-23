@@ -190,13 +190,4 @@ public class ImageService {
         return new ImageUserProfileDeleteRespDto(imageId);
     }
 
-    private void validItemOwner(Long itemId, Long userId) {
-        DonationItem donationItem = donationItemRepository.findById(itemId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.ITEM_NOT_FOUND));
-
-        if (!donationItem.getUser().getId().equals(userId)) {
-            throw new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS);
-        }
-    }
-
 }
