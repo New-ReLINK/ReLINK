@@ -1,5 +1,6 @@
 package com.my.relink.chat.controller.dto.request;
 
+import com.my.relink.common.validation.ValidFile;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -13,7 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 @AllArgsConstructor
 public class ChatImageReqDto {
 
-    @NotNull(message = "이미지를 첨부해야 합니다")
+    @ValidFile(message = "이미지를 첨부해야 합니다")
     private MultipartFile image;
 
 }
