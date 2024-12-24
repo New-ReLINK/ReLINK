@@ -1,6 +1,7 @@
 package com.my.relink.config.security.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.my.relink.config.log.HttpLogFilter;
 import com.my.relink.config.security.GlobalFilterExceptionHandler;
 import com.my.relink.config.security.JwtAuthorizationFilter;
 import com.my.relink.config.security.LoginAuthenticationFilter;
@@ -38,6 +39,7 @@ public class SecurityConfig {
     private final ObjectMapper objectMapper;
     private final AuthenticationConfiguration authenticationConfiguration;
     private final UserRepository userRepository;
+    private final HttpLogFilter httpLogFilter;
 
     @Value("${spring.profiles.active}")
     private String profileType;
@@ -66,6 +68,7 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .httpBasic(AbstractHttpConfigurer::disable)
+                .addFilterBefore(httpLogFilter, SecurityContextHolderFilter.class)
                 .addFilterBefore(new GlobalFilterExceptionHandler(objectMapper), SecurityContextHolderFilter.class)
                 .addFilterBefore(new JwtAuthorizationFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(
