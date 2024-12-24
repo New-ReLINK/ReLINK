@@ -5,11 +5,6 @@ import com.my.relink.controller.donation.dto.PagingInfo;
 import com.my.relink.controller.donation.dto.req.DonationItemRejectReqDto;
 import com.my.relink.controller.donation.dto.req.DonationItemReqDto;
 import com.my.relink.controller.donation.dto.resp.*;
-import com.my.relink.controller.donation.dto.resp.DonationItemDetailRespDto;
-import com.my.relink.controller.donation.dto.resp.DonationItemListRespDto;
-import com.my.relink.controller.donation.dto.resp.DonationItemIdRespDto;
-import com.my.relink.controller.donation.dto.resp.DonationItemRejectionRespDto;
-import com.my.relink.controller.donation.dto.resp.DonationItemUserListRespDto;
 import com.my.relink.domain.category.Category;
 import com.my.relink.domain.category.repository.CategoryRepository;
 import com.my.relink.domain.image.EntityType;
@@ -83,7 +78,7 @@ public class DonationItemService {
         DonationItem donationItem = donationItemRepository.findByIdWithCategory(itemId)
                 .orElseThrow(()->new BusinessException(ErrorCode.DONATION_ITEM_NOT_FOUND));
 
-        Map<Long, String> imageMap = imageService.getImagesByItemIds(EntityType.DONATION_ITEM, List.of(itemId));
+        Map<Long, List<String>> imageMap = imageService.getImagesByItemIds(EntityType.DONATION_ITEM, List.of(itemId));
 
         return DonationItemDetailRespDto.fromEntity(donationItem, imageMap);
     }
