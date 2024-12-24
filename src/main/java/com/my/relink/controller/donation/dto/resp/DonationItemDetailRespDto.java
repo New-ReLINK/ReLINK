@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 
 @Getter
@@ -19,8 +20,8 @@ public class DonationItemDetailRespDto {
     private DonationStatus donationStatus;
     private LocalDate createdAt;
 
-    public static DonationItemDetailRespDto fromEntity(DonationItem item,  Map<Long, String> imageMap) {
-        String imageUrl = imageMap.get(item.getId());
+    public static DonationItemDetailRespDto fromEntity(DonationItem item, Map<Long, List<String>> imageMap) {
+        String imageUrl = imageMap.get(item.getId()).toString();
 
         return DonationItemDetailRespDto.builder()
                 .id(item.getId())
