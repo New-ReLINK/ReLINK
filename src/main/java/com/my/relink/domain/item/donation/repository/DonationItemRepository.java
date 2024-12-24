@@ -10,16 +10,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
-public interface DonationItemRepository extends JpaRepository<DonationItem, Long> {
-
-    @Query("SELECT d FROM DonationItem d " +
-            "WHERE d.donationStatus = 'DONATION_COMPLETED' " +
-            "AND (:category IS NULL OR d.category.name = :category) " +
-            "AND (:search IS NULL OR d.name LIKE %:search%) " +
-            "ORDER BY d.modifiedAt DESC")
-    Page<DonationItem> findAllByFilters(@Param("category") String category,
-                                        @Param("search") String search,
-                                        Pageable pageable);
+public interface DonationItemRepository extends JpaRepository<DonationItem, Long>, CustomDonationItemRepository {
 
     @Query("SELECT COUNT(d) FROM DonationItem d WHERE d.donationStatus = 'DONATION_COMPLETED'")
     long countCompletedDonations();
