@@ -37,28 +37,28 @@ public class LikeService {
         ExchangeItem exchangeItem = exchangeItemRepository.findById(itemId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EXCHANGE_ITEM_NOT_FOUND));
 
-        return likeRepository.findByUserAndExchangeItem(user, exchangeItem)
-                .map(like -> {
-                    Long likeId = like.getId();
-                    likeRepository.delete(like);
-                    return likeId;
-                })
-                .orElseGet(() -> {
-                    Like savedLike = likeRepository.save(
-                            Like.builder()
-                                    .user(user)
-                                    .exchangeItem(exchangeItem)
-                                    .build()
-                    );
-                    return savedLike.getId();
-                });
-    }
+        Optional<Like> like = likeRepository.getLike(exchangeItem.getId(), user.getId());
 
-    public void deleteLikesByExchangeItemId(Long itemId) {
-        likeRepository.deleteByExchangeItemId(itemId);
+        if (like.isPresent()) {
+            Long likeId = like.get().getId();
+            likeRepository.delete(like.get());
+            return likeId;
+        } else {
+            Like savedLike = likeRepository.save(
+                    Like.builder()
+                            .user(user)
+                            .exchangeItem(exchangeItem)
+                            .build()
+            );
+            return savedLike.getId();
+        }
     }
 
     public Boolean existsItemLike(Long itemId, Long userId) {
         return likeRepository.existsLike(itemId, userId);
+    }
+
+    public void deleteLike(Long itemId) {
+        likeRepository.deleteLike(itemId);
     }
 }
