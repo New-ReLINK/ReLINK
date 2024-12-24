@@ -16,12 +16,10 @@ import com.my.relink.domain.trade.Trade;
 import com.my.relink.domain.user.User;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
-import com.my.relink.service.NotificationService;
 import com.my.relink.service.TradeService;
 import com.my.relink.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,8 +48,8 @@ public class ChatService {
                     .entityId(trade.getId())
                     .build());
             return new ChatImageRespDto(image);
-        } catch (Exception e){
-            if(e instanceof BusinessException){
+        } catch (Exception e) {
+            if (e instanceof BusinessException) {
                 throw e;
             }
             log.error("[채팅 이미지 저장 실패] tradeId = {}, cause = {}", tradeId, e.getMessage(), e);
@@ -60,11 +58,11 @@ public class ChatService {
         }
     }
 
-    private void handleImageFail(String uploadedImageUrl, Long tradeId){
-        if(uploadedImageUrl != null){
-            try{
+    private void handleImageFail(String uploadedImageUrl, Long tradeId) {
+        if (uploadedImageUrl != null) {
+            try {
                 s3Service.deleteImage(uploadedImageUrl);
-            } catch (Exception deleteFail){
+            } catch (Exception deleteFail) {
                 log.error("[이미지 삭제 실패] tradeId = {}, imageUrl = {}, cause = {}",
                         tradeId, uploadedImageUrl, deleteFail.getMessage(), deleteFail);
             }
@@ -87,9 +85,7 @@ public class ChatService {
     }
 
     public void deleteChatsByTradeId(Long tradeId) {
-        messageRepository.deleteByTradeId(tradeId);
+        messageRepository.deleteMessage(tradeId);
     }
-
-
 
 }

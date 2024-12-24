@@ -2,38 +2,32 @@ package com.my.relink.domain.item.exchange.repository;
 
 import com.my.relink.domain.category.Category;
 import com.my.relink.domain.item.exchange.ExchangeItem;
-import com.my.relink.domain.item.exchange.QExchangeItem;
 import com.my.relink.domain.trade.TradeStatus;
-import com.my.relink.domain.user.QUser;
-import com.my.relink.ex.BusinessException;
-import com.my.relink.ex.ErrorCode;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+
+import static com.my.relink.domain.item.exchange.QExchangeItem.exchangeItem;
 
 @Repository
 @RequiredArgsConstructor
 public class CustomExchangeItemRepositoryImpl implements CustomExchangeItemRepository {
 
     private final JPAQueryFactory queryFactory;
-    QExchangeItem exchangeItem = QExchangeItem.exchangeItem;
 
     @Override
     public Page<ExchangeItem> findAllByCriteria(String search, TradeStatus tradeStatus, Category category, String deposit, Pageable pageable) {
         BooleanBuilder builder = buildSearchCriteria(search, tradeStatus, category);
-
-        long totalCount = queryFactory.selectFrom(exchangeItem)
-                .where(builder)
-                .fetchCount();
-
         List<ExchangeItem> items = queryFactory.selectFrom(exchangeItem)
                 .leftJoin(exchangeItem.user).fetchJoin()
                 .where(builder)
@@ -41,8 +35,54 @@ public class CustomExchangeItemRepositoryImpl implements CustomExchangeItemRepos
                 .limit(pageable.getPageSize())
                 .orderBy(getSortOrder(deposit))
                 .fetch();
+        JPAQuery<Long> countQuery = queryFactory
+                .select(exchangeItem.count())
+                .from(exchangeItem)
+                .where(builder);
+        long count = Optional.ofNullable(countQuery.fetchOne()).orElse(0L);
+        return new PageImpl<>(items, pageable, count);
+    }
 
-        return new org.springframework.data.domain.PageImpl<>(items, pageable, totalCount);
+    @Override
+    public Page<ExchangeItem> findAvailableItemsByUserId(Long userId, Pageable pageable) {
+        List<ExchangeItem> items = queryFactory
+                .selectFrom(exchangeItem)
+                .join(exchangeItem.user).fetchJoin()
+                .where(
+                        exchangeItem.user.id.eq(userId),
+                        exchangeItem.tradeStatus.eq(TradeStatus.AVAILABLE),
+                        exchangeItem.isDeleted.isFalse()
+                )
+                .orderBy(exchangeItem.modifiedAt.desc())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+        JPAQuery<Long> countQuery = queryFactory
+                .select(exchangeItem.count())
+                .from(exchangeItem)
+                .where(
+                        exchangeItem.user.id.eq(userId),
+                        exchangeItem.tradeStatus.eq(TradeStatus.AVAILABLE),
+                        exchangeItem.isDeleted.isFalse());
+        long count = Optional.ofNullable(countQuery.fetchOne()).orElse(0L);
+        return new PageImpl<>(items, pageable, count);
+    }
+
+    public Page<ExchangeItem> findByUserId(@Param("userId") Long userId, Pageable pageable) {
+        List<ExchangeItem> items = queryFactory
+                .selectFrom(exchangeItem)
+                .join(exchangeItem.user).fetchJoin()
+                .where(exchangeItem.user.id.eq(userId))
+                .orderBy(exchangeItem.modifiedAt.desc())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+        JPAQuery<Long> countQuery = queryFactory
+                .select(exchangeItem.count())
+                .from(exchangeItem)
+                .where(exchangeItem.user.id.eq(userId));
+        long count = Optional.ofNullable(countQuery.fetchOne()).orElse(0L);
+        return new PageImpl<>(items, pageable, count);
     }
 
     // 검색 조건
@@ -69,39 +109,6 @@ public class CustomExchangeItemRepositoryImpl implements CustomExchangeItemRepos
         return deposit.equalsIgnoreCase("asc")
                 ? exchangeItem.deposit.asc()
                 : exchangeItem.deposit.desc();
-    }
-
-    @Override
-    public Page<ExchangeItem> findAvailableItemsByUserId(Long userId, Pageable pageable) {
-        QExchangeItem exchangeItem = QExchangeItem.exchangeItem;
-        QUser user = QUser.user;
-
-        List<ExchangeItem> content = queryFactory
-                .selectFrom(exchangeItem)
-                .join(exchangeItem.user, user).fetchJoin()
-                .where(
-                        exchangeItem.user.id.eq(userId),
-                        exchangeItem.tradeStatus.eq(TradeStatus.AVAILABLE),
-                        exchangeItem.isDeleted.isFalse()
-                )
-                .orderBy(exchangeItem.modifiedAt.desc())
-                .offset(pageable.getOffset())
-                .limit(pageable.getPageSize())
-                .fetch();
-
-        long total = Optional.ofNullable(
-                queryFactory
-                        .select(exchangeItem.count())
-                        .from(exchangeItem)
-                        .where(
-                                exchangeItem.user.id.eq(userId),
-                                exchangeItem.tradeStatus.eq(TradeStatus.AVAILABLE),
-                                exchangeItem.isDeleted.isFalse()
-                        )
-                        .fetchOne()
-        ).orElse(0L);
-
-        return new PageImpl<>(content, pageable, total);
     }
 
 }

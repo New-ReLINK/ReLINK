@@ -64,7 +64,7 @@ class ExchangeItemRepositoryTest {
 
         // then
         Pageable pageable = PageRequest.of(0, 10);
-        Page<ExchangeItem> result = exchangeItemRepository.findByUserIdWithUser(user.getId(), pageable);
+        Page<ExchangeItem> result = exchangeItemRepository.findByUserId(user.getId(), pageable);
 
         List<ExchangeItem> content = result.getContent();
         assertThat(content).isNotNull();

@@ -19,7 +19,6 @@ import com.my.relink.ex.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -53,7 +52,7 @@ public class UserService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        Image image = imageRepository.findByEntityIdAndEntityType(user.getId(), EntityType.USER).orElse(null);
+        Image image = imageRepository.findFirstImage(user.getId(), EntityType.USER).orElse(null);
 
         return new UserInfoRespDto(user, image);
     }
@@ -117,7 +116,7 @@ public class UserService {
 
     public void delayDeleteUser(User currentUser) {
         boolean hasActiveTrades = tradeRepository.existsByRequesterIdAndTradeStatus(currentUser.getId(), TradeStatus.IN_EXCHANGE) ||
-                        tradeRepository.existsByRequesterIdAndTradeStatus(currentUser.getId(), TradeStatus.IN_DELIVERY);
+                tradeRepository.existsByRequesterIdAndTradeStatus(currentUser.getId(), TradeStatus.IN_DELIVERY);
         if (hasActiveTrades) {
             throw new BusinessException(ErrorCode.ACTIVE_TRADE_EXISTS);
         }

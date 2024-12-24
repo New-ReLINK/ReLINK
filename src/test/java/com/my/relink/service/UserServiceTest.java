@@ -6,7 +6,6 @@ import com.my.relink.controller.user.dto.resp.*;
 import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.image.Image;
 import com.my.relink.domain.image.repository.ImageRepository;
-import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.item.exchange.repository.ExchangeItemRepository;
 import com.my.relink.domain.point.Point;
 import com.my.relink.domain.point.repository.PointRepository;
@@ -113,7 +112,7 @@ class UserServiceTest extends DummyObject {
                 .build();
 
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
-        when(imageRepository.findByEntityIdAndEntityType(user.getId(), EntityType.USER))
+        when(imageRepository.findFirstImage(user.getId(), EntityType.USER))
                 .thenReturn(Optional.of(image));
 
         // when
@@ -126,7 +125,7 @@ class UserServiceTest extends DummyObject {
         assertThat(image.getImageUrl()).isEqualTo(result.getImageUrl());
 
         verify(userRepository).findByEmail(email);
-        verify(imageRepository).findByEntityIdAndEntityType(user.getId(), EntityType.USER);
+        verify(imageRepository).findFirstImage(user.getId(), EntityType.USER);
     }
 
     @Test
@@ -154,7 +153,7 @@ class UserServiceTest extends DummyObject {
                 .build();
 
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
-        when(imageRepository.findByEntityIdAndEntityType(user.getId(), EntityType.USER))
+        when(imageRepository.findFirstImage(user.getId(), EntityType.USER))
                 .thenReturn(Optional.empty());
 
         // when
@@ -167,7 +166,7 @@ class UserServiceTest extends DummyObject {
         assertThat(result.getImageUrl()).isNull();
 
         verify(userRepository).findByEmail(email);
-        verify(imageRepository).findByEntityIdAndEntityType(user.getId(), EntityType.USER);
+        verify(imageRepository).findFirstImage(user.getId(), EntityType.USER);
     }
 
     @Test

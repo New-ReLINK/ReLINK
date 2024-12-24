@@ -21,7 +21,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
@@ -62,13 +61,13 @@ class ImageServiceTest {
                 .entityType(EntityType.USER)
                 .build();
 
-        when(imageRepository.findTopByEntityIdAndEntityTypeOrderByCreatedAtAsc(userId, EntityType.USER))
+        when(imageRepository.findFirstImage(userId, EntityType.USER))
                 .thenReturn(Optional.of(image));
 
         // when & then
         assertThrows(BusinessException.class, () -> imageService.addUserProfile(userId, mockFile));
         verify(imageRepository, times(1))
-                .findTopByEntityIdAndEntityTypeOrderByCreatedAtAsc(any(), any());
+                .findFirstImage(any(), any());
     }
 
     @Test
@@ -86,7 +85,7 @@ class ImageServiceTest {
                 .entityType(EntityType.USER)
                 .build();
 
-        when(imageRepository.findTopByEntityIdAndEntityTypeOrderByCreatedAtAsc(userId, EntityType.USER))
+        when(imageRepository.findFirstImage(userId, EntityType.USER))
                 .thenReturn(Optional.empty());
         when(s3Service.upload(mockFile)).thenReturn(imageUrl);
         when(imageRepository.save(any())).thenReturn(image);
@@ -220,7 +219,7 @@ class ImageServiceTest {
 
     @Test
     @DisplayName("상품 이미지 삭제 성공")
-    void testDeleteExchangeItemImage_Success () {
+    void testDeleteExchangeItemImage_Success() {
         Long itemId = 1L;
         Long userId = 2L;
         Long imageId = 3L;
