@@ -35,19 +35,6 @@
 <!--        </encoder>-->
 <!--    </appender>-->
 
-    <!-- Logstash Appender -->
-<!--    <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">-->
-<!--        <destination>localhost:5000</destination>-->
-<!--        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">-->
-<!--            <level>INFO</level>-->
-<!--        </filter>-->
-<!--        <encoder class="net.logstash.logback.encoder.LogstashEncoder">-->
-<!--            <charset>UTF-8</charset>-->
-<!--            <includeContext>true</includeContext>-->
-<!--            <includeMdc>true</includeMdc>-->
-<!--            <customFields>{"application":"ReLINK"}</customFields>-->
-<!--        </encoder>-->
-<!--    </appender>-->
 
     <!-- HTTP 로그 Logstash Appender -->
     <appender name="HTTP_LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
@@ -81,6 +68,7 @@
         <appender-ref ref="SYSTEM_LOGSTASH" />
         <queueSize>512</queueSize>
         <discardingThreshold>0</discardingThreshold>
+        <maxFlushTime>1000</maxFlushTime>
         <includeCallerData>true</includeCallerData>
         <neverBlock>true</neverBlock>
     </appender>
@@ -91,6 +79,7 @@
         <appender-ref ref="HTTP_LOGSTASH" />
         <queueSize>512</queueSize>
         <discardingThreshold>0</discardingThreshold>
+        <maxFlushTime>1000</maxFlushTime>
         <includeCallerData>true</includeCallerData>
         <neverBlock>true</neverBlock>
     </appender>
