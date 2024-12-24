@@ -16,6 +16,8 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
+
 
 @Repository
 @RequiredArgsConstructor
@@ -90,6 +92,16 @@ public class CustomDonationItemRepositoryImpl implements CustomDonationItemRepos
                         "AND FUNCTION('YEAR', {0}) = FUNCTION('YEAR', CURRENT_DATE)",
                 dateTimePath
         );
+    }
+
+    @Override
+    public Optional<DonationItem> findByIdWithCategory(Long id) {
+        DonationItem result = queryFactory.selectFrom(donationItem)
+                .join(donationItem.category, categoryEntity).fetchJoin()
+                .where(donationItem.id.eq(id))
+                .fetchOne();
+
+        return Optional.ofNullable(result);
     }
 
 }
