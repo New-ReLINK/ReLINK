@@ -19,12 +19,11 @@ import java.util.List;
 public class CustomDonationItemRepositoryImpl implements CustomDonationItemRepository{
 
     private final JPAQueryFactory queryFactory;
-    QDonationItem qDonationItem = QDonationItem.donationItem;
+    QDonationItem donationItem = QDonationItem.donationItem;
+    QCategory categoryEntity = QCategory.category;
 
     @Override
     public Page<DonationItem> findAllByFilters(String category, String search, Pageable pageable) {
-        QDonationItem donationItem = QDonationItem.donationItem;
-        QCategory categoryEntity = QCategory.category;
 
         List<DonationItem> content = queryFactory.selectFrom(donationItem)
                 .join(donationItem.category, categoryEntity)
@@ -57,6 +56,17 @@ public class CustomDonationItemRepositoryImpl implements CustomDonationItemRepos
 
     private BooleanExpression likeSearch(String search, QDonationItem donationItem) {
         return search != null ? donationItem.name.containsIgnoreCase(search) : null;
+    }
+
+    @Override
+    public long countCompletedDonations() {
+        Long count = queryFactory.select(donationItem.count())
+                .from(donationItem)
+                .where(donationItem.donationStatus.eq(DonationStatus.DONATION_COMPLETED))
+                .fetchOne();
+        return count != null ? count : 0L;
+
+
     }
 
 }

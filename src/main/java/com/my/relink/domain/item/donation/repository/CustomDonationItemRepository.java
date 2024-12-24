@@ -7,4 +7,5 @@ import org.springframework.data.domain.Pageable;
 
 public interface CustomDonationItemRepository {
     Page<DonationItem> findAllByFilters(String category, String search, Pageable pageable);
+    long countCompletedDonations();
 }
