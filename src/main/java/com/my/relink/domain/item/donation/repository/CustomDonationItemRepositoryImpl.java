@@ -5,6 +5,8 @@ import com.my.relink.domain.item.donation.DonationItem;
 import com.my.relink.domain.item.donation.DonationStatus;
 import com.my.relink.domain.item.donation.QDonationItem;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.DateTimePath;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -12,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -66,7 +69,27 @@ public class CustomDonationItemRepositoryImpl implements CustomDonationItemRepos
                 .fetchOne();
         return count != null ? count : 0L;
 
+    }
 
+    @Override
+    public long countCompletedDonationsThisMonth() {
+        Long count = queryFactory.select(donationItem.count())
+                .from(donationItem)
+                .where(
+                        donationItem.donationStatus.eq(DonationStatus.DONATION_COMPLETED),
+                        isCurrentMonth(donationItem.modifiedAt)
+                )
+                .fetchOne();
+
+        return count != null ? count : 0L;
+    }
+
+    private BooleanExpression isCurrentMonth(DateTimePath<LocalDateTime> dateTimePath) {
+        return Expressions.booleanTemplate(
+                "FUNCTION('MONTH', {0}) = FUNCTION('MONTH', CURRENT_DATE) " +
+                        "AND FUNCTION('YEAR', {0}) = FUNCTION('YEAR', CURRENT_DATE)",
+                dateTimePath
+        );
     }
 
 }

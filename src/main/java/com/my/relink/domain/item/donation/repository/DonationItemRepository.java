@@ -11,10 +11,6 @@ import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 
 public interface DonationItemRepository extends JpaRepository<DonationItem, Long>, CustomDonationItemRepository {
-    @Query("SELECT COUNT(d) FROM DonationItem d WHERE d.donationStatus = 'DONATION_COMPLETED' " +
-            "AND FUNCTION('MONTH', d.modifiedAt) = FUNCTION('MONTH', CURRENT_DATE) " +
-            "AND FUNCTION('YEAR', d.modifiedAt) = FUNCTION('YEAR', CURRENT_DATE)")
-    long countCompletedDonationsThisMonth();
 
     Page<DonationItem> findByUserId(Long userId, Pageable pageable);
 
