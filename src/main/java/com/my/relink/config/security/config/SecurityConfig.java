@@ -55,6 +55,7 @@ public class SecurityConfig {
                             .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.ERROR).permitAll()
                             .requestMatchers("/auth/**", "/chats/**", "/charge-success", "/charge/**", "/charge/users/**", "/charge-form", "/users/payment", "/charge-fail").permitAll()
                             .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll() //정적 리소스 허용
+                            .requestMatchers("/actuator/**").permitAll()
                             .requestMatchers("/error").permitAll();
                     if (profileType.equals("dev")) {
                         auth.requestMatchers(PathRequest.toH2Console()).permitAll();
