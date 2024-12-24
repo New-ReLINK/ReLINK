@@ -16,8 +16,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
-
 @Service
 @RequiredArgsConstructor
 public class LikeService {
@@ -36,22 +34,24 @@ public class LikeService {
         User user = userService.findByIdOrFail(userId);
         ExchangeItem exchangeItem = exchangeItemRepository.findById(itemId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EXCHANGE_ITEM_NOT_FOUND));
+        return likeAddOrDelete(user, exchangeItem);
+    }
 
-        Optional<Like> like = likeRepository.getLike(exchangeItem.getId(), user.getId());
-
-        if (like.isPresent()) {
-            Long likeId = like.get().getId();
-            likeRepository.delete(like.get());
-            return likeId;
-        } else {
-            Like savedLike = likeRepository.save(
-                    Like.builder()
-                            .user(user)
-                            .exchangeItem(exchangeItem)
-                            .build()
-            );
-            return savedLike.getId();
-        }
+    public Long likeAddOrDelete(User user, ExchangeItem exchangeItem) {
+        return likeRepository.getLike(exchangeItem.getId(), user.getId())
+                .map(existingLike -> {
+                    likeRepository.delete(existingLike);
+                    return existingLike.getId();
+                })
+                .orElseGet(() -> {
+                    Like savedLike = likeRepository.save(
+                            Like.builder()
+                                    .user(user)
+                                    .exchangeItem(exchangeItem)
+                                    .build()
+                    );
+                    return savedLike.getId();
+                });
     }
 
     public Boolean existsItemLike(Long itemId, Long userId) {

@@ -2,7 +2,6 @@ package com.my.relink.domain.item.exchange.repository;
 
 import com.my.relink.domain.category.Category;
 import com.my.relink.domain.item.exchange.ExchangeItem;
-import com.my.relink.domain.item.exchange.QExchangeItem;
 import com.my.relink.domain.trade.TradeStatus;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.OrderSpecifier;
@@ -18,12 +17,13 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
+import static com.my.relink.domain.item.exchange.QExchangeItem.exchangeItem;
+
 @Repository
 @RequiredArgsConstructor
 public class CustomExchangeItemRepositoryImpl implements CustomExchangeItemRepository {
 
     private final JPAQueryFactory queryFactory;
-    QExchangeItem exchangeItem = QExchangeItem.exchangeItem;
 
     @Override
     public Page<ExchangeItem> findAllByCriteria(String search, TradeStatus tradeStatus, Category category, String deposit, Pageable pageable) {
@@ -40,7 +40,7 @@ public class CustomExchangeItemRepositoryImpl implements CustomExchangeItemRepos
                 .from(exchangeItem)
                 .where(builder);
         long count = Optional.ofNullable(countQuery.fetchOne()).orElse(0L);
-        return new org.springframework.data.domain.PageImpl<>(items, pageable, count);
+        return new PageImpl<>(items, pageable, count);
     }
 
     @Override
