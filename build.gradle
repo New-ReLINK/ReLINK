@@ -10,7 +10,7 @@ version = '0.0.1-SNAPSHOT'
 
 war{
     war.enabled = true
-    archiveFileName = 'rerink.war'
+    archiveFileName = 'relink.war'
 }
 
 java {
@@ -70,6 +70,10 @@ dependencies {
 
     // embedded tomcat
     providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
+
+    // metric
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'io.micrometer:micrometer-registry-prometheus'
 }
 
 tasks.named('test') {

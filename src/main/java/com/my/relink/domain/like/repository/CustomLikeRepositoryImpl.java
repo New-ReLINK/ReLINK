@@ -1,7 +1,7 @@
 package com.my.relink.domain.like.repository;
 
 import com.my.relink.domain.image.EntityType;
-import com.my.relink.domain.like.QLike;
+import com.my.relink.domain.like.Like;
 import com.my.relink.domain.like.repository.dto.LikeExchangeItemListRepositoryDto;
 import com.my.relink.domain.user.QUser;
 import com.querydsl.core.types.Projections;
@@ -16,6 +16,7 @@ import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import static com.my.relink.domain.image.QImage.image;
 import static com.my.relink.domain.item.exchange.QExchangeItem.exchangeItem;
@@ -28,7 +29,6 @@ public class CustomLikeRepositoryImpl implements CustomLikeRepository {
 
     private final JPAQueryFactory jpaQueryFactory;
     private final QUser likedUser = new QUser("likedUser");
-    private static final QLike like = QLike.like;
 
     @Override
     public Page<LikeExchangeItemListRepositoryDto> findUserLikeExchangeItem(Long userId, Pageable pageable) {
@@ -78,6 +78,17 @@ public class CustomLikeRepositoryImpl implements CustomLikeRepository {
         return PageableExecutionUtils.getPage(itemListDtos, pageable, totalCount::fetchOne);
     }
 
+    public Optional<Like> getLike(Long itemId, Long userId) {
+        Like contents = jpaQueryFactory
+                .selectFrom(like)
+                .where(
+                        like.exchangeItem.id.eq(itemId),
+                        like.user.id.eq(userId)
+                )
+                .fetchFirst();
+        return Optional.ofNullable(contents);
+    }
+
     public Boolean existsLike(Long itemId, Long userId) {
         return jpaQueryFactory
                 .selectOne()
@@ -87,5 +98,12 @@ public class CustomLikeRepositoryImpl implements CustomLikeRepository {
                         like.user.id.eq(userId)
                 )
                 .fetchFirst() != null;
+    }
+
+    public void deleteLike(Long itemId) {
+        jpaQueryFactory
+                .delete(like)
+                .where(like.exchangeItem.id.eq(itemId))
+                .execute();
     }
 }
