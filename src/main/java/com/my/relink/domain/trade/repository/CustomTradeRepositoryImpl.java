@@ -87,8 +87,8 @@ public class CustomTradeRepositoryImpl implements CustomTradeRepository {
                 .join(ownerExchangeItem.user, owner).fetchJoin()
                 .join(trade.requesterExchangeItem, requesterExchangeItem).fetchJoin()
                 .join(requesterExchangeItem.user, requester).fetchJoin()
-                .where(ownerExchangeItem.id.in(itemId)
-                        .or(requesterExchangeItem.id.in(itemId)))
+                .where(ownerExchangeItem.id.eq(itemId)
+                        .or(requesterExchangeItem.id.eq(itemId)))
                 .fetchOne();
         return Optional.ofNullable(contents);
     }

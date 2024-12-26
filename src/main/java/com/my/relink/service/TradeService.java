@@ -381,11 +381,6 @@ public class TradeService {
 
     }
 
-    public Long getTradeIdByItemId(Long itemId) {
-        return tradeRepository.findTradeIdByExchangeItemId(itemId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
-    }
-
     @Transactional
     public TradeIdRespDto createTrade(ExchangeItem itemFromOwner, ExchangeItem itemFromRequester, User requester) {
         Trade trade = Trade.builder()
@@ -402,18 +397,16 @@ public class TradeService {
         return new TradeIdRespDto(savedTrade.getId());
     }
 
-    public void deleteTrade(Long itemId) {
-        Optional<Trade> trade = tradeRepository.findByExchangeItemId(itemId);
-        ExchangeItem partnerItem = null;
-        if (trade.isPresent()) {
-            partnerItem = trade.get().getRequesterExchangeItem().getId().equals(itemId)
-                    ? trade.get().getOwnerExchangeItem()
-                    : trade.get().getRequesterExchangeItem();
-        }
-        if (partnerItem.isDeleted() || partnerItem.getUser().isDeleted()) {
-            tradeRepository.delete(trade.get());
-            messageRepository.deleteMessage((trade.get().getId()));
-        }
+    public void deleteTrade(Long itemId, Long userId) {
+        tradeRepository.findByExchangeItemId(itemId)
+                .filter(trade -> {
+                    ExchangeItem partnerItem = trade.getPartnerExchangeItem(userId);
+                    return partnerItem.isDeleted() || partnerItem.getUser().isDeleted();
+                })
+                .ifPresent(trade -> {
+                    tradeRepository.delete(trade);
+                    messageRepository.deleteMessage(trade.getId());
+                });
     }
 }
 

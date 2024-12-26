@@ -459,7 +459,7 @@ class ExchangeItemServiceTest {
         assertThat(deletedItemId).isEqualTo(itemId);
         verify(exchangeItem).validExchangeItemOwner(userId, userId);
         verify(exchangeItem).delete();
-        verify(tradeService, times(1)).deleteTrade(itemId);
+        verify(tradeService, times(1)).deleteTrade(itemId, userId);
         verify(imageService, times(1)).deleteImages(EntityType.EXCHANGE_ITEM, itemId);
         verify(likeService, times(1)).deleteLikes(itemId);
     }

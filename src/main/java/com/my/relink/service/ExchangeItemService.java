@@ -154,12 +154,12 @@ public class ExchangeItemService {
         exchangeItem.validExchangeItemOwner(exchangeItem.getUser().getId(), userId);
         validDeleteExchangeItemTradeStatus(exchangeItem.getTradeStatus());
         exchangeItem.delete();
-        deleteRelatedEntities(exchangeItem.getId());
+        deleteRelatedEntities(exchangeItem.getId(), userId);
         return exchangeItem.getId();
     }
 
-    private void deleteRelatedEntities(Long itemId) {
-        tradeService.deleteTrade(itemId);
+    private void deleteRelatedEntities(Long itemId, Long userId) {
+        tradeService.deleteTrade(itemId, userId);
         likeService.deleteLikes(itemId);
         imageService.deleteImages(EntityType.EXCHANGE_ITEM, itemId);
     }
