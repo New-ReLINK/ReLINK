@@ -35,12 +35,16 @@ class LikeServiceTest {
     void testLikeExchangeItem_Success_addLike() {
         Long userId = 1L;
         Long itemId = 100L;
-        User user = mock(User.class);
-        ExchangeItem exchangeItem = mock(ExchangeItem.class);
+        User user = User.builder()
+                .id(userId)
+                .build();
+        ExchangeItem exchangeItem = ExchangeItem.builder()
+                .id(itemId)
+                .build();
 
         when(userService.findByIdOrFail(userId)).thenReturn(user);
         when(exchangeItemRepository.findById(itemId)).thenReturn(Optional.of(exchangeItem));
-        when(likeRepository.findByUserAndExchangeItem(user, exchangeItem)).thenReturn(Optional.empty());
+        when(likeRepository.getLike(itemId, userId)).thenReturn(Optional.empty());
         Like newLike = Like.builder()
                 .user(user)
                 .exchangeItem(exchangeItem)
@@ -52,6 +56,7 @@ class LikeServiceTest {
 
         assertThat(likeId).isEqualTo(10L);
         verify(likeRepository, times(1)).save(any(Like.class));
+        verify(likeRepository, never()).delete(any(Like.class));
     }
 
     @Test
@@ -60,8 +65,12 @@ class LikeServiceTest {
         Long userId = 1L;
         Long itemId = 100L;
         Long likeId = 10L;
-        User user = mock(User.class);
-        ExchangeItem exchangeItem = mock(ExchangeItem.class);
+        User user = User.builder()
+                .id(userId)
+                .build();
+        ExchangeItem exchangeItem = ExchangeItem.builder()
+                .id(itemId)
+                .build();
         Like existingLike = Like.builder()
                 .id(likeId)
                 .user(user)
@@ -70,7 +79,7 @@ class LikeServiceTest {
 
         when(userService.findByIdOrFail(userId)).thenReturn(user);
         when(exchangeItemRepository.findById(itemId)).thenReturn(Optional.of(exchangeItem));
-        when(likeRepository.findByUserAndExchangeItem(user, exchangeItem)).thenReturn(Optional.of(existingLike));
+        when(likeRepository.getLike(itemId, userId)).thenReturn(Optional.of(existingLike));
 
         Long deletedLikeId = likeService.toggleLike(userId, itemId);
 

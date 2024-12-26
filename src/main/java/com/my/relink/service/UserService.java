@@ -54,7 +54,7 @@ public class UserService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        Image image = imageRepository.findByEntityIdAndEntityType(user.getId(), EntityType.USER).orElse(null);
+        Image image = imageRepository.findFirstImage(user.getId(), EntityType.USER).orElse(null);
 
         return new UserInfoRespDto(user, image);
     }

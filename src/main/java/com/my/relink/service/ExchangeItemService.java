@@ -58,7 +58,7 @@ public class ExchangeItemService {
 
     public GetExchangeItemRespDto getExchangeItemsByUserId(Long userId, int page, int size) {
         Pageable pageable = PageRequest.of(page - 1, size);
-        Page<ExchangeItem> items = exchangeItemRepository.findByUserIdWithUser(userId, pageable);
+        Page<ExchangeItem> items = exchangeItemRepository.findByUserId(userId, pageable);
         if (items.isEmpty()) {
             return GetExchangeItemRespDto.empty(pageable);
         }
@@ -162,7 +162,7 @@ public class ExchangeItemService {
     // 연관된 image, like, chat 삭제
     private void deleteRelatedEntities(Long itemId) {
         imageService.deleteImagesByEntityId(EntityType.EXCHANGE_ITEM, itemId);
-        likeService.deleteLikesByExchangeItemId(itemId);
+        likeService.deleteLike(itemId);
         Long tradeId = tradeService.getTradeIdByItemId(itemId);
         chatService.deleteChatsByTradeId(tradeId);
     }
