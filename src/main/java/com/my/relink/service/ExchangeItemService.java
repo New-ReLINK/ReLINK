@@ -20,6 +20,8 @@ import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.domain.user.User;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
+import com.my.relink.util.MetricConstants;
+import io.micrometer.core.annotation.Timed;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -32,6 +34,7 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@Timed(MetricConstants.SERVICE_EXCHANGE_ITEM_TIME)
 public class ExchangeItemService {
 
     private final ExchangeItemRepository exchangeItemRepository;

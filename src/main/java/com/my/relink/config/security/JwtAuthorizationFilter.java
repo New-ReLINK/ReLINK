@@ -21,7 +21,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
-        if (isTestEndpoint(request)|| request.getRequestURI().contains("/auth") || isWsEndPoint(request)) {
+        if (isTestEndpoint(request)|| request.getRequestURI().contains("/auth") || isWsEndPoint(request) || request.getRequestURI().contains("actuator")) {
             filterChain.doFilter(request, response);
             return;
         }
