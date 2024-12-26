@@ -16,6 +16,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class LikeService {
@@ -58,7 +60,7 @@ public class LikeService {
         return likeRepository.existsLike(itemId, userId);
     }
 
-    public void deleteLike(Long itemId) {
+    public void deleteLikes(Long itemId) {
         likeRepository.deleteLike(itemId);
     }
 }

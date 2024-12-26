@@ -140,7 +140,7 @@ public class DonationItemService {
             throw new BusinessException(ErrorCode.DONATION_ITEM_CANNOT_BE_DELETED);
         }
 
-        imageService.deleteImagesByEntityId(EntityType.DONATION_ITEM, itemId);
+        imageService.deleteImages(EntityType.DONATION_ITEM, itemId);
 
         donationItemRepository.delete(donationItem);
 

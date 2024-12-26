@@ -96,7 +96,7 @@ public class ImageService {
         return new ImageUserProfileDeleteRespDto(imageId);
     }
 
-    public void deleteImagesByEntityId(EntityType entityType, Long entityId) {
+    public void deleteImages(EntityType entityType, Long entityId) {
         imageRepository.deleteImage(entityType, entityId);
     }
 

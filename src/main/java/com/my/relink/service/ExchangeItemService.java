@@ -44,7 +44,6 @@ public class ExchangeItemService {
     private final TradeService tradeService;
     private final ImageService imageService;
     private final LikeService likeService;
-    private final ChatService chatService;
     private final UserService userService;
 
     @Transactional
@@ -155,16 +154,14 @@ public class ExchangeItemService {
         exchangeItem.validExchangeItemOwner(exchangeItem.getUser().getId(), userId);
         validDeleteExchangeItemTradeStatus(exchangeItem.getTradeStatus());
         exchangeItem.delete();
-        deleteRelatedEntities(exchangeItem.getId());
+        deleteRelatedEntities(exchangeItem.getId(), userId);
         return exchangeItem.getId();
     }
 
-    // 연관된 image, like, chat 삭제
-    private void deleteRelatedEntities(Long itemId) {
-        imageService.deleteImagesByEntityId(EntityType.EXCHANGE_ITEM, itemId);
-        likeService.deleteLike(itemId);
-        Long tradeId = tradeService.getTradeIdByItemId(itemId);
-        chatService.deleteChatsByTradeId(tradeId);
+    private void deleteRelatedEntities(Long itemId, Long userId) {
+        tradeService.deleteTrade(itemId, userId);
+        likeService.deleteLikes(itemId);
+        imageService.deleteImages(EntityType.EXCHANGE_ITEM, itemId);
     }
 
     // 상품의 거래 상태 확인(수정 시)
