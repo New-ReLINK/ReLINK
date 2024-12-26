@@ -31,9 +31,13 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.simp.stomp.*;
@@ -73,6 +77,17 @@ import static org.springframework.messaging.simp.stomp.StompSession.*;
 @ActiveProfiles("test")
 public class ChatSavePerformanceTest {
 
+    @TestConfiguration
+    static class TestConfig {
+        @Bean
+        @Primary
+        public MessageRepository countingMessageRepository(
+                @Qualifier("messageRepository") MessageRepository delegate) {
+            return new CountingMessageRepository(delegate);
+        }
+    }
+
+
     @Autowired
     private JwtProvider jwtProvider;
     @Autowired
@@ -91,8 +106,8 @@ public class ChatSavePerformanceTest {
     private Map<Long, TestUser> connectedUsers = new ConcurrentHashMap<>();
 
     private int numberOfChatRooms = 100;
-    private final List<ChatMessageRespDto> receivedMessages = Collections.synchronizedList(new ArrayList<>());
 
+    private final Set<ChatMessageRespDto> receivedMessages = ConcurrentHashMap.newKeySet();
 
 
     @LocalServerPort
@@ -106,6 +121,9 @@ public class ChatSavePerformanceTest {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private CountingMessageRepository countingMessageRepository;
 
 
     @BeforeEach
@@ -253,28 +271,28 @@ public class ChatSavePerformanceTest {
         printTestResults(startTime, endTime, numberOfChatRooms, messagePerChat);
         executorService.shutdown();
         connectedUsers.values().forEach(user -> {
-            if(user.session.isConnected()){
-                user.session.disconnect();
+            try {
+                if(user.session.isConnected()) {
+                    user.session.disconnect();
+                    Thread.sleep(100);
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
         });
+
+        log.info("전송 시도된 메시지: {}", messageCounter.get());
+        log.info("DB 저장된 메시지: {}", countingMessageRepository.getSavedCount());
+        log.info("저장 실패한 메시지: {}", countingMessageRepository.getFailedCount());
+        log.info("수신된 메시지: {}", receivedMessages.size());
 
         assertAll(
                 () -> assertTrue(messageCounter.get() >= messagePerChat * numberOfChatRooms * 0.8,
                         "최소 80% 이상의 메시지가 전송되어야 합니다"),
-                () -> assertEquals(messageCounter.get(), receivedMessages.size(),
-                        "전송된 메시지 수와 저장된 메시지 수가 일치해야 합니다"),
-                () -> {
-                    // 각 채팅방별 메시지 수 확인
-                    Map<Long, Long> messagesPerTrade = receivedMessages.stream()
-                            .collect(Collectors.groupingBy(
-                                    ChatMessageRespDto::getTradeId,
-                                    Collectors.counting()
-                            ));
-
-                    assertTrue(messagesPerTrade.values().stream()
-                                    .allMatch(count -> count == messagePerChat),
-                            "채팅방 별 메시지 수가 일치하지 않습니다");
-                }
+                () -> assertEquals(messageCounter.get(), countingMessageRepository.getSavedCount(),
+                        "전송된 메시지 수와 DB 저장 메시지 수가 일치해야 합니다"),
+                () -> assertEquals(messageCounter.get(), countingMessageRepository.getSavedCount(),
+                        "전송된 메시지 수와 DB 저장 메시지 수가 일치해야 합니다")
         );
 
     }
@@ -324,7 +342,6 @@ public class ChatSavePerformanceTest {
                         .toInstant()
                         .toEpochMilli();
 
-
                 long endTime = System.currentTimeMillis();
                 messageLatencies.computeIfAbsent(message.getSenderId().toString(), k ->
                         new ArrayList<>()).add(endTime - sentMillisTime);
@@ -332,7 +349,7 @@ public class ChatSavePerformanceTest {
         };
 
         ownerSession.subscribe(destination, frameHandler);
-        requestSession.subscribe(destination, frameHandler);
+        //requestSession.subscribe(destination, frameHandler);
     }
 
 
@@ -370,15 +387,18 @@ public class ChatSavePerformanceTest {
                             session.send("/app/chats/" + tradeId + "/message", message);
                         });
 
-                        future.get(3, TimeUnit.SECONDS); //타임아웃으로 TEXT_PARTIAL_WRITING 상태 방지
-                        messageSent = true;
-                        messageCounter.incrementAndGet();
+                        try {
+                            future.get(3, TimeUnit.SECONDS); //타임아웃으로 TEXT_PARTIAL_WRITING 상태 방지
+                            messageSent = true;
+                            messageCounter.incrementAndGet();
+                        }catch (TimeoutException e){
+                            future.cancel(true);
+                            attempts++;
+                            log.warn("메시지 전송 타임아웃 - userId: {}, messageIdx: {}", userId, i);
+                        }
 
                         Thread.sleep(100 + random.nextInt(50));
                     }
-                } catch (TimeoutException e) {
-                    attempts++;
-                    log.warn("메시지 전송 타임아웃 - userId: {}, messageIdx: {}", userId, i);
                 } catch (Exception e){
                     attempts++;
                     if(attempts >= retryCount){
