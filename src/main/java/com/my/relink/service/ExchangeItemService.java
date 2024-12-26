@@ -55,7 +55,7 @@ public class ExchangeItemService {
 
     public GetExchangeItemRespDto getExchangeItemsByUserId(Long userId, int page, int size) {
         Pageable pageable = PageRequest.of(page - 1, size);
-        Page<ExchangeItem> items = exchangeItemRepository.findByUserIdWithUser(userId, pageable);
+        Page<ExchangeItem> items = exchangeItemRepository.findByUserId(userId, pageable);
         if (items.isEmpty()) {
             return GetExchangeItemRespDto.empty(pageable);
         }
@@ -136,13 +136,13 @@ public class ExchangeItemService {
         return GetExchangeItemRespDto.of(content);
     }
 
-    public TradeIdRespDto choiceExchangeItem(Long itemId, ChoiceExchangeItemReqDto reqDto, Long userId) {
-        ExchangeItem itemFromOwner = findByIdFetchUser(itemId);
+    public TradeIdRespDto choiceExchangeItem(Long itemId, ChoiceExchangeItemReqDto reqDto, Long requesterId) {
+        ExchangeItem itemFromOwner = findByIdOrFail(itemId);
         ExchangeItem itemFromRequester = findByIdFetchUser(reqDto.getItemId());
-        User user = userService.findByIdOrFail(userId);
-        itemFromRequester.validExchangeItemOwner(itemFromRequester.getUser().getId(), userId);
+        User requester = userService.findByIdOrFail(requesterId);
+        itemFromRequester.validExchangeItemOwner(itemFromRequester.getUser().getId(), requesterId);
         validExchangeItemTradeStatus(itemFromOwner.getTradeStatus());
-        return tradeService.createTrade(itemFromOwner, itemFromRequester, user);
+        return tradeService.createTrade(itemFromOwner, itemFromRequester, requester);
     }
 
     // 삭제는 soft delete
@@ -159,7 +159,7 @@ public class ExchangeItemService {
     // 연관된 image, like, chat 삭제
     private void deleteRelatedEntities(Long itemId) {
         imageService.deleteImagesByEntityId(EntityType.EXCHANGE_ITEM, itemId);
-        likeService.deleteLikesByExchangeItemId(itemId);
+        likeService.deleteLike(itemId);
         Long tradeId = tradeService.getTradeIdByItemId(itemId);
         chatService.deleteChatsByTradeId(tradeId);
     }

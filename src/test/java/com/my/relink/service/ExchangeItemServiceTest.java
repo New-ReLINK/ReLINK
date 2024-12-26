@@ -169,7 +169,7 @@ class ExchangeItemServiceTest {
         List<ExchangeItem> exchangeItems = List.of(item1, item2);
         Pageable pageable = PageRequest.of(0, 10);
         Page<ExchangeItem> page = new PageImpl<>(exchangeItems, pageable, exchangeItems.size());
-        when(exchangeItemRepository.findByUserIdWithUser(userId1, pageable)).thenReturn(page);
+        when(exchangeItemRepository.findByUserId(userId1, pageable)).thenReturn(page);
         Trade trade1 = Trade.builder()
                 .id(1L)
                 .ownerExchangeItem(item2)
@@ -228,7 +228,7 @@ class ExchangeItemServiceTest {
         Pageable pageable = PageRequest.of(0, 10);
         Page<ExchangeItem> emptyPage = Page.empty(pageable);
 
-        when(exchangeItemRepository.findByUserIdWithUser(userId, pageable)).thenReturn(emptyPage);
+        when(exchangeItemRepository.findByUserId(userId, pageable)).thenReturn(emptyPage);
 
         GetExchangeItemRespDto result = exchangeItemService.getExchangeItemsByUserId(userId, 1, 10);
         assertThat(result).isNotNull();
@@ -470,7 +470,7 @@ class ExchangeItemServiceTest {
         verify(exchangeItem).validExchangeItemOwner(userId, userId);
         verify(exchangeItem).delete();
         verify(imageService, times(1)).deleteImagesByEntityId(EntityType.EXCHANGE_ITEM, itemId);
-        verify(likeService, times(1)).deleteLikesByExchangeItemId(itemId);
+        verify(likeService, times(1)).deleteLike(itemId);
         verify(chatService, times(1)).deleteChatsByTradeId(tradeId);
     }
 
@@ -494,7 +494,7 @@ class ExchangeItemServiceTest {
         verify(exchangeItem).validExchangeItemOwner(userId, invalidUserId);
         verify(exchangeItem, never()).delete();
         verify(imageService, never()).deleteImagesByEntityId(any(), anyLong());
-        verify(likeService, never()).deleteLikesByExchangeItemId(anyLong());
+        verify(likeService, never()).deleteLike(anyLong());
         verify(chatService, never()).deleteChatsByTradeId(anyLong());
     }
 
@@ -515,7 +515,7 @@ class ExchangeItemServiceTest {
         assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.ITEM_IN_EXCHANGE);
         verify(exchangeItem, never()).delete();
         verify(imageService, never()).deleteImagesByEntityId(any(), anyLong());
-        verify(likeService, never()).deleteLikesByExchangeItemId(anyLong());
+        verify(likeService, never()).deleteLike(anyLong());
         verify(chatService, never()).deleteChatsByTradeId(anyLong());
     }
 
@@ -773,16 +773,16 @@ class ExchangeItemServiceTest {
                 .user(user)
                 .build();
 
-        when(exchangeItemRepository.findByIdWithUser(eq(itemFromOwnerId))).thenReturn(Optional.of(itemFromOwner));
+        when(exchangeItemRepository.findById(eq(itemFromOwnerId))).thenReturn(Optional.of(itemFromOwner));
         when(exchangeItemRepository.findByIdWithUser(eq(itemFromRequesterId))).thenReturn(Optional.of(itemFromRequester));
-        when(userService.findByIdOrFail(eq(userId))).thenReturn(user); // Mock 설정
+        when(userService.findByIdOrFail(eq(userId))).thenReturn(user);
         when(tradeService.createTrade(eq(itemFromOwner), eq(itemFromRequester), eq(user))).thenReturn(new TradeIdRespDto(1L));
 
         TradeIdRespDto tradeId = exchangeItemService.choiceExchangeItem(itemFromOwnerId, reqDto, userId);
 
         assertThat(tradeId.getTradeId()).isEqualTo(1L);
 
-        verify(exchangeItemRepository, times(1)).findByIdWithUser(eq(itemFromOwnerId));
+        verify(exchangeItemRepository, times(1)).findById(eq(itemFromOwnerId));
         verify(exchangeItemRepository, times(1)).findByIdWithUser(eq(itemFromRequesterId));
         verify(userService, times(1)).findByIdOrFail(eq(userId));
         verify(tradeService, times(1)).createTrade(eq(itemFromOwner), eq(itemFromRequester), eq(user));
@@ -807,7 +807,7 @@ class ExchangeItemServiceTest {
                 .tradeStatus(TradeStatus.AVAILABLE)
                 .build();
         ChoiceExchangeItemReqDto reqDto = new ChoiceExchangeItemReqDto(requesterItemId);
-        when(exchangeItemRepository.findByIdWithUser(itemId)).thenReturn(Optional.of(itemFromOwner));
+        when(exchangeItemRepository.findById(itemId)).thenReturn(Optional.of(itemFromOwner));
         when(exchangeItemRepository.findByIdWithUser(requesterItemId)).thenReturn(Optional.of(itemFromRequester));
 
         BusinessException exception = assertThrows(
