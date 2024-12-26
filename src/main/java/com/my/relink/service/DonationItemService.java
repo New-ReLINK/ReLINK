@@ -5,11 +5,6 @@ import com.my.relink.controller.donation.dto.PagingInfo;
 import com.my.relink.controller.donation.dto.req.DonationItemRejectReqDto;
 import com.my.relink.controller.donation.dto.req.DonationItemReqDto;
 import com.my.relink.controller.donation.dto.resp.*;
-import com.my.relink.controller.donation.dto.resp.DonationItemDetailRespDto;
-import com.my.relink.controller.donation.dto.resp.DonationItemListRespDto;
-import com.my.relink.controller.donation.dto.resp.DonationItemIdRespDto;
-import com.my.relink.controller.donation.dto.resp.DonationItemRejectionRespDto;
-import com.my.relink.controller.donation.dto.resp.DonationItemUserListRespDto;
 import com.my.relink.domain.category.Category;
 import com.my.relink.domain.category.repository.CategoryRepository;
 import com.my.relink.domain.image.EntityType;
@@ -30,6 +25,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -62,9 +58,17 @@ public class DonationItemService {
         Page<DonationItem> donationItems = donationItemRepository.findAllByFilters(category, search, pageable);
 
         long totalCompletedDonations = donationItemRepository.countCompletedDonations();
-        long completedDonationsThisMonth = donationItemRepository.countCompletedDonationsThisMonth();
+        long completedDonationsThisMonth = countCompletedDonationsThisMonth();
 
         return DonationItemListRespDto.of(donationItems, totalCompletedDonations, completedDonationsThisMonth);
+    }
+
+    public long countCompletedDonationsThisMonth() {
+        LocalDateTime now = LocalDateTime.now();
+        int currentYear = now.getYear();
+        int currentMonth = now.getMonthValue();
+
+        return donationItemRepository.countCompletedDonationsThisMonth(currentYear, currentMonth);
     }
 
     public DonationItemUserListRespDto getUserDonationItems(AuthUser authUser, int page, int size) {
@@ -86,7 +90,7 @@ public class DonationItemService {
         DonationItem donationItem = donationItemRepository.findByIdWithCategory(itemId)
                 .orElseThrow(()->new BusinessException(ErrorCode.DONATION_ITEM_NOT_FOUND));
 
-        Map<Long, String> imageMap = imageService.getImagesByItemIds(EntityType.DONATION_ITEM, List.of(itemId));
+        Map<Long, List<String>> imageMap = imageService.getImagesByItemIds(EntityType.DONATION_ITEM, List.of(itemId));
 
         return DonationItemDetailRespDto.fromEntity(donationItem, imageMap);
     }

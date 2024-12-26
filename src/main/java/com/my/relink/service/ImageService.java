@@ -47,10 +47,17 @@ public class ImageService {
                 .orElse(null);
     }
 
-    public Map<Long, String> getImagesByItemIds(EntityType entityType, List<Long> itemIds) {
+    public Map<Long, List<String>> getImagesByItemIds(EntityType entityType, List<Long> itemIds) {
         List<Image> images = imageRepository.findImages(entityType, itemIds);
         return images.stream()
-                .collect(Collectors.toMap(Image::getEntityId, Image::getImageUrl));
+                .collect(Collectors.toMap(
+                        Image::getEntityId,
+                        image -> new ArrayList<>(List.of(image.getImageUrl())),
+                        (existingList, newList) -> {
+                            existingList.addAll(newList);
+                            return existingList;
+                        }
+                ));
     }
 
     public Map<Long, String> getFirstImagesByItemIds(EntityType entityType, List<Long> itemIds) {
@@ -176,7 +183,6 @@ public class ImageService {
             throw new BusinessException(ErrorCode.MAX_IMAGE_COUNT);
         }
     }
-
 
     @Transactional
     public ImageUserProfileDeleteRespDto deleteDonationItemImage(Long userId, Long itemId, Long imageId) {
