@@ -78,6 +78,7 @@ public class CustomLikeRepositoryImpl implements CustomLikeRepository {
         return PageableExecutionUtils.getPage(itemListDtos, pageable, totalCount::fetchOne);
     }
 
+    @Override
     public Optional<Like> getLike(Long itemId, Long userId) {
         Like contents = jpaQueryFactory
                 .selectFrom(like)
@@ -89,6 +90,7 @@ public class CustomLikeRepositoryImpl implements CustomLikeRepository {
         return Optional.ofNullable(contents);
     }
 
+    @Override
     public Boolean existsLike(Long itemId, Long userId) {
         return jpaQueryFactory
                 .selectOne()
@@ -100,6 +102,7 @@ public class CustomLikeRepositoryImpl implements CustomLikeRepository {
                 .fetchFirst() != null;
     }
 
+    @Override
     public void deleteLike(Long itemId) {
         jpaQueryFactory
                 .delete(like)

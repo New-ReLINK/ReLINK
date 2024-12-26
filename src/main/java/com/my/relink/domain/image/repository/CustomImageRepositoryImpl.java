@@ -54,7 +54,7 @@ public class CustomImageRepositoryImpl implements CustomImageRepository {
                 .delete(image)
                 .where(
                         image.entityType.eq(entityType),
-                        (image.entityId.eq(entityId))
+                        image.entityId.eq(entityId)
                 )
                 .execute();
     }
