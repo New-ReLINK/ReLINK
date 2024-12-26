@@ -7,6 +7,7 @@ import com.my.relink.controller.trade.dto.request.TrackingNumberReqDto;
 import com.my.relink.controller.trade.dto.request.TradeCancelReqDto;
 import com.my.relink.controller.trade.dto.response.*;
 import com.my.relink.domain.item.exchange.ExchangeItem;
+import com.my.relink.domain.message.repository.MessageRepository;
 import com.my.relink.domain.point.pointHistory.PointHistory;
 import com.my.relink.domain.point.pointHistory.repository.PointHistoryRepository;
 import com.my.relink.domain.trade.Trade;
@@ -24,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 
@@ -40,6 +42,7 @@ public class TradeService {
     private final DateTimeUtil dateTimeUtil;
     private final PointHistoryRepository pointHistoryRepository;
     private final NotificationPublisherService notificationPublisherService;
+    private final MessageRepository messageRepository;
 
     /**
      * [문의하기] -> 해당 채팅방의 거래 정보, 상품 정보, 상대 유저 정보 내리기
@@ -393,7 +396,21 @@ public class TradeService {
                 .hasRequesterReceived(false)
                 .build();
         Trade savedTrade = tradeRepository.save(trade);
-        return  new TradeIdRespDto(savedTrade.getId());
+        return new TradeIdRespDto(savedTrade.getId());
+    }
+
+    public void deleteTrade(Long itemId) {
+        Optional<Trade> trade = tradeRepository.findByExchangeItemId(itemId);
+        ExchangeItem partnerItem = null;
+        if (trade.isPresent()) {
+            partnerItem = trade.get().getRequesterExchangeItem().getId().equals(itemId)
+                    ? trade.get().getOwnerExchangeItem()
+                    : trade.get().getRequesterExchangeItem();
+        }
+        if (partnerItem.isDeleted() || partnerItem.getUser().isDeleted()) {
+            tradeRepository.delete(trade.get());
+            messageRepository.deleteMessage((trade.get().getId()));
+        }
     }
 }
 
