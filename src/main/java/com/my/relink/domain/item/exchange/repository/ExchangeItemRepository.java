@@ -2,8 +2,6 @@ package com.my.relink.domain.item.exchange.repository;
 
 import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.trade.TradeStatus;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -17,9 +15,6 @@ public interface ExchangeItemRepository extends JpaRepository<ExchangeItem, Long
 
     @Query("select ei from ExchangeItem ei join fetch ei.user where ei.id = :itemId and ei.isDeleted = false")
     Optional<ExchangeItem> findByIdWithUser(@Param("itemId") Long itemId);
-
-    @Query("select ei from ExchangeItem ei join fetch ei.user where ei.user.id = :userId")
-    Page<ExchangeItem> findByUserIdWithUser(@Param("userId") Long userId, Pageable pageable);
 
     @Modifying(clearAutomatically = true)
     @Query("update ExchangeItem e set e.tradeStatus = com.my.relink.domain.trade.TradeStatus.UNAVAILABLE where e.user.id = :userId")
