@@ -1,5 +1,7 @@
 package com.my.relink.config.log;
 
+import com.my.relink.config.log.context.HttpMDCContext;
+import com.my.relink.config.log.context.SystemMDCContext;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -7,6 +9,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 
+import java.util.Map;
 import java.util.UUID;
 
 @Aspect
@@ -21,10 +24,14 @@ public class SystemLogAspect {
         String className = joinPoint.getTarget().getClass().getSimpleName();
         String methodName = joinPoint.getSignature().getName();
 
-        try {
-            MDC.put("component", className);
-            MDC.put("operation", methodName);
-            MDC.put("traceId", UUID.randomUUID().toString());
+        Map<String, String> httpContext = MDC.getCopyOfContextMap();
+        String existingRequestId = HttpMDCContext.getRequestId();
+
+        try (SystemMDCContext context = new SystemMDCContext()) {
+            MDC.clear();
+            context.putComponent(className);
+            context.putOperation(methodName);
+            context.putRequestId(existingRequestId);
 
             long startTime = System.currentTimeMillis();
             log.info("Started: {}.{}", className, methodName);
@@ -32,15 +39,19 @@ public class SystemLogAspect {
             Object result = joinPoint.proceed();
 
             long duration = System.currentTimeMillis() - startTime;
-            log.info("Completed: {}.{}, duration: {}ms", className, methodName, duration);
+            context.putDuration(duration);
+            log.info("Completed: {}.{}", className, methodName);
 
             return result;
-
         } catch (Exception e) {
             log.error("Failed: {}.{}, error: {}", className, methodName, e.getMessage(), e);
             throw e;
         } finally {
-            MDC.clear();
+            if(httpContext != null) {
+                MDC.setContextMap(httpContext);
+            } else {
+                MDC.clear();
+            }
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.my.relink.config.log;
 
+import com.my.relink.config.log.context.HttpMDCContext;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.UUID;
 
 @Component
@@ -19,40 +21,32 @@ import java.util.UUID;
 @Slf4j
 public class HttpLogFilter extends OncePerRequestFilter {
 
-    private static final String START_TIME = "startTime";
-    private static final String REQUEST_ID = "requestId";
-    private static final String METHOD = "method";
-    private static final String URI = "uri";
-    private static final String STATUS = "status";
-    private static final String DURATION = "duration";
-
-    private static final String CLIENT_IP = "clientIp";
+    private static final String X_REQUEST_ID = "X-Request-Id";
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         long startTime = System.currentTimeMillis();
+        String requestId = Optional.ofNullable(request.getHeader(X_REQUEST_ID))
+                .orElse(UUID.randomUUID().toString());
 
-        try {
-            MDC.put(START_TIME, String.valueOf(startTime));
-            MDC.put(REQUEST_ID, UUID.randomUUID().toString());
-            MDC.put(METHOD, request.getMethod());
-            MDC.put(URI, request.getRequestURI());
-            MDC.put(CLIENT_IP, request.getRemoteAddr());
+        try(HttpMDCContext context = new HttpMDCContext()){
+            context.putStartTime(startTime);
+            context.putClientIp(request.getRemoteAddr());
+            context.putUri(request.getRequestURI());
+            context.putMethod(request.getMethod());
+            context.putRequestId(request.getRequestId());
+            context.putRequestId(requestId);
+            response.setHeader(X_REQUEST_ID, requestId);
 
             log.info("Request received - {} {}", request.getMethod(), request.getRequestURI());
 
             filterChain.doFilter(request, response);
 
             long duration = System.currentTimeMillis() - startTime;
+            context.putDuration(duration);
+            context.putStatus(response.getStatus());
 
-            MDC.put(STATUS, String.valueOf(response.getStatus()));
-            MDC.put(DURATION, String.valueOf(duration));
-
-            log.info("Request completed - Status: {}, Duration: {}ms",
-                    response.getStatus(),
-                    duration);
-        } finally {
-            MDC.clear();
+            log.info("Request completed");
         }
     }
 }
