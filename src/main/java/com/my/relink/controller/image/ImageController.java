@@ -76,4 +76,15 @@ public class ImageController {
                 .status(HttpStatus.OK)
                 .body(ApiResult.success(imageService.deleteExchangeItemImage(itemId, imageId, authUser.getId())));
     }
+
+    @DeleteMapping("/items/donations/{itemId}/images/{imageId}")
+    public ResponseEntity<ApiResult<ImageUserProfileDeleteRespDto>> deleteDonationItemImage(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable(value = "itemId") Long itemId,
+            @PathVariable Long imageId
+    ){
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResult.success(imageService.deleteDonationItemImage(authUser.getId(), itemId, imageId)));
+    }
 }
