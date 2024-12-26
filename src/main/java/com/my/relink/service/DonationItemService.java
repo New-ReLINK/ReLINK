@@ -21,6 +21,8 @@ import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import com.my.relink.domain.item.donation.repository.DonationItemRepository;
+import com.my.relink.util.MetricConstants;
+import io.micrometer.core.annotation.Timed;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -33,6 +35,7 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@Timed(MetricConstants.SERVICE_DONATION_ITEM_TIME)
 public class DonationItemService {
 
     private final DonationItemRepository donationItemRepository;
