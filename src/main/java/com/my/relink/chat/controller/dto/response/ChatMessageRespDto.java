@@ -2,11 +2,13 @@ package com.my.relink.chat.controller.dto.response;
 
 import com.my.relink.domain.message.Message;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
 /**
  * 서버 -> 클라이언트
  */
+@NoArgsConstructor
 public class ChatMessageRespDto {
 
     private String content;
