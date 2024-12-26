@@ -10,6 +10,6 @@ import java.util.Optional;
 public interface CustomDonationItemRepository {
     Page<DonationItem> findAllByFilters(String category, String search, Pageable pageable);
     long countCompletedDonations();
-    long countCompletedDonationsThisMonth();
+    long countCompletedDonationsThisMonth(int year, int month);
     Optional<DonationItem> findByIdWithCategory(Long id);
 }

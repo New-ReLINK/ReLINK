@@ -74,24 +74,17 @@ public class CustomDonationItemRepositoryImpl implements CustomDonationItemRepos
     }
 
     @Override
-    public long countCompletedDonationsThisMonth() {
+    public long countCompletedDonationsThisMonth(int year, int month) {
         Long count = queryFactory.select(donationItem.count())
                 .from(donationItem)
                 .where(
                         donationItem.donationStatus.eq(DonationStatus.DONATION_COMPLETED),
-                        isCurrentMonth(donationItem.modifiedAt)
+                        donationItem.modifiedAt.year().eq(year),
+                        donationItem.modifiedAt.month().eq(month)
                 )
                 .fetchOne();
 
         return count != null ? count : 0L;
-    }
-
-    private BooleanExpression isCurrentMonth(DateTimePath<LocalDateTime> dateTimePath) {
-        return Expressions.booleanTemplate(
-                "FUNCTION('MONTH', {0}) = FUNCTION('MONTH', CURRENT_DATE) " +
-                        "AND FUNCTION('YEAR', {0}) = FUNCTION('YEAR', CURRENT_DATE)",
-                dateTimePath
-        );
     }
 
     @Override
