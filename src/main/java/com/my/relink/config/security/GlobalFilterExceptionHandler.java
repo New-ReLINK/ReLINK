@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.my.relink.ex.ErrorCode;
 import com.my.relink.ex.SecurityFilterChainException;
 import com.my.relink.util.api.ApiResult;
+import io.sentry.Sentry;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,9 +34,13 @@ public class GlobalFilterExceptionHandler extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
         } catch (SecurityFilterChainException e) {
             log.info("인증 / 인가 필터 예외 : {}", e.getMessage());
+            // Sentry로 예외 전송
+            Sentry.captureException(e);
             errorResponse(response, ErrorCode.AUTH_FAIL_ERROR);
         } catch (Exception e) {
             log.info("서버 측 에러 : {}", e.getMessage());
+            // Sentry로 예외 전송
+            Sentry.captureException(e);
             errorResponse(response, ErrorCode.FILTER_CHAIN_ERROR);
         }
     }
