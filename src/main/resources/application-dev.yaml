@@ -34,6 +34,7 @@ logging:
     com.my.relink: DEBUG
     org.springframework.web.socket: DEBUG
     org.springframework.messaging: DEBUG
+    io.sentry: DEBUG
 
 
 jwt:
@@ -55,3 +56,11 @@ cloud:
 toss:
   widget-secret-key: test_gsk_docs_OaPz8L5KdmQXkzRz3y47BMw6 #결제 위젯 연동 api 테스트를 위한 공개키
   client-key: test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm #결제 위젯 연동 api 테스트를 위한 공개키
+sentry:
+  dsn: https://fb238d0052d3ac49c7dc60a76e07846f@o4508520721940480.ingest.us.sentry.io/4508520729346048
+  environment: dev
+  release: 1.0.0
+  logging:
+    enabled: true
+    minimum-event-level: warn
+  debug: true
