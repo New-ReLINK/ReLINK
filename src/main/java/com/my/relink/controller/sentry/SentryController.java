@@ -1,5 +1,7 @@
 package com.my.relink.controller.sentry;
 
+import com.my.relink.ex.BusinessException;
+import com.my.relink.ex.ErrorCode;
 import io.sentry.Sentry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,7 +15,7 @@ public class SentryController {
     @GetMapping("/trigger-error")
     public String triggerError() {
         try{
-            throw new RuntimeException("error to Sentry");
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }catch (Exception e) {
             logger.error(e.getMessage());
             Sentry.captureException(e);
