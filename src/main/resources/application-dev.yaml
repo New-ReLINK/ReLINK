@@ -64,3 +64,4 @@ sentry:
     enabled: true
     minimum-event-level: warn
   debug: true
+  exception-resolver-order: -2147483647
