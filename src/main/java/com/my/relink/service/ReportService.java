@@ -86,6 +86,7 @@ public class ReportService {
      * @return 교환 상품 및 소유자 정보
      */
     public ExchangeItemInfoRespDto getExchangeItemInfoForReport(Long itemId) {
+        log.info("신고 전 교환 상품 정보 조회: itemId = {}", itemId);
         ExchangeItem exchangeItem = exchangeItemService.findByIdFetchUser(itemId);
         String exchangeItemUrl = imageService.getExchangeItemThumbnailUrl(exchangeItem);
         return new ExchangeItemInfoRespDto(exchangeItem, exchangeItemUrl);
