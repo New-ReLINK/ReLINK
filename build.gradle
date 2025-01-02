@@ -74,6 +74,10 @@ dependencies {
     // embedded tomcat
     providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
 
+    //sentry
+    implementation 'io.sentry:sentry-spring-boot-starter:6.27.0'
+    implementation 'io.sentry:sentry-logback:6.27.0'
+
 
     // metric
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
