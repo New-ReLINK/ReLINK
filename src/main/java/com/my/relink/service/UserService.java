@@ -16,12 +16,15 @@ import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.domain.user.repository.dto.UserInfoWithCountRepositoryDto;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
+import com.my.relink.util.MetricConstants;
+import io.micrometer.core.annotation.Timed;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@Timed(MetricConstants.SERVICE_USER_TIME)
 public class UserService {
 
     private final UserRepository userRepository;
@@ -36,7 +39,6 @@ public class UserService {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
     }
-
 
     public UserCreateRespDto register(UserCreateReqDto dto) {
         dto.changePassword(passwordEncoder.encode(dto.getPassword()));
