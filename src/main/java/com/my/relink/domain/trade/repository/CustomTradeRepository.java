@@ -11,8 +11,12 @@ import java.util.Optional;
 public interface CustomTradeRepository {
     List<Trade> findByExchangeItemIds(@Param("itemIds") List<Long> itemIds);
 
+    Optional<Trade> findByExchangeItemId(Long itemId);
+
     Optional<Trade> findTradeWithDetails(@Param("tradeId") Long tradeId);
+
     boolean existsByRequesterIdAndTradeStatus(Long userId, TradeStatus tradeStatus);
+
     Optional<Trade> findByIdWithExchangeItem(@Param("tradeId") Long tradeId);
 
     Optional<TradeWithOwnerItemNameDto> findTradeWithOwnerItemNameById(Long tradeId);

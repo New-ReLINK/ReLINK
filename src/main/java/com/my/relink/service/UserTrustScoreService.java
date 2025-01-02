@@ -2,11 +2,14 @@ package com.my.relink.service;
 
 import com.my.relink.domain.review.repository.ReviewRepository;
 import com.my.relink.domain.user.User;
+import com.my.relink.util.MetricConstants;
+import io.micrometer.core.annotation.Timed;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@Timed(MetricConstants.SERVICE_USER_TRUST_SCORE_TIME)
 public class UserTrustScoreService {
 
     private final ReviewRepository reviewRepository;

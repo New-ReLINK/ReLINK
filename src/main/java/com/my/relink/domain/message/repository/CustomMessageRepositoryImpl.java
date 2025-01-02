@@ -12,6 +12,7 @@ public class CustomMessageRepositoryImpl implements CustomMessageRepository {
 
     private final JPAQueryFactory jpaQueryFactory;
 
+    @Override
     public void deleteMessage(Long tradeId) {
         jpaQueryFactory
                 .delete(message)

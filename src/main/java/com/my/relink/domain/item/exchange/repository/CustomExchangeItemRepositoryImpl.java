@@ -68,6 +68,7 @@ public class CustomExchangeItemRepositoryImpl implements CustomExchangeItemRepos
         return new PageImpl<>(items, pageable, count);
     }
 
+    @Override
     public Page<ExchangeItem> findByUserId(@Param("userId") Long userId, Pageable pageable) {
         List<ExchangeItem> items = queryFactory
                 .selectFrom(exchangeItem)

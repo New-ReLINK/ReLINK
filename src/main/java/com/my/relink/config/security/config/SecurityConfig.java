@@ -1,6 +1,7 @@
 package com.my.relink.config.security.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.my.relink.config.log.HttpLogFilter;
 import com.my.relink.config.security.GlobalFilterExceptionHandler;
 import com.my.relink.config.security.JwtAuthorizationFilter;
 import com.my.relink.config.security.LoginAuthenticationFilter;
@@ -38,6 +39,7 @@ public class SecurityConfig {
     private final ObjectMapper objectMapper;
     private final AuthenticationConfiguration authenticationConfiguration;
     private final UserRepository userRepository;
+    private final HttpLogFilter httpLogFilter;
 
     @Value("${spring.profiles.active}")
     private String profileType;
@@ -55,6 +57,7 @@ public class SecurityConfig {
                             .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.ERROR).permitAll()
                             .requestMatchers("/auth/**", "/chats/**", "/charge-success", "/charge/**", "/charge/users/**", "/charge-form", "/users/payment", "/charge-fail").permitAll()
                             .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll() //정적 리소스 허용
+                            .requestMatchers("/actuator/**").permitAll()
                             .requestMatchers("/error").permitAll();
                     if (profileType.equals("dev")) {
                         auth.requestMatchers(PathRequest.toH2Console()).permitAll();
@@ -66,6 +69,7 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .httpBasic(AbstractHttpConfigurer::disable)
+                .addFilterBefore(httpLogFilter, SecurityContextHolderFilter.class)
                 .addFilterBefore(new GlobalFilterExceptionHandler(objectMapper), SecurityContextHolderFilter.class)
                 .addFilterBefore(new JwtAuthorizationFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(

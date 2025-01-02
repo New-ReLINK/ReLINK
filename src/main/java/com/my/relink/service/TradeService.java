@@ -7,6 +7,7 @@ import com.my.relink.controller.trade.dto.request.TrackingNumberReqDto;
 import com.my.relink.controller.trade.dto.request.TradeCancelReqDto;
 import com.my.relink.controller.trade.dto.response.*;
 import com.my.relink.domain.item.exchange.ExchangeItem;
+import com.my.relink.domain.message.repository.MessageRepository;
 import com.my.relink.domain.point.pointHistory.PointHistory;
 import com.my.relink.domain.point.pointHistory.repository.PointHistoryRepository;
 import com.my.relink.domain.trade.Trade;
@@ -19,6 +20,8 @@ import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import com.my.relink.util.DateTimeUtil;
+import com.my.relink.util.MetricConstants;
+import io.micrometer.core.annotation.Timed;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -26,12 +29,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Timed(MetricConstants.SERVICE_TRADE_TIME)
 public class TradeService {
 
     private final TradeRepository tradeRepository;
@@ -42,6 +47,7 @@ public class TradeService {
     private final DateTimeUtil dateTimeUtil;
     private final PointHistoryRepository pointHistoryRepository;
     private final NotificationPublisherService notificationPublisherService;
+    private final MessageRepository messageRepository;
 
     /**
      * [문의하기] -> 해당 채팅방의 거래 정보, 상품 정보, 상대 유저 정보 내리기
@@ -384,11 +390,6 @@ public class TradeService {
 
     }
 
-    public Long getTradeIdByItemId(Long itemId) {
-        return tradeRepository.findTradeIdByExchangeItemId(itemId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
-    }
-
     @Transactional
     public TradeIdRespDto createTrade(ExchangeItem itemFromOwner, ExchangeItem itemFromRequester, User requester) {
         Trade trade = Trade.builder()
@@ -402,7 +403,19 @@ public class TradeService {
                 .hasRequesterReceived(false)
                 .build();
         Trade savedTrade = tradeRepository.save(trade);
-        return  new TradeIdRespDto(savedTrade.getId());
+        return new TradeIdRespDto(savedTrade.getId());
+    }
+
+    public void deleteTrade(Long itemId, Long userId) {
+        tradeRepository.findByExchangeItemId(itemId)
+                .filter(trade -> {
+                    ExchangeItem partnerItem = trade.getPartnerExchangeItem(userId);
+                    return partnerItem.isDeleted() || partnerItem.getUser().isDeleted();
+                })
+                .ifPresent(trade -> {
+                    tradeRepository.delete(trade);
+                    messageRepository.deleteMessage(trade.getId());
+                });
     }
 
     @Cacheable(value = "tradeInfo", key = "#tradeId")
