@@ -15,7 +15,7 @@ public class SentryController {
     @GetMapping("/trigger-error")
     public String triggerError() {
         try{
-            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+            throw new BusinessException(ErrorCode.USER_SECESSION);
         }catch (Exception e) {
             logger.error(e.getMessage());
             Sentry.captureException(e);

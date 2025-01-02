@@ -40,6 +40,10 @@ public class GlobalFilterExceptionHandler extends OncePerRequestFilter {
         } catch (Exception e) {
             log.info("서버 측 에러 : {}", e.getMessage());
             // Sentry로 예외 전송
+            Sentry.configureScope(scope -> {
+                scope.setTag("alertType", "SERVER_ERROR");
+                scope.setExtra("errorMessage", e.getMessage());
+            });
             Sentry.captureException(e);
             errorResponse(response, ErrorCode.FILTER_CHAIN_ERROR);
         }

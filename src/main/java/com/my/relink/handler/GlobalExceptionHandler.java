@@ -34,6 +34,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResult<String>> handleGeneralException(Exception e){
         log.error("예기치 못한 내부 오류 발생: {}", e.getMessage(), e);
         // Sentry로 예외 전송
+        Sentry.configureScope(scope -> {
+            scope.setTag("alertType", "GENERAL_EXCEPTION");
+        });
         Sentry.captureException(e);
         return new ResponseEntity<>(
                 ApiResult.error(ErrorCode.UNEXPECTED_SERVER_ERROR),
@@ -134,19 +137,32 @@ public class GlobalExceptionHandler {
     }
 
     private HttpStatus getHttpStatusForException(TossPaymentException e) {
+        HttpStatus status;
         if (e instanceof TossPaymentBadRequestException) {
-            return HttpStatus.BAD_REQUEST;
+            status = HttpStatus.BAD_REQUEST;
+            //return HttpStatus.BAD_REQUEST;
         } else if (e instanceof TossPaymentUnauthorizedException) {
-            return HttpStatus.UNAUTHORIZED;
+            status = HttpStatus.UNAUTHORIZED;
+            //return HttpStatus.UNAUTHORIZED;
         } else if (e instanceof TossPaymentForbiddenException) {
-            return HttpStatus.FORBIDDEN;
+            status = HttpStatus.FORBIDDEN;
+            //return HttpStatus.FORBIDDEN;
         } else if (e instanceof TossPaymentNotFoundException) {
-            return HttpStatus.NOT_FOUND;
+            status = HttpStatus.NOT_FOUND;
+            //return HttpStatus.NOT_FOUND;
         } else if (e instanceof TossPaymentServerException) {
-            return HttpStatus.INTERNAL_SERVER_ERROR;
+            status = HttpStatus.INTERNAL_SERVER_ERROR;
+            //return HttpStatus.INTERNAL_SERVER_ERROR;
         } else {
-            return HttpStatus.INTERNAL_SERVER_ERROR;
+            status = HttpStatus.INTERNAL_SERVER_ERROR;
+            //return HttpStatus.INTERNAL_SERVER_ERROR;
         }
+
+        if(status.is5xxServerError()){
+            Sentry.configureScope(scope -> scope.setTag("alertType", "SERVER_ERROR"));
+        }
+
+        return status;
     }
 
 

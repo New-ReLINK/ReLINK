@@ -11,6 +11,7 @@ import com.my.relink.domain.notification.exchange.repository.ExchangeNotificatio
 import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
+import io.sentry.Sentry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -42,6 +43,11 @@ public class NotificationPublisherService {
             savedNotification = exchangeNotificationRepository.save(exchangeNotification);
         } catch (Exception e) {
             log.info("알림 저장 실패 : {}", e.getMessage());
+
+            Sentry.configureScope(scope -> {
+                scope.setTag("alertType", "SERVER_ERROR");
+            });
+            Sentry.captureException(e);
             throw new BusinessException(ErrorCode.NOTIFICATION_CREATE_FAILED);
         }
 
@@ -49,6 +55,10 @@ public class NotificationPublisherService {
             applicationEventPublisher.publishEvent(new NotificationEvent<>(NotificationType.EXCHANGE, savedNotification));
         } catch (Exception e) {
             log.info("알림 발행 실패 : {}", e.getMessage());
+            Sentry.configureScope(scope -> {
+                scope.setTag("alertType", "SERVER_ERROR");
+            });
+            Sentry.captureException(e);
             throw new BusinessException(ErrorCode.NOTIFICATION_DELIVERY_FAILED);
         }
     }
@@ -69,6 +79,12 @@ public class NotificationPublisherService {
             savedNotification = chatNotificationRepository.save(chatNotification);
         } catch (Exception e) {
             log.info("알림 저장 실패 : {}", e.getMessage());
+
+            Sentry.configureScope(scope -> {
+                scope.setTag("alertType", "SERVER_ERROR");
+            });
+            Sentry.captureException(e);
+
             throw new BusinessException(ErrorCode.NOTIFICATION_CREATE_FAILED);
         }
 
@@ -76,6 +92,12 @@ public class NotificationPublisherService {
             applicationEventPublisher.publishEvent(new NotificationEvent<>(NotificationType.CHAT, savedNotification));
         } catch (Exception e) {
             log.info("알림 발행 실패 : {}", e.getMessage());
+
+            Sentry.configureScope(scope -> {
+                scope.setTag("alertType", "SERVER_ERROR");
+            });
+            Sentry.captureException(e);
+
             throw new BusinessException(ErrorCode.NOTIFICATION_DELIVERY_FAILED);
         }
     }
@@ -94,6 +116,12 @@ public class NotificationPublisherService {
             savedNotification = donationNotificationRepository.save(donationNotification);
         } catch (Exception e) {
             log.info("알림 저장 실패 : {}", e.getMessage());
+
+            Sentry.configureScope(scope -> {
+                scope.setTag("alertType", "SERVER_ERROR");
+            });
+            Sentry.captureException(e);
+
             throw new BusinessException(ErrorCode.NOTIFICATION_CREATE_FAILED);
         }
 
@@ -101,6 +129,12 @@ public class NotificationPublisherService {
             applicationEventPublisher.publishEvent(new NotificationEvent<>(NotificationType.DONATION, savedNotification));
         } catch (Exception e) {
             log.info("알림 발행 실패 : {}", e.getMessage());
+
+            Sentry.configureScope(scope -> {
+                scope.setTag("alertType", "SERVER_ERROR");
+            });
+            Sentry.captureException(e);
+
             throw new BusinessException(ErrorCode.NOTIFICATION_DELIVERY_FAILED);
         }
     }
