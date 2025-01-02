@@ -16,13 +16,15 @@ import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.domain.user.repository.dto.UserInfoWithCountRepositoryDto;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
+import com.my.relink.util.MetricConstants;
+import io.micrometer.core.annotation.Timed;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Timed(MetricConstants.SERVICE_USER_TIME)
 public class UserService {
 
     private final UserRepository userRepository;
@@ -38,7 +40,6 @@ public class UserService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
     }
 
-
     public UserCreateRespDto register(UserCreateReqDto dto) {
         dto.changePassword(passwordEncoder.encode(dto.getPassword()));
         User savedUser = userRepository.save(dto.toEntity(dto));
@@ -53,7 +54,7 @@ public class UserService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        Image image = imageRepository.findByEntityIdAndEntityType(user.getId(), EntityType.USER).orElse(null);
+        Image image = imageRepository.findFirstImage(user.getId(), EntityType.USER).orElse(null);
 
         return new UserInfoRespDto(user, image);
     }
@@ -117,7 +118,7 @@ public class UserService {
 
     public void delayDeleteUser(User currentUser) {
         boolean hasActiveTrades = tradeRepository.existsByRequesterIdAndTradeStatus(currentUser.getId(), TradeStatus.IN_EXCHANGE) ||
-                        tradeRepository.existsByRequesterIdAndTradeStatus(currentUser.getId(), TradeStatus.IN_DELIVERY);
+                tradeRepository.existsByRequesterIdAndTradeStatus(currentUser.getId(), TradeStatus.IN_DELIVERY);
         if (hasActiveTrades) {
             throw new BusinessException(ErrorCode.ACTIVE_TRADE_EXISTS);
         }

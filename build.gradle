@@ -10,7 +10,7 @@ version = '0.0.1-SNAPSHOT'
 
 war{
     war.enabled = true
-    archiveFileName = 'rerink.war'
+    archiveFileName = 'relink.war'
 }
 
 java {
@@ -68,12 +68,21 @@ dependencies {
     //thymeleaf
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 
+    // logstash logback encoder
+    implementation 'net.logstash.logback:logstash-logback-encoder:7.4'
+
     // embedded tomcat
     providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
 
     //sentry
     implementation 'io.sentry:sentry-spring-boot-starter:6.27.0'
     implementation 'io.sentry:sentry-logback:6.27.0'
+
+
+    // metric
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+
 }
 
 tasks.named('test') {

@@ -8,7 +8,6 @@ import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.image.Image;
 import com.my.relink.domain.image.repository.ImageRepository;
 import com.my.relink.domain.item.donation.DonationItem;
-import com.my.relink.domain.item.donation.DonationStatus;
 import com.my.relink.domain.item.donation.repository.DonationItemRepository;
 import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.item.exchange.repository.ExchangeItemRepository;
@@ -35,23 +34,30 @@ public class ImageService {
     private final S3Service s3Service;
 
     @Transactional
-    public void saveImages(List<Image> imageList){
+    public void saveImages(List<Image> imageList) {
         imageRepository.saveAll(imageList);
     }
 
 
-    public String getExchangeItemThumbnailUrl(ExchangeItem exchangeItem){
-        return imageRepository.findTopByEntityIdAndEntityTypeOrderByCreatedAtAsc(
+    public String getExchangeItemThumbnailUrl(ExchangeItem exchangeItem) {
+        return imageRepository.findFirstImage(
                         exchangeItem.getId(),
                         EntityType.EXCHANGE_ITEM)
                 .map(Image::getImageUrl)
                 .orElse(null);
     }
 
-    public Map<Long, String> getImagesByItemIds(EntityType entityType, List<Long> itemIds) {
+    public Map<Long, List<String>> getImagesByItemIds(EntityType entityType, List<Long> itemIds) {
         List<Image> images = imageRepository.findImages(entityType, itemIds);
         return images.stream()
-                .collect(Collectors.toMap(Image::getEntityId, Image::getImageUrl));
+                .collect(Collectors.toMap(
+                        Image::getEntityId,
+                        image -> new ArrayList<>(List.of(image.getImageUrl())),
+                        (existingList, newList) -> {
+                            existingList.addAll(newList);
+                            return existingList;
+                        }
+                ));
     }
 
     public Map<Long, String> getFirstImagesByItemIds(EntityType entityType, List<Long> itemIds) {
@@ -62,7 +68,7 @@ public class ImageService {
 
     @Transactional
     public ImageUserProfileCreateRespDto addUserProfile(Long userId, MultipartFile file) {
-        imageRepository.findTopByEntityIdAndEntityTypeOrderByCreatedAtAsc(userId, EntityType.USER)
+        imageRepository.findFirstImage(userId, EntityType.USER)
                 .ifPresent(image -> {
                     throw new BusinessException(ErrorCode.ALREADY_IMAGE_FILE);
                 });
@@ -90,18 +96,18 @@ public class ImageService {
         return new ImageUserProfileDeleteRespDto(imageId);
     }
 
-    public void deleteImagesByEntityId(EntityType entityType, Long entityId) {
-        imageRepository.deleteByEntityTypeAndEntityId(entityType, entityId);
+    public void deleteImages(EntityType entityType, Long entityId) {
+        imageRepository.deleteImage(entityType, entityId);
     }
 
     public String getDonationItemThumbnailUrl(EntityType entityType, Long itemId) {
-        return imageRepository.findTopByEntityIdAndEntityTypeOrderByCreatedAtAsc(itemId, entityType)
+        return imageRepository.findFirstImage(itemId, entityType)
                 .map(Image::getImageUrl)
                 .orElse(null);
     }
 
     public List<String> getImageUrlsByItemId(EntityType entityType, Long itemId) {
-        return imageRepository.findImageUrlsByItemId(entityType, itemId);
+        return imageRepository.findImageUrls(entityType, itemId);
     }
 
     @Transactional
@@ -177,7 +183,6 @@ public class ImageService {
             throw new BusinessException(ErrorCode.MAX_IMAGE_COUNT);
         }
     }
-
 
     @Transactional
     public ImageUserProfileDeleteRespDto deleteDonationItemImage(Long userId, Long itemId, Long imageId) {

@@ -1,7 +1,6 @@
 package com.my.relink.service;
 
 
-import com.my.relink.chat.service.ChatService;
 import com.my.relink.controller.exchangeItem.dto.req.ChoiceExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.req.CreateExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.req.GetAllExchangeItemReqDto;
@@ -22,7 +21,6 @@ import com.my.relink.domain.trade.Trade;
 import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.domain.user.Role;
 import com.my.relink.domain.user.User;
-import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import com.my.relink.util.page.PageInfo;
@@ -37,7 +35,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.lang.reflect.Field;
@@ -62,15 +63,11 @@ class ExchangeItemServiceTest {
     @Mock
     private CategoryRepository categoryRepository;
     @Mock
-    private UserRepository userRepository;
-    @Mock
     private PointRepository pointRepository;
     @Mock
     private ImageService imageService;
     @Mock
     private LikeService likeService;
-    @Mock
-    private ChatService chatService;
     @Mock
     private UserService userService;
     @Mock
@@ -169,7 +166,7 @@ class ExchangeItemServiceTest {
         List<ExchangeItem> exchangeItems = List.of(item1, item2);
         Pageable pageable = PageRequest.of(0, 10);
         Page<ExchangeItem> page = new PageImpl<>(exchangeItems, pageable, exchangeItems.size());
-        when(exchangeItemRepository.findByUserIdWithUser(userId1, pageable)).thenReturn(page);
+        when(exchangeItemRepository.findByUserId(userId1, pageable)).thenReturn(page);
         Trade trade1 = Trade.builder()
                 .id(1L)
                 .ownerExchangeItem(item2)
@@ -228,7 +225,7 @@ class ExchangeItemServiceTest {
         Pageable pageable = PageRequest.of(0, 10);
         Page<ExchangeItem> emptyPage = Page.empty(pageable);
 
-        when(exchangeItemRepository.findByUserIdWithUser(userId, pageable)).thenReturn(emptyPage);
+        when(exchangeItemRepository.findByUserId(userId, pageable)).thenReturn(emptyPage);
 
         GetExchangeItemRespDto result = exchangeItemService.getExchangeItemsByUserId(userId, 1, 10);
         assertThat(result).isNotNull();
@@ -263,7 +260,6 @@ class ExchangeItemServiceTest {
                 .brand("Test Brand")
                 .desiredItem("Test Desired Item")
                 .tradeStatus(TradeStatus.AVAILABLE)
-                .isDeleted(false)
                 .build();
         Mockito.when(exchangeItemRepository.findById(itemId)).thenReturn(Optional.of(exchangeItem));
         GetExchangeItemRespDto result = exchangeItemService.getExchangeItemModifyPage(itemId, userId);
@@ -297,7 +293,6 @@ class ExchangeItemServiceTest {
                 .brand("Test Brand")
                 .desiredItem("Test Desired Item")
                 .tradeStatus(TradeStatus.AVAILABLE)
-                .isDeleted(false)
                 .build();
         Mockito.when(exchangeItemRepository.findById(itemId)).thenReturn(Optional.of(exchangeItem));
         BusinessException exception = assertThrows(BusinessException.class, () -> {
@@ -338,7 +333,6 @@ class ExchangeItemServiceTest {
                 .brand("Test Brand")
                 .desiredItem("Test Desired Item")
                 .tradeStatus(TradeStatus.AVAILABLE)
-                .isDeleted(false)
                 .build();
         UpdateExchangeItemReqDto reqDto = new UpdateExchangeItemReqDto(
                 "New Item Name",
@@ -388,7 +382,6 @@ class ExchangeItemServiceTest {
                 .brand("Test Brand")
                 .desiredItem("Test Desired Item")
                 .tradeStatus(TradeStatus.AVAILABLE)
-                .isDeleted(false)
                 .build();
         UpdateExchangeItemReqDto reqDto = new UpdateExchangeItemReqDto(
                 "New Item Name",
@@ -429,7 +422,6 @@ class ExchangeItemServiceTest {
                 .brand("Test Brand")
                 .desiredItem("Test Desired Item")
                 .tradeStatus(TradeStatus.AVAILABLE)
-                .isDeleted(false)
                 .build();
         UpdateExchangeItemReqDto reqDto = new UpdateExchangeItemReqDto(
                 "New Item Name",
@@ -455,23 +447,21 @@ class ExchangeItemServiceTest {
     void testDeleteExchangeItem_Success() {
         Long userId = 1L;
         Long itemId = 100L;
-        Long tradeId = 200L;
         User user = User.builder().id(userId).build();
         ExchangeItem exchangeItem = mock(ExchangeItem.class);
 
         when(exchangeItemRepository.findById(itemId)).thenReturn(Optional.of(exchangeItem));
         when(exchangeItem.getUser()).thenReturn(user);
         when(exchangeItem.getId()).thenReturn(itemId);
-        when(tradeService.getTradeIdByItemId(itemId)).thenReturn(tradeId);
 
         Long deletedItemId = exchangeItemService.deleteExchangeItem(itemId, userId);
 
         assertThat(deletedItemId).isEqualTo(itemId);
         verify(exchangeItem).validExchangeItemOwner(userId, userId);
         verify(exchangeItem).delete();
-        verify(imageService, times(1)).deleteImagesByEntityId(EntityType.EXCHANGE_ITEM, itemId);
-        verify(likeService, times(1)).deleteLikesByExchangeItemId(itemId);
-        verify(chatService, times(1)).deleteChatsByTradeId(tradeId);
+        verify(tradeService, times(1)).deleteTrade(itemId, userId);
+        verify(imageService, times(1)).deleteImages(EntityType.EXCHANGE_ITEM, itemId);
+        verify(likeService, times(1)).deleteLikes(itemId);
     }
 
     @Test
@@ -493,9 +483,8 @@ class ExchangeItemServiceTest {
         assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.UNAUTHORIZED_ACCESS);
         verify(exchangeItem).validExchangeItemOwner(userId, invalidUserId);
         verify(exchangeItem, never()).delete();
-        verify(imageService, never()).deleteImagesByEntityId(any(), anyLong());
-        verify(likeService, never()).deleteLikesByExchangeItemId(anyLong());
-        verify(chatService, never()).deleteChatsByTradeId(anyLong());
+        verify(imageService, never()).deleteImages(any(), anyLong());
+        verify(likeService, never()).deleteLikes(anyLong());
     }
 
     @Test
@@ -514,9 +503,8 @@ class ExchangeItemServiceTest {
 
         assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.ITEM_IN_EXCHANGE);
         verify(exchangeItem, never()).delete();
-        verify(imageService, never()).deleteImagesByEntityId(any(), anyLong());
-        verify(likeService, never()).deleteLikesByExchangeItemId(anyLong());
-        verify(chatService, never()).deleteChatsByTradeId(anyLong());
+        verify(imageService, never()).deleteImages(any(), anyLong());
+        verify(likeService, never()).deleteLikes(anyLong());
     }
 
     @Test
@@ -638,7 +626,7 @@ class ExchangeItemServiceTest {
 
     @Test
     @DisplayName("교환하기 페이지 조회 성공 - 이미지가 없는 경우")
-    void testGetExchangeItemFromOwner_Success_NotImage () {
+    void testGetExchangeItemFromOwner_Success_NotImage() {
         Long itemId = 1L;
         Long userId = 2L;
         User user = User.builder().id(1L).nickname("Test User").build();
@@ -691,7 +679,7 @@ class ExchangeItemServiceTest {
 
     @Test
     @DisplayName("교환하기 페이지 조회 실패 - 조회 직전 아이템의 거래 상태가 IN_EXCHANGE로 변경된 경우")
-    void testGetExchangeItemFromOwner_Fail_Trading () {
+    void testGetExchangeItemFromOwner_Fail_Trading() {
         Long itemId = 1L;
         Long userId = 2L;
         User user = User.builder().id(1L).nickname("Test User").build();

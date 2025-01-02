@@ -36,12 +36,14 @@ public class LikeService {
         User user = userService.findByIdOrFail(userId);
         ExchangeItem exchangeItem = exchangeItemRepository.findById(itemId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EXCHANGE_ITEM_NOT_FOUND));
+        return likeAddOrDelete(user, exchangeItem);
+    }
 
-        return likeRepository.findByUserAndExchangeItem(user, exchangeItem)
-                .map(like -> {
-                    Long likeId = like.getId();
-                    likeRepository.delete(like);
-                    return likeId;
+    public Long likeAddOrDelete(User user, ExchangeItem exchangeItem) {
+        return likeRepository.getLike(exchangeItem.getId(), user.getId())
+                .map(existingLike -> {
+                    likeRepository.delete(existingLike);
+                    return existingLike.getId();
                 })
                 .orElseGet(() -> {
                     Like savedLike = likeRepository.save(
@@ -54,11 +56,11 @@ public class LikeService {
                 });
     }
 
-    public void deleteLikesByExchangeItemId(Long itemId) {
-        likeRepository.deleteByExchangeItemId(itemId);
-    }
-
     public Boolean existsItemLike(Long itemId, Long userId) {
         return likeRepository.existsLike(itemId, userId);
+    }
+
+    public void deleteLikes(Long itemId) {
+        likeRepository.deleteLike(itemId);
     }
 }

@@ -52,7 +52,7 @@ public class ExchangeItem extends BaseEntity {
     private TradeStatus tradeStatus;
 
     @Column(nullable = false)
-    private Boolean isDeleted = false;
+    private boolean isDeleted = false;
 
     @Builder
     public ExchangeItem(
@@ -67,7 +67,7 @@ public class ExchangeItem extends BaseEntity {
             String brand,
             String desiredItem,
             TradeStatus tradeStatus,
-            Boolean isDeleted
+            boolean isDeleted
     ) {
         this.id = id;
         this.name = name;
