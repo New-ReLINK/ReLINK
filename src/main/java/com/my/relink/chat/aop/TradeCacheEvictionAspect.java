@@ -44,7 +44,7 @@ public class TradeCacheEvictionAspect {
     )
     public void evictTradeInfoCache(Long itemId) {
         Long tradeId = tradeService.findByIdWithOwnerItemOrFail(itemId).getId();
-        if(tradeId == null) return;
+        if (tradeId == null) return;
         Cache cache = cacheManager.getCache("tradeInfo");
         if(cache != null) {
             cache.evict(tradeId);

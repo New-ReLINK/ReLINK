@@ -1,6 +1,6 @@
 package com.my.relink.chat.controller.dto.response;
 
-import com.my.relink.chat.service.ChatMessage;
+import com.my.relink.chat.service.cache.ChatMessage;
 import com.my.relink.domain.message.Message;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

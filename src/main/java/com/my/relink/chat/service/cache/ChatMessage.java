@@ -1,4 +1,4 @@
-package com.my.relink.chat.service;
+package com.my.relink.chat.service.cache;
 
 import com.my.relink.domain.message.Message;
 import com.my.relink.domain.trade.Trade;

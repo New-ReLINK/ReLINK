@@ -7,6 +7,8 @@ import com.my.relink.chat.controller.dto.request.ChatMessageReqDto;
 import com.my.relink.chat.controller.dto.response.ChatMessageRespDto;
 import com.my.relink.chat.handler.StompHandler;
 import com.my.relink.chat.handler.WebSocketHeader;
+import com.my.relink.chat.service.cache.ChatCacheService;
+import com.my.relink.chat.service.cache.EnhancedPerformanceMetrics;
 import com.my.relink.config.cache.RedisConfig;
 import com.my.relink.config.security.AuthUser;
 import com.my.relink.config.security.jwt.JwtProvider;
@@ -58,14 +60,12 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import static com.my.relink.chat.handler.StompHandler.*;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.*;
-
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("local")
 @EnableScheduling
-public class ChatSavePerformanceLocalTest {
+public class ChatSavePerformanceLocalTestWithCache{
 
     @Autowired
     private JwtProvider jwtProvider;
@@ -114,6 +114,17 @@ public class ChatSavePerformanceLocalTest {
     @Autowired
     private OperationMetrics serviceMetric;
 
+    @Autowired
+    private RedisConfig redisConfig;
+
+    @Autowired
+    private RedisTemplate redisTemplate;
+
+    @Autowired
+    private EnhancedPerformanceMetrics redisMetrics;
+
+    @Autowired
+    private ChatCacheService chatCacheService;
 
 
     @BeforeEach
@@ -266,23 +277,43 @@ public class ChatSavePerformanceLocalTest {
         });
 
         // 결과 검증 및 정리
-        long actualDbCount = messageRepository.count();
-
-        //전체 성능 지표
-        printTestResults(startTime, endTime, numberOfChatRooms, messagePerChat, actualDbCount);
 
         log.info("전송 시도된 메시지: {}", messageCounter.get());
-        log.info("DB 저장된 메시지: {}", actualDbCount);
         log.info("수신된 메시지: {}", receivedMessages.size());
+
+
+        // 배치 처리 성능 따로 측정
+        log.info("=== 배치 처리 성능 테스트 시작 ===");
+        long batchStartTime = System.currentTimeMillis();
+        chatCacheService.persistCachedMessages();
+        Thread.sleep(2000); //redis 캐시가 모두 db에 저장될 때까지 대기........
+
+        long batchEndTime = System.currentTimeMillis();
+        double batchProcessingTime = (batchEndTime - batchStartTime) / 1000.0;
+        long getCachedMessageCountAfter =
+                redisTemplate.keys(CHAT_TRADE_PREFIX).stream()
+                        .mapToLong(key -> redisTemplate.opsForZSet().size(key))
+                        .sum();
+
+        long actualDbCount = messageRepository.count();
+
+        //콘솔에 짤려서 여기서 한꺼번에 출력할 것 (redis)
+        printTestResults(startTime, endTime, numberOfChatRooms, messagePerChat, actualDbCount);
+
+        log.info("=== 배치 처리 성능 테스트 결과 ===");
+        log.info("배치 처리 시간: {} 초", batchProcessingTime);
+        log.info("DB 저장된 메시지: {}", messageRepository.count());
+        log.info("캐시에 남은 메시지: {}", getCachedMessageCountAfter);
+
+        redisMetrics.printEnhancedMetrics();
+        serviceMetric.printMetrics();
 
         assertAll(
                 () -> assertTrue(messageCounter.get() >= messagePerChat * numberOfChatRooms * 0.8,
                         "최소 80% 이상의 메시지가 전송되어야 합니다"),
-                () -> assertEquals(messageCounter.get(), actualDbCount,
-                        "전송된 메시지 수와 DB 저장 메시지 수가 일치해야 합니다")
-
+                () -> assertEquals(messageCounter.get(), actualDbCount + getCachedMessageCountAfter,
+                        "처리된 메시지 수가 일치해야 합니다")
         );
-
     }
 
 
@@ -522,7 +553,7 @@ public class ChatSavePerformanceLocalTest {
         }
 
         log.info("\n=== StompHandler Performance ===");
-        Map<String, MetricsDTO> metrics = stompHandler.getMetrics();
+        Map<String, StompHandler.MetricsDTO> metrics = stompHandler.getMetrics();
 
         metrics.forEach((operation, metric) -> {
             log.info("{} Operation:", operation);
@@ -534,6 +565,59 @@ public class ChatSavePerformanceLocalTest {
 
         serviceMetric.printMetrics();
 
+        redisMetrics.printEnhancedMetrics();
+
+
+        // Redis 관련 메트릭 추가
+//        log.info("\n=== Redis Metrics ===");
+//        Set<String> chatKeys = redisTemplate.keys(CHAT_TRADE_PREFIX);
+//        int remainingRooms = chatKeys != null ? chatKeys.size() : 0;
+//        long totalRedisMessages = 0;
+//
+//        log.info("Redis Chat Rooms Count: {}", remainingRooms);
+
+//        if (chatKeys != null && !chatKeys.isEmpty()) {
+//            Map<String, RedisRoomMetrics> roomMetrics = new HashMap<>();
+//
+//            // 각 채팅방별 상세 메트릭 수집
+//            for (String key : chatKeys) {
+//                Long messageCount = redisTemplate.opsForZSet().size(key);
+//                Long ttl = redisTemplate.getExpire(key, TimeUnit.MINUTES);
+//
+//                // 첫 메시지와 마지막 메시지의 시간 확인
+//                Set<ChatMessage> messages = redisTemplate.opsForZSet().range(key, 0, -1);
+//                LocalDateTime firstMessageTime = null;
+//                LocalDateTime lastMessageTime = null;
+//
+//                if (messages != null && !messages.isEmpty()) {
+//                    List<ChatMessage> messageList = new ArrayList<>(messages);
+//                    firstMessageTime = messageList.get(0).getCreatedAt();
+//                    lastMessageTime = messageList.get(messageList.size() - 1).getCreatedAt();
+//                }
+//
+//                roomMetrics.put(key, new RedisRoomMetrics(
+//                        messageCount != null ? messageCount : 0L,
+//                        ttl != null ? ttl : -1L,
+//                        firstMessageTime,
+//                        lastMessageTime
+//                ));
+//
+//                totalRedisMessages += (messageCount != null ? messageCount : 0L);
+//            }
+//
+//            // 상세 메트릭 출력
+//            log.info("=== Detailed Redis Room Metrics ===");
+//            roomMetrics.forEach((key, redisMetrics) -> {
+//                log.info("Chat Room: {}", key);
+//                log.info("  Message Count: {}", redisMetrics.messageCount);
+//                log.info("  TTL (minutes): {}", redisMetrics.ttl);
+//                log.info("  First Message Time: {}", redisMetrics.firstMessageTime);
+//                log.info("  Last Message Time: {}", redisMetrics.lastMessageTime);
+//                log.info("  Time Span: {}",
+//                        redisMetrics.firstMessageTime != null && redisMetrics.lastMessageTime != null ?
+//                                Duration.between(redisMetrics.firstMessageTime, redisMetrics.lastMessageTime).toMinutes() + " minutes" : "N/A");
+//            });
+//        }
     }
 
     public static class RedisRoomMetrics {
@@ -596,7 +680,7 @@ public class ChatSavePerformanceLocalTest {
     }
 
 
-    private  class AuthenticatedStompSessionHandler extends StompSessionHandlerAdapter{
+    private  class AuthenticatedStompSessionHandler extends StompSessionHandlerAdapter {
         private final String userType;
         private final Long tradeId;
         private final CountDownLatch connectLatch;
@@ -657,3 +741,4 @@ public class ChatSavePerformanceLocalTest {
 
 
 }
+

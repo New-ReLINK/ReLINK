@@ -58,6 +58,45 @@
         </appender>
     </springProfile>
 
+    <springProfile name="local">
+        <!-- 콘솔 Appender -->
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            </encoder>
+        </appender>
+
+        <!-- Hibernate 바인딩 파라미터 로깅 -->
+        <logger name="org.hibernate.orm.jdbc.bind" level="TRACE" additivity="false">
+            <appender-ref ref="CONSOLE" />
+        </logger>
+
+        <!-- 애플리케이션 로깅 -->
+        <logger name="com.my.relink" level="DEBUG" additivity="false">
+            <appender-ref ref="CONSOLE" />
+        </logger>
+
+        <!-- WebSocket 로깅 -->
+        <logger name="org.springframework.web.socket" level="DEBUG" additivity="false">
+            <appender-ref ref="CONSOLE" />
+        </logger>
+
+        <!-- 메시징 로깅 -->
+        <logger name="org.springframework.messaging" level="DEBUG" additivity="false">
+            <appender-ref ref="CONSOLE" />
+        </logger>
+
+        <!-- Redis 로깅 -->
+        <logger name="org.springframework.data.redis" level="DEBUG" additivity="false">
+            <appender-ref ref="CONSOLE" />
+        </logger>
+
+        <!-- Root 레벨은 INFO로 설정 -->
+        <root level="INFO">
+            <appender-ref ref="CONSOLE" />
+        </root>
+    </springProfile>
+
 
     <!--dev 환경 로거 -->
     <springProfile name="dev">
@@ -145,32 +184,5 @@
 
 
 
-    <!--    ======================================-->
-<!--    &lt;!&ndash; 전체 애플리케이션 패키지에 대한 로거 설정 &ndash;&gt;-->
-<!--    <logger name="com.my.relink" level="INFO" additivity="false">-->
-<!--        <appender-ref ref="CONSOLE" />-->
-<!--        <appender-ref ref="ASYNC_SYSTEM_LOGSTASH" />-->
-<!--    </logger>-->
-
-
-<!--    &lt;!&ndash; 시스템 로그를 위한 Logger &ndash;&gt;-->
-<!--    <logger name="com.my.relink.config.log.SystemLogAspect" level="INFO" additivity="false">-->
-<!--        <appender-ref ref="SYSTEM_LOGSTASH" />-->
-<!--        <appender-ref ref="CONSOLE" />-->
-<!--    </logger>-->
-
-
-<!--    &lt;!&ndash; HTTP 로그를 위한 Logger &ndash;&gt;-->
-<!--    <logger name="com.my.relink.config.log.HttpLogFilter" level="INFO" additivity="false">-->
-<!--        <appender-ref ref="HTTP_LOGSTASH" />-->
-<!--        <appender-ref ref="CONSOLE" />-->
-<!--    </logger>-->
-
-
-<!--    &lt;!&ndash; Logger 설정 &ndash;&gt;-->
-<!--    <root level="INFO">-->
-<!--        <appender-ref ref="CONSOLE" />-->
-<!--        <appender-ref ref="ASYNC_SYSTEM_LOGSTASH" />-->
-<!--    </root>-->
 
 </configuration>
