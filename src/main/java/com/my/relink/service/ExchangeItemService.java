@@ -1,6 +1,5 @@
 package com.my.relink.service;
 
-import com.my.relink.chat.service.ChatService;
 import com.my.relink.controller.exchangeItem.dto.req.ChoiceExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.req.CreateExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.req.GetAllExchangeItemReqDto;
