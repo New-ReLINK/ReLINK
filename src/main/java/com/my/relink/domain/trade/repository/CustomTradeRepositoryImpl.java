@@ -4,7 +4,9 @@ import com.my.relink.domain.item.exchange.QExchangeItem;
 import com.my.relink.domain.trade.QTrade;
 import com.my.relink.domain.trade.Trade;
 import com.my.relink.domain.trade.TradeStatus;
+import com.my.relink.domain.trade.repository.dto.TradeWithOwnerItemNameDto;
 import com.my.relink.domain.user.QUser;
+import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.repository.query.Param;
@@ -13,20 +15,37 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
+import static com.my.relink.domain.item.exchange.QExchangeItem.*;
+import static com.my.relink.domain.trade.QTrade.*;
+
 @Repository
 @RequiredArgsConstructor
 public class CustomTradeRepositoryImpl implements CustomTradeRepository {
 
     private final JPAQueryFactory queryFactory;
 
+    @Override
+    public Optional<TradeWithOwnerItemNameDto> findTradeWithOwnerItemNameById(Long tradeId) {
+        return Optional.ofNullable(
+                queryFactory
+                        .select(Projections.constructor(TradeWithOwnerItemNameDto.class,
+                                trade,
+                                exchangeItem.name))
+                        .from(trade)
+                        .join(trade.ownerExchangeItem, exchangeItem)
+                        .where(trade.id.eq(tradeId))
+                        .fetchOne()
+        );
+    }
+
     public List<Trade> findByExchangeItemIds(List<Long> itemIds) {
         if (itemIds == null || itemIds.isEmpty()) {
             return List.of();
         }
         QTrade trade = QTrade.trade;
-        QExchangeItem ownerExchangeItem = QExchangeItem.exchangeItem;
+        QExchangeItem ownerExchangeItem = exchangeItem;
         QUser ownerUser = QUser.user;
-        QExchangeItem requesterExchangeItem = QExchangeItem.exchangeItem;
+        QExchangeItem requesterExchangeItem = exchangeItem;
         QUser requesterUser = QUser.user;
 
         return queryFactory.selectDistinct(trade)

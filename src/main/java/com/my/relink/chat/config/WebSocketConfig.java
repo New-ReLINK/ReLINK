@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.WebSocketSession;
@@ -37,7 +38,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
         registry.enableSimpleBroker("/topic") //구독 요청을 처리할 prefix
-                .setHeartbeatValue(new long[]{1000, 1000}) //10초 간격으로 양방향 하트비트
+                .setHeartbeatValue(new long[]{10000, 10000}) //10초 간격으로 양방향 하트비트
                 .setTaskScheduler(heartBeatScheduler()); //해당 하트비트 확인 스케줄러
         registry.setApplicationDestinationPrefixes("/app"); //클라이언트가 메시지를 발행할 때 사용할 prefix
         registry.setPreservePublishOrder(true); //메시지 순서 보장
@@ -76,10 +77,24 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void configureWebSocketTransport(WebSocketTransportRegistration registry) {
         registry
                 .setMessageSizeLimit(512 * 1024)  // 메시지 크기 제한: 512kb
-                .setSendBufferSizeLimit(1024 * 1024)  // 버퍼 크기 제한: 1mb
-                .setSendTimeLimit(5 * 1000)  // 메시지 전송 제한 시간: 5초
+                .setSendBufferSizeLimit(2048 * 1024)  // 버퍼 크기 제한: 1mb
+                .setSendTimeLimit(20 * 1000)  // 메시지 전송 제한 시간: 20초
                 .setTimeToFirstMessage(10 * 1000)  // 첫 메시지 수신 대기 시간: 10초
                 .addDecoratorFactory(webSocketHandlerDecoratorFactory()); //웹소켓 핸들러 데코레이터 추가 -> 웹소켓 생명주기 주요 이벤트 추적
+    }
+
+
+    @Bean
+    public ThreadPoolTaskExecutor webSocketTaskExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(50);
+        executor.setMaxPoolSize(100);
+        executor.setQueueCapacity(200);
+        executor.setKeepAliveSeconds(120);
+        executor.setThreadNamePrefix("websocket-");
+        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+        executor.initialize();
+        return executor;
     }
 
     /**
@@ -89,12 +104,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
         registration.interceptors(stompHandler);
-        log.debug("stomp handler 인터셉터 등록 완료");
-        registration
-                .taskExecutor()
-                .corePoolSize(5) //기본 작업 스레드 5개
-                .maxPoolSize(20) //최대 20개까지 증가가능
-                .queueCapacity(50); //대기열 50개
+        registration.taskExecutor(webSocketTaskExecutor());
     }
 
     @Bean

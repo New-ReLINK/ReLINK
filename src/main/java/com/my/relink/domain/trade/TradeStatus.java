@@ -5,6 +5,7 @@ import com.my.relink.ex.ErrorCode;
 import lombok.Getter;
 
 import java.util.Arrays;
+import java.util.List;
 
 @Getter
 public enum TradeStatus {
@@ -29,5 +30,9 @@ public enum TradeStatus {
                 .filter(tradeStatus -> tradeStatus.getMessage().equals(message))
                 .findFirst()
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_STATUS_NOT_FOUND));
+    }
+
+    public static Boolean isChatAccessStatus(TradeStatus tradeStatus){
+        return List.of(EXCHANGED, CANCELED, UNAVAILABLE).contains(tradeStatus);
     }
 }

@@ -1,5 +1,6 @@
 package com.my.relink.chat.service;
 
+import com.my.relink.chat.aop.metric.TimeMetric;
 import com.my.relink.chat.controller.dto.request.ChatImageReqDto;
 import com.my.relink.chat.controller.dto.request.ChatMessageReqDto;
 import com.my.relink.chat.controller.dto.response.ChatImageRespDto;
@@ -13,6 +14,7 @@ import com.my.relink.domain.message.Message;
 import com.my.relink.domain.message.repository.MessageRepository;
 import com.my.relink.domain.notification.chat.ChatStatus;
 import com.my.relink.domain.trade.Trade;
+import com.my.relink.domain.trade.repository.dto.TradeWithOwnerItemNameDto;
 import com.my.relink.domain.user.User;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
@@ -20,13 +22,20 @@ import com.my.relink.service.TradeService;
 import com.my.relink.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Clock;
+import java.time.LocalDateTime;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 @Slf4j
+@EnableAsync
 public class ChatService {
 
     private final MessageRepository messageRepository;
@@ -35,6 +44,8 @@ public class ChatService {
     private final S3Service s3Service;
     private final ImageRepository imageRepository;
     private final NotificationPublisherService notificationPublisherService;
+    private final Clock clock;
+
 
     @Transactional
     public ChatImageRespDto saveImageForChat(Long tradeId, ChatImageReqDto chatImageReqDto) {
@@ -69,16 +80,43 @@ public class ChatService {
         }
     }
 
+    @Async
+    public CompletableFuture<Void> sendNotificationAsync(
+            Long senderId,
+            String content,
+            String senderNickname,
+            String itemName,
+            ChatStatus status) {
+        return CompletableFuture.runAsync(() ->
+                notificationPublisherService.crateChatNotification(
+                        senderId, content, senderNickname, itemName, status
+                )
+        );
+    }
+
+
+    @Async
+    public CompletableFuture<Void> saveMessageAsync(Message message){
+        return CompletableFuture.runAsync(() -> {
+            messageRepository.save(message);
+        });
+    }
+
+
+    //메시지 저장 비동기 처리
     @Transactional
+    @TimeMetric
     public ChatMessageRespDto saveMessage(Long tradeId, ChatMessageReqDto chatMessageReqDto, Long senderId) {
+        LocalDateTime messageTime = LocalDateTime.now(clock);
         User sender = userService.findByIdOrFail(senderId);
-        Trade trade = tradeService.findByIdWithOwnerItemOrFail(tradeId);
-        Message message = messageRepository.save(chatMessageReqDto.toEntity(trade, sender));
-        notificationPublisherService.crateChatNotification(
+        TradeWithOwnerItemNameDto tradeInfo = tradeService.findTradeWithOwnerItemName(tradeId);
+        Message message = chatMessageReqDto.toEntityWithCreateTime(tradeInfo.getTrade(), sender, messageTime);
+        saveMessageAsync(message);
+        sendNotificationAsync(
                 senderId,
-                message.getContent(),
+                chatMessageReqDto.getContent(),
                 sender.getNickname(),
-                trade.getOwnerExchangeItem().getName(),
+                tradeInfo.getItemName(),
                 ChatStatus.NEW_CHAT
         );
         return new ChatMessageRespDto(message);

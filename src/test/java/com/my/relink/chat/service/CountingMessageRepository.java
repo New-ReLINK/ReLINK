@@ -3,17 +3,21 @@ package com.my.relink.chat.service;
 import com.my.relink.domain.message.Message;
 import com.my.relink.domain.message.repository.MessageRepository;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.query.FluentQuery;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
-
 
 public class CountingMessageRepository implements MessageRepository {
 
@@ -25,6 +29,14 @@ public class CountingMessageRepository implements MessageRepository {
         this.delegate = delegate;
         this.savedMessageCount = new AtomicInteger(0);
         this.failedSaveCount = new AtomicInteger(0);
+    }
+
+    public static class MessageSavedEvent {
+        private final Message message;
+
+        public MessageSavedEvent(Message message) {
+            this.message = message;
+        }
     }
 
     @Override
@@ -39,12 +51,19 @@ public class CountingMessageRepository implements MessageRepository {
         }
     }
 
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void afterCommit(MessageSavedEvent event){
+        savedMessageCount.incrementAndGet();
+    }
+
+
+
     @Override
     public void deleteMessage(Long tradeId) {
     }
 
     @Override
-    public List<Message> findMessagesBeforeCursor(Long tradeId, Long cursor, Pageable pageable) {
+    public List<Message> findMessagesBeforeCursor(Long tradeId, LocalDateTime cursor, Pageable pageable) {
         return null;
     }
 

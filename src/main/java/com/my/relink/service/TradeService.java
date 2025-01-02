@@ -12,6 +12,7 @@ import com.my.relink.domain.point.pointHistory.repository.PointHistoryRepository
 import com.my.relink.domain.trade.Trade;
 import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.domain.trade.repository.TradeRepository;
+import com.my.relink.domain.trade.repository.dto.TradeWithOwnerItemNameDto;
 import com.my.relink.domain.user.Address;
 import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.repository.UserRepository;
@@ -19,6 +20,7 @@ import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import com.my.relink.util.DateTimeUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -63,6 +65,13 @@ public class TradeService {
 
 
     public Trade findByIdOrFail(Long tradeId) {
+        return tradeRepository.findById(tradeId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
+    }
+
+
+    @Cacheable(value = "tradeStatus", key = "#tradeId")
+    public Trade findByIdOrFailWhenSend(Long tradeId) {
         return tradeRepository.findById(tradeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
     }
@@ -394,6 +403,12 @@ public class TradeService {
                 .build();
         Trade savedTrade = tradeRepository.save(trade);
         return  new TradeIdRespDto(savedTrade.getId());
+    }
+
+    @Cacheable(value = "tradeInfo", key = "#tradeId")
+    public TradeWithOwnerItemNameDto findTradeWithOwnerItemName(Long tradeId) {
+        return tradeRepository.findTradeWithOwnerItemNameById(tradeId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
     }
 }
 

@@ -9,6 +9,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 @Service
@@ -21,6 +25,7 @@ public class MessageService {
     private final DateTimeUtil dateTimeUtil;
     private static final Long DEFAULT_CURSOR = Long.MAX_VALUE;
     private static final int DEFAULT_PAGE = 0;
+    private final Clock clock;
 
 
     /**
@@ -33,11 +38,11 @@ public class MessageService {
      */
     public MessageRespDto getChatRoomMessages(Long tradeId, int size, Long cursor) {
         tradeService.findByIdOrFail(tradeId);
-        cursor = getInitialCursor(cursor);
+        LocalDateTime timestampCursor = getInitialCursor(cursor);
 
         List<Message> messageList = messageRepository.findMessagesBeforeCursor(
                 tradeId,
-                cursor,
+                timestampCursor,
                 PageRequest.of(DEFAULT_PAGE, size + 1)
         );
         Long nextCursor = getNextCursor(messageList, size);
@@ -47,14 +52,22 @@ public class MessageService {
     }
 
     private Long getNextCursor(List<Message> messageList, int size) {
-        return messageList.size() > size? messageList.get(size - 1).getId() : null;
+        if (messageList.size() <= size) {
+            return null;
+        }
+        return messageList.get(size).getMessageTime()
+                .atZone(clock.getZone())
+                .toInstant()
+                .toEpochMilli();
     }
 
     private List<Message> limitMessages(List<Message> messages, int size) {
         return messages.size() > size ? messages.subList(0, size) : messages;
     }
 
-    private Long getInitialCursor(Long cursor) {
-        return (cursor == null || cursor == 0) ? DEFAULT_CURSOR : cursor;
+    private LocalDateTime getInitialCursor(Long cursor) {
+        return cursor == null ?
+                LocalDateTime.now(clock) :
+                LocalDateTime.ofInstant(Instant.ofEpochMilli(cursor), clock.getZone());
     }
 }
