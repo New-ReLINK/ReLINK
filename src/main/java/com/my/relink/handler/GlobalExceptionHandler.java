@@ -140,22 +140,16 @@ public class GlobalExceptionHandler {
         HttpStatus status;
         if (e instanceof TossPaymentBadRequestException) {
             status = HttpStatus.BAD_REQUEST;
-            //return HttpStatus.BAD_REQUEST;
         } else if (e instanceof TossPaymentUnauthorizedException) {
             status = HttpStatus.UNAUTHORIZED;
-            //return HttpStatus.UNAUTHORIZED;
         } else if (e instanceof TossPaymentForbiddenException) {
             status = HttpStatus.FORBIDDEN;
-            //return HttpStatus.FORBIDDEN;
         } else if (e instanceof TossPaymentNotFoundException) {
             status = HttpStatus.NOT_FOUND;
-            //return HttpStatus.NOT_FOUND;
         } else if (e instanceof TossPaymentServerException) {
             status = HttpStatus.INTERNAL_SERVER_ERROR;
-            //return HttpStatus.INTERNAL_SERVER_ERROR;
         } else {
             status = HttpStatus.INTERNAL_SERVER_ERROR;
-            //return HttpStatus.INTERNAL_SERVER_ERROR;
         }
 
         if(status.is5xxServerError()){
