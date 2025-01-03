@@ -36,7 +36,7 @@ public class Review extends BaseEntity {
     private User writer;
 
     @Enumerated(EnumType.STRING)
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "trade_review",
             joinColumns = @JoinColumn(name = "review_id"))
     private List<TradeReview> tradeReview;
