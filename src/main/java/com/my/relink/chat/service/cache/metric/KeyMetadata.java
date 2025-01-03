@@ -1,4 +1,4 @@
-package com.my.relink.chat.service.cache;
+package com.my.relink.chat.service.cache.metric;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import lombok.AllArgsConstructor;

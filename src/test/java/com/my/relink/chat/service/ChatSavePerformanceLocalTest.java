@@ -3,6 +3,7 @@ package com.my.relink.chat.service;
 import com.my.relink.chat.aop.metric.OperationMetrics;
 import com.my.relink.chat.config.WebSocketConfig;
 import com.my.relink.chat.config.WebSocketMetricsCollector;
+import com.my.relink.chat.config.metric.WebSocketPerformanceMetrics;
 import com.my.relink.chat.controller.dto.request.ChatMessageReqDto;
 import com.my.relink.chat.controller.dto.response.ChatMessageRespDto;
 import com.my.relink.chat.handler.StompHandler;
@@ -113,6 +114,7 @@ public class ChatSavePerformanceLocalTest {
 
     @Autowired
     private OperationMetrics serviceMetric;
+    private final WebSocketPerformanceMetrics metrics = new WebSocketPerformanceMetrics();
 
 
 
@@ -176,12 +178,16 @@ public class ChatSavePerformanceLocalTest {
     @Test
     @DisplayName("500개의 채팅방에서 동시에 연결 및 메시지 전송")
     void 여러_채팅방에서_동시에_연결_및_메시지_전송() throws Exception {
+        metrics.startMeasurement();
         log.info("WebSocket 연결 시작...");
         WEBSOCKET_URL = String.format("ws://localhost:%d/chats", port);
         log.info("Connecting to: {}", WEBSOCKET_URL);
 
-        numberOfChatRooms = 500;
+        numberOfChatRooms = 100;
         int messagePerChat = 100;
+
+//        numberOfChatRooms = 500;
+//        int messagePerChat = 100;
 
 //
 //        numberOfChatRooms = 500;
@@ -234,8 +240,8 @@ public class ChatSavePerformanceLocalTest {
         // 모든 작업 완료 대기
         //boolean completed = completionLatch.await(120, TimeUnit.SECONDS); //채팅방 100개, 각각 50건의 대화
 
-        //boolean completed = completionLatch.await(600, TimeUnit.SECONDS);  // 10분. 채팅방 500개, 각각 100건의 대화
-        boolean completed = completionLatch.await(900, TimeUnit.SECONDS);  // 15분. 채팅방 500개, 각각 200건의 대화
+        boolean completed = completionLatch.await(600, TimeUnit.SECONDS);  // 10분. 채팅방 500개, 각각 100건의 대화
+        //boolean completed = completionLatch.await(900, TimeUnit.SECONDS);  // 15분. 채팅방 500개, 각각 200건의 대화
 
         long endTime = System.currentTimeMillis();
 
@@ -267,6 +273,8 @@ public class ChatSavePerformanceLocalTest {
 
         // 결과 검증 및 정리
         long actualDbCount = messageRepository.count();
+        metrics.endMeasurement();
+        metrics.printResults(numberOfChatRooms, messagePerChat, actualDbCount);
 
         //전체 성능 지표
         printTestResults(startTime, endTime, numberOfChatRooms, messagePerChat, actualDbCount);

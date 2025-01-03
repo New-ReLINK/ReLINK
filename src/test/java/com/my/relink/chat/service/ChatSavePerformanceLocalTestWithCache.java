@@ -8,7 +8,7 @@ import com.my.relink.chat.controller.dto.response.ChatMessageRespDto;
 import com.my.relink.chat.handler.StompHandler;
 import com.my.relink.chat.handler.WebSocketHeader;
 import com.my.relink.chat.service.cache.ChatCacheService;
-import com.my.relink.chat.service.cache.EnhancedPerformanceMetrics;
+import com.my.relink.chat.service.cache.metric.EnhancedPerformanceMetrics;
 import com.my.relink.config.cache.RedisConfig;
 import com.my.relink.config.security.AuthUser;
 import com.my.relink.config.security.jwt.JwtProvider;

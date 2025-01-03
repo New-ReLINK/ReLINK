@@ -1,4 +1,4 @@
-package com.my.relink.chat.config.dto;
+package com.my.relink.chat.config.metric;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
