@@ -33,6 +33,6 @@ public enum TradeStatus {
     }
 
     public static Boolean isChatAccessStatus(TradeStatus tradeStatus){
-        return List.of(EXCHANGED, CANCELED, UNAVAILABLE).contains(tradeStatus);
+        return List.of(AVAILABLE, IN_EXCHANGE, IN_DELIVERY).contains(tradeStatus);
     }
 }

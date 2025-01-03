@@ -24,15 +24,18 @@ public class TradeCacheEvictionAspect {
     private final CacheManager cacheManager;
     private final TradeService tradeService;
 
-    @CacheEvict(value = "tradeStatus", key = "#target.getId()")
     @AfterReturning(
-            value = "execution(* com.my.relink.domain.trade.Trade.updateTradeStatus(..)) && args(newStatus)",
+            value = "@annotation(com.my.relink.annotation.TradeStatusCacheEvict) && args(newStatus)",
             argNames = "joinPoint,newStatus"
     )
     public void evictTradeStatusCache(JoinPoint joinPoint, TradeStatus newStatus) {
         if(!TradeStatus.isChatAccessStatus(newStatus)){
             Trade trade = (Trade) joinPoint.getTarget();
-            log.debug("TradeStatus 캐시 무효화 - tradeId: {}, newStatus: {}", trade.getId(), newStatus);
+            Cache cache = cacheManager.getCache("tradeStatus");
+            if(cache != null){
+                cache.evict(trade.getId());
+                log.debug("TradeStatus 캐시 무효화 - tradeId: {}, newStatus: {}", trade.getId(), newStatus);
+            }
         }
     }
 

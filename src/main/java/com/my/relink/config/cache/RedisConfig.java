@@ -14,7 +14,7 @@ import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSeriali
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Configuration
-@Profile("local")
+@Profile("local-1")
 public class RedisConfig {
     @Value("${spring.data.redis.host}")
     private String host;

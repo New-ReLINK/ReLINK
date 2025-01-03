@@ -203,7 +203,7 @@ public class StompHandler implements ChannelInterceptor {
      */
     private void validateTradeStatus(TradeStatus tradeStatus) {
         log.info("거래 상태 검증: {}", tradeStatus);
-        if (TradeStatus.isChatAccessStatus(tradeStatus)) {
+        if (!TradeStatus.isChatAccessStatus(tradeStatus)) {
             log.debug("더 이상 채팅 세션을 제공하지 않는 거래 채팅방에 접근 시도 - tradeStatus : {}", tradeStatus);
             throw new BusinessException(ErrorCode.CHATROOM_ACCESS_DENIED);
         }

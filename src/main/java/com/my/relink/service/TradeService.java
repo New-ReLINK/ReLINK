@@ -23,6 +23,7 @@ import com.my.relink.util.DateTimeUtil;
 import com.my.relink.util.MetricConstants;
 import io.micrometer.core.annotation.Timed;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -100,6 +101,7 @@ public class TradeService {
     }
 
     @Transactional
+    @CacheEvict(value = "tradeStatus", key = "#tradeId")
     public TradeRequestRespDto requestTrade(Long tradeId, AuthUser authUser) {
 
         User currentUser = userRepository.findById(authUser.getId())
@@ -146,6 +148,7 @@ public class TradeService {
     }
 
     @Transactional
+    @CacheEvict(value = "tradeStatus", key = "#tradeId")
     public void cancelTradeRequest(Long tradeId, AuthUser authUser) {
 
         User currentUser = userRepository.findById(authUser.getId())
@@ -216,6 +219,7 @@ public class TradeService {
     }
 
     @Transactional
+    @CacheEvict(value = "tradeStatus", key = "#tradeId")
     public TradeCompleteRespDto completeTrade(Long tradeId, AuthUser authUser) {
         User currentUser = userRepository.findById(authUser.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
@@ -250,6 +254,7 @@ public class TradeService {
     }
 
     @Transactional
+    @CacheEvict(value = "tradeStatus", key = "#tradeId")
     public void getExchangeItemTrackingNumber(Long tradeId, TrackingNumberReqDto reqDto, AuthUser authUser) {
         User currentUser = userRepository.findById(authUser.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
@@ -326,6 +331,7 @@ public class TradeService {
     }
 
     @Transactional
+    @CacheEvict(value = "tradeStatus", key = "#tradeId")
     public TradeCancelRespDto cancelTrade(Long tradeId, TradeCancelReqDto reqDto, AuthUser authUser) {
         User currentUser = userRepository.findById(authUser.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));

@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 @Transactional(readOnly = true)
-@Profile("local")
+@Profile("local-1")
 public class ChatCacheService {
 
     private final MessageRepository messageRepository;
