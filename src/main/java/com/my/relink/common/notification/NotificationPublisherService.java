@@ -9,8 +9,6 @@ import com.my.relink.domain.notification.donation.repository.DonationNotificatio
 import com.my.relink.domain.notification.exchange.ExchangeNotification;
 import com.my.relink.domain.notification.exchange.repository.ExchangeNotificationRepository;
 import com.my.relink.domain.trade.TradeStatus;
-import com.my.relink.ex.BusinessException;
-import com.my.relink.ex.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;

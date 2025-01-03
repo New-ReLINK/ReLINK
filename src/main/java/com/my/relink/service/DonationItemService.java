@@ -1,5 +1,6 @@
 package com.my.relink.service;
 
+import com.my.relink.common.notification.NotificationPublisherService;
 import com.my.relink.config.security.AuthUser;
 import com.my.relink.controller.donation.dto.PagingInfo;
 import com.my.relink.controller.donation.dto.req.DonationItemRejectReqDto;
@@ -38,6 +39,7 @@ public class DonationItemService {
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
     private final ImageService imageService;
+    private final NotificationPublisherService notificationPublisherService;
 
     public DonationItemIdRespDto createDonationItem(DonationItemReqDto request, AuthUser authUser) {
         User user = userRepository.findById(authUser.getId())
@@ -106,6 +108,12 @@ public class DonationItemService {
 
         RejectedReason rejectedReason = donationItem.getRejectedReason();
 
+        notificationPublisherService.createDonationNotification(
+                userId,
+                donationItem.getName(),
+                DonationStatus.INSPECTION_REJECTED
+        );
+
         return DonationItemRejectionRespDto.fromEntity(donationItem, imageUrl, rejectedReason);
     }
 
@@ -118,6 +126,12 @@ public class DonationItemService {
 
         String imageUrl = imageService.getDonationItemThumbnailUrl(EntityType.DONATION_ITEM, itemId);
         String certificateUrl = imageService.getDonationItemThumbnailUrl(EntityType.DONATION_CERTIFICATION, itemId);
+
+        notificationPublisherService.createDonationNotification(
+                userId,
+                donationItem.getName(),
+                DonationStatus.DONATION_COMPLETED
+        );
 
         return DonationCompleteItemDetailRespDto.fromEntity(donationItem, imageUrl, certificateUrl);
     }
@@ -162,6 +176,12 @@ public class DonationItemService {
         donationItem.updateStatus(request.getDisposal());
 
         DonationItem savedItem = donationItemRepository.save(donationItem);
+
+        notificationPublisherService.createDonationNotification(
+                userId,
+                donationItem.getName(),
+                DonationStatus.INSPECTION_REJECTED
+        );
 
         return new DonationItemIdRespDto(savedItem.getId());
     }
