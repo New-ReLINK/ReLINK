@@ -1,10 +1,13 @@
 package com.my.relink.chat.config;
 
+import com.my.relink.chat.config.metric.TaskMetric;
+import com.my.relink.chat.config.metric.WebSocketMetricsHolder;
 import com.my.relink.chat.handler.StompHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.TaskDecorator;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.scheduling.TaskScheduler;
@@ -22,6 +25,7 @@ import org.springframework.web.socket.handler.WebSocketHandlerDecoratorFactory;
 import java.io.IOException;
 import java.nio.channels.ClosedChannelException;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 @Configuration
 @EnableWebSocketMessageBroker //STOMP 활성화
@@ -30,6 +34,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final StompHandler stompHandler;
+    private final WebSocketMetricsHolder metricsHolder;
 
     /**
      * 메시지 브로커 설정
@@ -93,8 +98,32 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         executor.setKeepAliveSeconds(120);
         executor.setThreadNamePrefix("websocket-");
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+        executor.setTaskDecorator(webSocketTaskDecorator()); //task 추적
         executor.initialize();
         return executor;
+    }
+
+    @Bean
+    public TaskDecorator webSocketTaskDecorator() {
+        return task -> {
+            long queuedTime = System.nanoTime();
+            return () -> {
+                long startTime = System.nanoTime();
+                try {
+                    task.run();
+                } finally {
+                    long completionTime = System.nanoTime();
+                    TaskMetric metric = new TaskMetric(
+                            queuedTime,
+                            startTime,
+                            completionTime,
+                            TimeUnit.NANOSECONDS.toMillis(startTime - queuedTime),
+                            TimeUnit.NANOSECONDS.toMillis(completionTime - startTime)
+                    );
+                    metricsHolder.addMetric(metric);
+                }
+            };
+        };
     }
 
     /**

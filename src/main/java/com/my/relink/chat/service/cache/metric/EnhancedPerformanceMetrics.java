@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
 @Component
-@Profile("local")
+@Profile("local-1")
 public class EnhancedPerformanceMetrics {
     private final Map<String, List<Long>> redisWriteLatencies = new ConcurrentHashMap<>();
     private final Map<String, List<Long>> redisReadLatencies = new ConcurrentHashMap<>();
