@@ -127,9 +127,8 @@ public class StompHandler implements ChannelInterceptor {
 
         if(destination != null && destination.startsWith("/app/chats")){
             Long tradeId = extractTradeIdFromSendPath(destination);
-            Trade trade = tradeService.findByIdOrFailWhenSend(tradeId);
-            //Trade trade = tradeService.findByIdOrFail(tradeId);
-            validateTradeStatus(trade.getTradeStatus());
+            TradeStatus tradeStatus = tradeService.findByIdOrFailWhenSend(tradeId);
+            validateTradeStatus(tradeStatus);
         }
     }
 
