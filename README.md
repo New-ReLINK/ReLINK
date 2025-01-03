@@ -30,6 +30,7 @@
 > 단순한 중고거래 플랫폼을 넘어, 사회적 가치를 창출하는 혁신적인 서비스로 자리매김하고자 합니다
 >
 > ReLINK는 단순히 물건과 물건을 연결하는 것이 아닌, 사람과 사람, 그리고 사회적 가치를 연결하는 새로운 플랫폼이 되기를 희망합니다
+>
 
 <br><br>
 
@@ -167,7 +168,7 @@
 |                            BE                            |                            BE                            |                           BE                            |                            BE                             |                            BE                            |
 |:--------------------------------------------------------:|:--------------------------------------------------------:|:-------------------------------------------------------:|:---------------------------------------------------------:|:--------------------------------------------------------:|
 | <img src="./images/yewoon.png" width="150" height="120"> | <img src="./images/gunwoo.png" width="140" height="120"> | <img src="./images/hanbi.png" width="150" height="130"> | <img src="./images/euijeon.png" width="170" height="130"> | <img src="./images/siyeon.png" width="190" height="140"> |
-|            [예원](https://github.com/linirini)             |        [devhoya97](https://github.com/devhoya97)         |     [BurningFalls](https://github.com/BurningFalls)     |            [Ho-Tea](https://github.com/Ho-Tea)            |           [Ho-Tea](https://github.com/Ho-Tea)            |
+|      [예원](https://github.com/yaewon0411)                 |                [건우](https://github.com/dbrjsdn2051)      |           [한비](https://github.com/TIP-Santa)            |            [의정](https://github.com/GoUiJeong)             |            [시연](https://github.com/siyeon02)             |
 
 ## 🏆 Ground Rules
 
