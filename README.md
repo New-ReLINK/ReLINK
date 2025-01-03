@@ -167,8 +167,10 @@
 
 |                            BE                            |                            BE                            |                           BE                            |                            BE                             |                            BE                            |
 |:--------------------------------------------------------:|:--------------------------------------------------------:|:-------------------------------------------------------:|:---------------------------------------------------------:|:--------------------------------------------------------:|
-| <img src="./images/yewoon.png" width="150" height="120"> | <img src="./images/gunwoo.png" width="140" height="120"> | <img src="./images/hanbi.png" width="150" height="130"> | <img src="./images/euijeon.png" width="170" height="130"> | <img src="./images/siyeon.png" width="190" height="140"> |
+| <img src="./images/yewoon.png" width="120" height="130"> | <img src="./images/gunwoo.png" width="120" height="130"> | <img src="./images/hanbi.png" width="120" height="130"> | <img src="./images/euijeon.png" width="120" height="130"> | <img src="./images/siyeon.png" width="120" height="130"> |
 |      [예원](https://github.com/yaewon0411)                 |                [건우](https://github.com/dbrjsdn2051)      |           [한비](https://github.com/TIP-Santa)            |            [의정](https://github.com/GoUiJeong)             |            [시연](https://github.com/siyeon02)             |
+
+<br><br>
 
 ## 🏆 Ground Rules
 
@@ -180,6 +182,8 @@
 | 10:10 - 10:30 | 🌅 모닝 데일리 스크럼 <br> - 오늘 할 일 공유 <br> - 이전 날 공유되지 못한 이슈 안내 |
 | 12:00 - 14:00 | 🍱 점심 식사 (슬랙으로 공유)                                       |
 | 20:00 - 20:15 | 🌙 회고 스크럼 <br> - 오늘 한 일 공유 <br> - 이슈 공유                  |
+
+<br>
 
 ### 📝 Task Management Rules
 
@@ -200,5 +204,7 @@
 5. ✨ **피드백 문화**
     - 서로의 코드를 존중해요
 
+
+<br><br><br><br><br><br><br><br><br><br><br>
 ---
 © 2025 Staccato. All rights reserved.
