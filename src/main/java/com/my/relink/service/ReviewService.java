@@ -41,6 +41,7 @@ public class ReviewService {
         return new ReviewDetailsRespDto(repositoryDto);
     }
 
+    @Transactional
     public PageResponse<ReviewListRespDto> findAllReviewByWriterUserId(Long userId, Pageable pageable) {
         Page<ReviewListRepositoryDto> allReviews = reviewRepository.findAllReviews(userId, pageable);
         Page<ReviewListRespDto> respDtos = allReviews.map(ReviewListRespDto::new);

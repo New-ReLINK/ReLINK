@@ -10,6 +10,7 @@ import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.stereotype.Repository;
@@ -84,6 +85,18 @@ public class CustomReviewRepositoryImpl implements CustomReviewRepository {
 
     @Override
     public Page<ReviewListRepositoryDto> findAllReviews(Long userId, Pageable pageable) {
+        List<Long> reviews = jpaQueryFactory.select(review.id)
+                .from(review)
+                .where(review.writer.id.eq(userId))
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .orderBy(review.createdAt.desc())
+                .fetch();
+
+        if (reviews.isEmpty()) {
+            return new PageImpl<>(new ArrayList<>(), pageable, 0);
+        }
+
         List<ReviewListWithOutTradeStatusRepositoryDto> reviewList = jpaQueryFactory.select(
                         Projections.constructor(ReviewListWithOutTradeStatusRepositoryDto.class,
                                 review.id,
@@ -95,9 +108,7 @@ public class CustomReviewRepositoryImpl implements CustomReviewRepository {
                 )
                 .from(review)
                 .leftJoin(review.exchangeItem, exchangeItem)
-                .where(review.writer.id.eq(userId))
-                .offset(pageable.getOffset())
-                .limit(pageable.getPageSize())
+                .where(review.writer.id.in(reviews))
                 .orderBy(review.createdAt.desc())
                 .fetch();
 
@@ -117,7 +128,8 @@ public class CustomReviewRepositoryImpl implements CustomReviewRepository {
         return PageableExecutionUtils.getPage(content, pageable, totalCount::fetchOne);
     }
 
-    private Map<Long, List<TradeReview>> getTradeReviews(List<Long> reviewIdList) {
+
+    protected Map<Long, List<TradeReview>> getTradeReviews(List<Long> reviewIdList) {
         List<Review> tradeReview = jpaQueryFactory.selectFrom(review)
                 .where(review.id.in(reviewIdList))
                 .orderBy(review.createdAt.desc())
