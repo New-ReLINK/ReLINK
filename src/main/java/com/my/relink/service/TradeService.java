@@ -77,9 +77,10 @@ public class TradeService {
 
 
     @Cacheable(value = "tradeStatus", key = "#tradeId")
-    public Trade findByIdOrFailWhenSend(Long tradeId) {
+    public TradeStatus findByIdOrFailWhenSend(Long tradeId) {
         return tradeRepository.findById(tradeId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
+                .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND))
+                .getTradeStatus();
     }
 
     public Trade findByIdWithUsersOrFail(Long tradeId) {
