@@ -66,14 +66,14 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body(ApiResult.success(null));
     }
 
-    @GetMapping("/users/check-nickname")
+    @PostMapping("/users/check-nickname")
     public ResponseEntity<ApiResult<UserValidNicknameRespDto>> duplicatedNickname(
             @Valid @RequestBody UserValidNicknameRepDto dto
     ) {
         return ResponseEntity.status(HttpStatus.OK).body(ApiResult.success(userService.validNickname(dto)));
     }
 
-    @GetMapping("/users/check-email")
+    @PostMapping("/users/check-email")
     public ResponseEntity<ApiResult<UserValidEmailRespDto>> duplicatedEmail(@Valid @RequestBody UserValidEmailReqDto dto) {
         return ResponseEntity.status(HttpStatus.OK).body(ApiResult.success(userService.validEmail(dto)));
     }
