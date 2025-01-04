@@ -60,6 +60,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import static com.my.relink.chat.handler.metric.OperationMetrics.*;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -199,7 +200,7 @@ public class ChatSavePerformanceLocalTestWithCache{
 //        int messagePerChat = 200;
 
         // 전체 작업을 관리할 스레드 풀
-        int threadPoolSize = (int) (200 * 0.35); //50으로 바꿀것..
+        int threadPoolSize = 50;
         ThreadPoolExecutor executorService = (ThreadPoolExecutor) Executors.newFixedThreadPool(threadPoolSize);
         executorService.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
 
@@ -553,7 +554,7 @@ public class ChatSavePerformanceLocalTestWithCache{
         }
 
         log.info("\n=== StompHandler Performance ===");
-        Map<String, StompHandler.MetricsDTO> metrics = stompHandler.getMetrics();
+        Map<String, MetricsDTO> metrics = stompHandler.getMetrics();
 
         metrics.forEach((operation, metric) -> {
             log.info("{} Operation:", operation);

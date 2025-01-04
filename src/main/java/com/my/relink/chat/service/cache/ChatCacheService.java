@@ -71,7 +71,7 @@ public class ChatCacheService {
     }
 
     @Transactional
-    //@TimeMetric
+    @TimeMetric
     public ChatMessageRespDto saveMessage(Long tradeId, ChatMessageReqDto dto, Long senderId) {
         LocalDateTime messageTime = LocalDateTime.now(clock);
         User sender = userService.findByIdOrFail(senderId);
@@ -123,111 +123,111 @@ public class ChatCacheService {
 
         try{
             long keysStartTime = System.currentTimeMillis();
-//            Set<String> chatKeys = redisTemplate.keys(CHAT_TRADE_PREFIX);
-            Set<String> chatKeys = new HashSet<>();
-            ScanOptions scanOptions = ScanOptions.scanOptions().match(CHAT_TRADE_PREFIX).build();
-            try (Cursor<String> cursor = redisTemplate.scan(scanOptions)) {
-                while (cursor.hasNext()) {
-                    chatKeys.add(cursor.next());
-                }
-            }
-
-            metrics.recordRedisRead("getRedisKeys", System.currentTimeMillis() - keysStartTime);
-
-            if (chatKeys.isEmpty()) {
-                return expiringSoonMessages;
-            }
-
-            log.info("검색된 채팅방 수: {}", chatKeys != null ? chatKeys.size() : 0);
-
-            long metadataStartTime = System.currentTimeMillis();
-            Map<String, KeyMetadata> keyMetadataMap = new HashMap<>();
-
-            List<Object> pipelinedResults = redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
-                for (String key : chatKeys) {
-                    connection.ttl(key.getBytes());
-                    connection.zCard(key.getBytes());
-                }
-                return null;
-            });
-
-            for (int i = 0; i < chatKeys.size(); i++) {
-                String key = new ArrayList<>(chatKeys).get(i);
-                Long ttl = (Long) pipelinedResults.get(i * 2);
-                Long size = (Long) pipelinedResults.get(i * 2 + 1);
-                keyMetadataMap.put(key, new KeyMetadata(ttl, size));
-            }
-            metrics.recordRedisRead("getMetadata", System.currentTimeMillis() - metadataStartTime);
-
-            long messageStartTime = System.currentTimeMillis();
-            List<String> keysToFetch = keyMetadataMap.entrySet().parallelStream()
-                    .filter(entry -> {
-                        KeyMetadata metadata = entry.getValue();
-                        return (metadata.getTtl() != null && metadata.getTtl() < 5) ||
-                                (metadata.getSize() != null && metadata.getSize() >= MAX_QUEUE_SIZE);
-                    })
-                    .map(Map.Entry::getKey)
-                    .toList();
-
-            if (!keysToFetch.isEmpty()) {
-                List<Object> messageResults = redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
-                    for (String key : keysToFetch) {
-                        byte[] keyBytes = key.getBytes();
-                        connection.zRange(keyBytes, 0, -1);
-                    }
-                    return null;
-                }, redisTemplate.getValueSerializer());
-
-                for (int i = 0; i < keysToFetch.size(); i++) {
-                    String key = keysToFetch.get(i);
-                    Set<ChatMessage> messages = (Set<ChatMessage>) messageResults.get(i);
-                    if (messages != null && !messages.isEmpty()) {
-                        expiringSoonMessages.addAll(messages);
-                        log.info("저장 대상 메시지 수: key={}, count={}", key, messages.size());
-                    }
-                }
-            }
-
-            metrics.recordRedisRead("getMessages", System.currentTimeMillis() - messageStartTime);
-            log.info("총 저장 예정 메시지 수: {}", expiringSoonMessages.size());
-
-
-                //각 채팅방 별로 만료 시간 확인 및 메시지 수집
-//            for (String key : chatKeys) {
-//                long metadataStartTime = System.currentTimeMillis();
-//
-//                boolean shouldPersist = false;
-//                Long ttl = redisTemplate.getExpire(key, TimeUnit.HOURS);
-//                Long queueSize = redisTemplate.opsForZSet().size(key);
-//
-//                metrics.recordRedisRead("getMetadata",
-//                        System.currentTimeMillis() - metadataStartTime);
-//
-//                log.info("채팅방 상태 체크: key={}, ttl={}, queueSize={}, MAX_SIZE={}",
-//                        key, ttl, queueSize, MAX_QUEUE_SIZE);
-//
-//                // TTL이 남은 시간 5분 이하 or 큐 크기가 초과된 경우
-//                if ((ttl != null && ttl < 5) || (queueSize != null && queueSize >= MAX_QUEUE_SIZE)) {
-//                    shouldPersist = true;
+            Set<String> chatKeys = redisTemplate.keys(CHAT_TRADE_PREFIX);
+//            Set<String> chatKeys = new HashSet<>();
+//            ScanOptions scanOptions = ScanOptions.scanOptions().match(CHAT_TRADE_PREFIX).build();
+//            try (Cursor<String> cursor = redisTemplate.scan(scanOptions)) {
+//                while (cursor.hasNext()) {
+//                    chatKeys.add(cursor.next());
 //                }
+//            }
 //
-//                if(shouldPersist){
-//                    // 3. 메시지 데이터 조회 성능 측정
-//                    long messageStartTime = System.currentTimeMillis();
+//            metrics.recordRedisRead("getRedisKeys", System.currentTimeMillis() - keysStartTime);
 //
-//                    Set<ChatMessage> messages = redisTemplate.opsForZSet().range(key, 0, -1);
+//            if (chatKeys.isEmpty()) {
+//                return expiringSoonMessages;
+//            }
 //
-//                    metrics.recordRedisRead("getMessages",
-//                            System.currentTimeMillis() - messageStartTime);
+//            log.info("검색된 채팅방 수: {}", chatKeys != null ? chatKeys.size() : 0);
 //
-//                    log.info("저장 대상 메시지 수: key={}, count={}", key,
-//                            messages != null ? messages.size() : 0);
-//                    if(!messages.isEmpty() && messages != null){
+//            long metadataStartTime = System.currentTimeMillis();
+//            Map<String, KeyMetadata> keyMetadataMap = new HashMap<>();
+//
+//            List<Object> pipelinedResults = redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
+//                for (String key : chatKeys) {
+//                    connection.ttl(key.getBytes());
+//                    connection.zCard(key.getBytes());
+//                }
+//                return null;
+//            });
+//
+//            for (int i = 0; i < chatKeys.size(); i++) {
+//                String key = new ArrayList<>(chatKeys).get(i);
+//                Long ttl = (Long) pipelinedResults.get(i * 2);
+//                Long size = (Long) pipelinedResults.get(i * 2 + 1);
+//                keyMetadataMap.put(key, new KeyMetadata(ttl, size));
+//            }
+//            metrics.recordRedisRead("getMetadata", System.currentTimeMillis() - metadataStartTime);
+//
+//            long messageStartTime = System.currentTimeMillis();
+//            List<String> keysToFetch = keyMetadataMap.entrySet().parallelStream()
+//                    .filter(entry -> {
+//                        KeyMetadata metadata = entry.getValue();
+//                        return (metadata.getTtl() != null && metadata.getTtl() < 5) ||
+//                                (metadata.getSize() != null && metadata.getSize() >= MAX_QUEUE_SIZE);
+//                    })
+//                    .map(Map.Entry::getKey)
+//                    .toList();
+//
+//            if (!keysToFetch.isEmpty()) {
+//                List<Object> messageResults = redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
+//                    for (String key : keysToFetch) {
+//                        byte[] keyBytes = key.getBytes();
+//                        connection.zRange(keyBytes, 0, -1);
+//                    }
+//                    return null;
+//                }, redisTemplate.getValueSerializer());
+//
+//                for (int i = 0; i < keysToFetch.size(); i++) {
+//                    String key = keysToFetch.get(i);
+//                    Set<ChatMessage> messages = (Set<ChatMessage>) messageResults.get(i);
+//                    if (messages != null && !messages.isEmpty()) {
 //                        expiringSoonMessages.addAll(messages);
+//                        log.info("저장 대상 메시지 수: key={}, count={}", key, messages.size());
 //                    }
 //                }
 //            }
+//
+//            metrics.recordRedisRead("getMessages", System.currentTimeMillis() - messageStartTime);
 //            log.info("총 저장 예정 메시지 수: {}", expiringSoonMessages.size());
+
+
+                //각 채팅방 별로 만료 시간 확인 및 메시지 수집
+            for (String key : chatKeys) {
+                long metadataStartTime = System.currentTimeMillis();
+
+                boolean shouldPersist = false;
+                Long ttl = redisTemplate.getExpire(key, TimeUnit.HOURS);
+                Long queueSize = redisTemplate.opsForZSet().size(key);
+
+                metrics.recordRedisRead("getMetadata",
+                        System.currentTimeMillis() - metadataStartTime);
+
+                log.info("채팅방 상태 체크: key={}, ttl={}, queueSize={}, MAX_SIZE={}",
+                        key, ttl, queueSize, MAX_QUEUE_SIZE);
+
+                // TTL이 남은 시간 5분 이하 or 큐 크기가 초과된 경우
+                if ((ttl != null && ttl < 5) || (queueSize != null && queueSize >= MAX_QUEUE_SIZE)) {
+                    shouldPersist = true;
+                }
+
+                if(shouldPersist){
+                    // 3. 메시지 데이터 조회 성능 측정
+                    long messageStartTime = System.currentTimeMillis();
+
+                    Set<ChatMessage> messages = redisTemplate.opsForZSet().range(key, 0, -1);
+
+                    metrics.recordRedisRead("getMessages",
+                            System.currentTimeMillis() - messageStartTime);
+
+                    log.info("저장 대상 메시지 수: key={}, count={}", key,
+                            messages != null ? messages.size() : 0);
+                    if(!messages.isEmpty() && messages != null){
+                        expiringSoonMessages.addAll(messages);
+                    }
+                }
+            }
+            log.info("총 저장 예정 메시지 수: {}", expiringSoonMessages.size());
 
         }catch (Exception e){
             log.error("메시지 수집 중 오류 발생: cause = {}", e.getMessage(), e);

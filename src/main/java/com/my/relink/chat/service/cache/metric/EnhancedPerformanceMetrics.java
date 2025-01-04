@@ -41,13 +41,8 @@ public class EnhancedPerformanceMetrics {
     public void printEnhancedMetrics() {
         log.info("\n=== Enhanced Performance Metrics ===");
 
-        // Redis Metrics
         printRedisMetrics();
-
-        // Batch Processing Metrics
         printBatchMetrics();
-
-        // Memory Usage Metrics
         //printMemoryMetrics();
     }
 

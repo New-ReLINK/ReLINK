@@ -23,7 +23,7 @@ public class WebSocketMetricsCollector {
     private long lastCompletedTasks = 0;
     private final WebSocketMetricsHolder metricsHolder;
 
-    @Scheduled(fixedRate = 1000)
+    //@Scheduled(fixedRate = 1000)
     public void logMetrics() {
         ThreadPoolExecutor tpe = webSocketTaskExecutor.getThreadPoolExecutor();
         long completedTasks = tpe.getCompletedTaskCount();

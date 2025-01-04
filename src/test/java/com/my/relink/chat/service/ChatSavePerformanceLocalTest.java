@@ -3,7 +3,6 @@ package com.my.relink.chat.service;
 import com.my.relink.chat.aop.metric.OperationMetrics;
 import com.my.relink.chat.config.WebSocketConfig;
 import com.my.relink.chat.config.WebSocketMetricsCollector;
-import com.my.relink.chat.config.metric.WebSocketPerformanceMetrics;
 import com.my.relink.chat.controller.dto.request.ChatMessageReqDto;
 import com.my.relink.chat.controller.dto.response.ChatMessageRespDto;
 import com.my.relink.chat.handler.StompHandler;
@@ -60,6 +59,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static com.my.relink.chat.handler.StompHandler.*;
+import static com.my.relink.chat.handler.metric.OperationMetrics.*;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -114,8 +114,6 @@ public class ChatSavePerformanceLocalTest {
 
     @Autowired
     private OperationMetrics serviceMetric;
-    private final WebSocketPerformanceMetrics metrics = new WebSocketPerformanceMetrics();
-
 
 
     @BeforeEach
@@ -178,23 +176,22 @@ public class ChatSavePerformanceLocalTest {
     @Test
     @DisplayName("500개의 채팅방에서 동시에 연결 및 메시지 전송")
     void 여러_채팅방에서_동시에_연결_및_메시지_전송() throws Exception {
-        metrics.startMeasurement();
         log.info("WebSocket 연결 시작...");
         WEBSOCKET_URL = String.format("ws://localhost:%d/chats", port);
         log.info("Connecting to: {}", WEBSOCKET_URL);
 
-        numberOfChatRooms = 100;
-        int messagePerChat = 100;
-
-//        numberOfChatRooms = 500;
+//        numberOfChatRooms = 100;
 //        int messagePerChat = 100;
+
+        numberOfChatRooms = 500;
+        int messagePerChat = 100;
 
 //
 //        numberOfChatRooms = 500;
 //        int messagePerChat = 200;
 
-        // 전체 작업을 관리할 스레드 풀
-        int threadPoolSize = (int) (200 * 0.35); //50으로 바꿀것..
+        //전체 작업을 관리할 스레드 풀
+        int threadPoolSize = 50;
         ThreadPoolExecutor executorService = (ThreadPoolExecutor) Executors.newFixedThreadPool(threadPoolSize);
         executorService.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
 
@@ -273,8 +270,6 @@ public class ChatSavePerformanceLocalTest {
 
         // 결과 검증 및 정리
         long actualDbCount = messageRepository.count();
-        metrics.endMeasurement();
-        metrics.printResults(numberOfChatRooms, messagePerChat, actualDbCount);
 
         //전체 성능 지표
         printTestResults(startTime, endTime, numberOfChatRooms, messagePerChat, actualDbCount);

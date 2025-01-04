@@ -24,20 +24,6 @@ public class TradeCacheEvictionAspect {
     private final CacheManager cacheManager;
     private final TradeService tradeService;
 
-    @AfterReturning(
-            value = "@annotation(com.my.relink.annotation.TradeStatusCacheEvict) && args(newStatus)",
-            argNames = "joinPoint,newStatus"
-    )
-    public void evictTradeStatusCache(JoinPoint joinPoint, TradeStatus newStatus) {
-        if(!TradeStatus.isChatAccessStatus(newStatus)){
-            Trade trade = (Trade) joinPoint.getTarget();
-            Cache cache = cacheManager.getCache("tradeStatus");
-            if(cache != null){
-                cache.evict(trade.getId());
-                log.debug("TradeStatus 캐시 무효화 - tradeId: {}, newStatus: {}", trade.getId(), newStatus);
-            }
-        }
-    }
 
     @AfterReturning(
             value = "execution(* com.my.relink.service.ExchangeItemService.updateExchangeItem(..)) && args(itemId)",
