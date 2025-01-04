@@ -50,46 +50,40 @@
 <br>
 
 <div align="center">
-   <div class="stack-row">
-   <img src="https://img.shields.io/badge/java-white?style=for-the-badge&logo=java&logoColor=white">
-   <br>
-   <img src="https://img.shields.io/badge/spring boot-6DB33F?style=for-the-badge&logo=spring&logoColor=white"> 
-   <img src="https://img.shields.io/badge/spring security-6DB33F?style=for-the-badge&logo=spring-security&logoColor=white">
-   <img src="https://img.shields.io/badge/junit5-25A162?style=for-the-badge&logo=junit5&logoColor=white">
-   <br>
+  <!-- Language -->
+  <img src="https://img.shields.io/badge/java-white?style=for-the-badge&logo=java&logoColor=white">
 
-   <img src="https://img.shields.io/badge/mysql-4479A1?style=for-the-badge&logo=mysql&logoColor=white">
-   <img src="https://img.shields.io/badge/jpa-02303A?style=for-the-badge&logo=jpa&logoColor=white">
-   <img src="https://img.shields.io/badge/querydsl-0769AD?style=for-the-badge&logo=query-dsl&logoColor=white">
+  <!-- Backend -->
+  <p>
+    <img src="https://img.shields.io/badge/spring boot-6DB33F?style=for-the-badge&logo=spring&logoColor=white"> 
+    <img src="https://img.shields.io/badge/spring security-6DB33F?style=for-the-badge&logo=spring-security&logoColor=white">
+    <img src="https://img.shields.io/badge/junit5-25A162?style=for-the-badge&logo=junit5&logoColor=white">
+  </p>
 
-   <br>
-   <img src="https://img.shields.io/badge/git-F05032?style=for-the-badge&logo=git&logoColor=white">
-   <img src="https://img.shields.io/badge/github-181717?style=for-the-badge&logo=github&logoColor=white">
-   <img src="https://img.shields.io/badge/github action-2088FF?style=for-the-badge&logo=githubactions&logoColor=black">
-   <img src="https://img.shields.io/badge/jenkins-D24939?style=for-the-badge&logo=jenkins&logoColor=black">
-   <br>
+  <!-- Database -->
+  <p>
+    <img src="https://img.shields.io/badge/mysql-4479A1?style=for-the-badge&logo=mysql&logoColor=white">
+    <img src="https://img.shields.io/badge/jpa-02303A?style=for-the-badge&logo=jpa&logoColor=white">
+    <img src="https://img.shields.io/badge/querydsl-0769AD?style=for-the-badge&logo=query-dsl&logoColor=white">
+  </p>
 
-   <img src="https://img.shields.io/badge/sentry-4479A1?style=for-the-badge&logo=sentry&logoColor=white">
-   <img src="https://img.shields.io/badge/rds-527FFF?style=for-the-badge&logo=amazon-rds&logoColor=white">
-   <img src="https://img.shields.io/badge/s3-569A31?style=for-the-badge&logo=amazon-s3&logoColor=white">
-   <img src="https://img.shields.io/badge/ec2-FF9900?style=for-the-badge&logo=amazon-ec2&logoColor=white">
-   <img src="https://img.shields.io/badge/open search-005EB8?style=for-the-badge&logo=opensearch&logoColor=black">
-   <br>
-   </div>
+  <!-- DevOps -->
+  <p>
+    <img src="https://img.shields.io/badge/git-F05032?style=for-the-badge&logo=git&logoColor=white">
+    <img src="https://img.shields.io/badge/github-181717?style=for-the-badge&logo=github&logoColor=white">
+    <img src="https://img.shields.io/badge/github action-2088FF?style=for-the-badge&logo=githubactions&logoColor=black">
+    <img src="https://img.shields.io/badge/jenkins-D24939?style=for-the-badge&logo=jenkins&logoColor=black">
+  </p>
+
+  <!-- Cloud & Monitoring -->
+  <p>
+    <img src="https://img.shields.io/badge/sentry-4479A1?style=for-the-badge&logo=sentry&logoColor=white">
+    <img src="https://img.shields.io/badge/rds-527FFF?style=for-the-badge&logo=amazon-rds&logoColor=white">
+    <img src="https://img.shields.io/badge/s3-569A31?style=for-the-badge&logo=amazon-s3&logoColor=white">
+    <img src="https://img.shields.io/badge/ec2-FF9900?style=for-the-badge&logo=amazon-ec2&logoColor=white">
+    <img src="https://img.shields.io/badge/open search-005EB8?style=for-the-badge&logo=opensearch&logoColor=black">
+  </p>
 </div>
-
-<style>
-.stack-row {
-    margin: 10px 0;
-}
-.stack-row img {
-    margin: 0px 1px;
-}
-</style>
-
-
-
-
 
 <br>
 
