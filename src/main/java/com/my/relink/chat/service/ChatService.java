@@ -20,6 +20,7 @@ import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import com.my.relink.service.TradeService;
 import com.my.relink.service.UserService;
+import io.sentry.Sentry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -65,6 +66,10 @@ public class ChatService {
             }
             log.error("[채팅 이미지 저장 실패] tradeId = {}, cause = {}", tradeId, e.getMessage(), e);
             handleImageFail(uploadedImageUrl, tradeId);
+            Sentry.configureScope(scope -> {
+                scope.setTag("alertType", "SERVER_ERROR");
+            });
+            Sentry.captureException(e);
             throw new BusinessException(ErrorCode.FAIL_TO_SAVE_IMAGE);
         }
     }

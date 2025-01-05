@@ -9,6 +9,7 @@ import com.my.relink.client.tosspayments.ex.unAuthorized.TossPaymentUnauthorized
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import com.my.relink.util.api.ApiResult;
+import io.sentry.Sentry;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Path;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +33,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResult<String>> handleGeneralException(Exception e){
         log.error("예기치 못한 내부 오류 발생: {}", e.getMessage(), e);
+        // Sentry로 예외 전송
+        Sentry.configureScope(scope -> {
+            scope.setTag("alertType", "GENERAL_EXCEPTION");
+        });
+        Sentry.captureException(e);
         return new ResponseEntity<>(
                 ApiResult.error(ErrorCode.UNEXPECTED_SERVER_ERROR),
                 HttpStatus.valueOf(ErrorCode.UNEXPECTED_SERVER_ERROR.getStatus())
@@ -43,6 +49,9 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ApiResult<String>> handleBusinessException(BusinessException e){
+        // Sentry로 예외 전송
+        Sentry.captureException(e);
+
         return new ResponseEntity<>(
                 ApiResult.error(e.getErrorCode()),
                 HttpStatus.valueOf(e.getErrorCode().getStatus())
@@ -55,6 +64,9 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(TossPaymentException.class)
     public ResponseEntity<ApiResult<String>> handleTossPaymentException(TossPaymentException e) {
+        // Sentry로 예외 전송
+        Sentry.captureException(e);
+
         HttpStatus status = getHttpStatusForException(e);
         return new ResponseEntity<>(
                 ApiResult.error(e.getMessage(), status.value()),
@@ -72,6 +84,9 @@ public class GlobalExceptionHandler {
         e.getBindingResult().getFieldErrors().forEach(error ->
             errorMap.put(error.getField(), error.getDefaultMessage())
         );
+        // Sentry로 예외 전송
+        Sentry.captureException(e);
+
         return new ResponseEntity<>(
                 ApiResult.error(errorMap, ErrorCode.VALIDATION_FAILED),
                 HttpStatus.valueOf(ErrorCode.VALIDATION_FAILED.getStatus())
@@ -86,6 +101,8 @@ public class GlobalExceptionHandler {
         Map<String, String> errorMap = new HashMap<>();
         e.getConstraintViolations().forEach(error ->
                 errorMap.put(extractFieldName(error.getPropertyPath()), error.getMessage()));
+        // Sentry로 예외 전송
+        Sentry.captureException(e);
         return new ResponseEntity<>(
                 ApiResult.error(errorMap, ErrorCode.VALIDATION_FAILED),
                 HttpStatus.valueOf(ErrorCode.VALIDATION_FAILED.getStatus())
@@ -97,6 +114,8 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<ApiResult<String>> handleNoResourceFoundException(NoResourceFoundException e) {
+        // Sentry로 예외 전송
+        Sentry.captureException(e);
         return new ResponseEntity<>(
                 ApiResult.error(ErrorCode.RESOURCE_NOT_FOUND),
                 HttpStatus.valueOf(ErrorCode.RESOURCE_NOT_FOUND.getStatus())
@@ -118,19 +137,26 @@ public class GlobalExceptionHandler {
     }
 
     private HttpStatus getHttpStatusForException(TossPaymentException e) {
+        HttpStatus status;
         if (e instanceof TossPaymentBadRequestException) {
-            return HttpStatus.BAD_REQUEST;
+            status = HttpStatus.BAD_REQUEST;
         } else if (e instanceof TossPaymentUnauthorizedException) {
-            return HttpStatus.UNAUTHORIZED;
+            status = HttpStatus.UNAUTHORIZED;
         } else if (e instanceof TossPaymentForbiddenException) {
-            return HttpStatus.FORBIDDEN;
+            status = HttpStatus.FORBIDDEN;
         } else if (e instanceof TossPaymentNotFoundException) {
-            return HttpStatus.NOT_FOUND;
+            status = HttpStatus.NOT_FOUND;
         } else if (e instanceof TossPaymentServerException) {
-            return HttpStatus.INTERNAL_SERVER_ERROR;
+            status = HttpStatus.INTERNAL_SERVER_ERROR;
         } else {
-            return HttpStatus.INTERNAL_SERVER_ERROR;
+            status = HttpStatus.INTERNAL_SERVER_ERROR;
         }
+
+        if(status.is5xxServerError()){
+            Sentry.configureScope(scope -> scope.setTag("alertType", "SERVER_ERROR"));
+        }
+
+        return status;
     }
 
 

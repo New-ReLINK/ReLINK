@@ -9,6 +9,7 @@ import com.my.relink.domain.user.repository.UserRepository;
 import com.my.relink.ex.ErrorCode;
 import com.my.relink.ex.SecurityFilterChainException;
 import com.my.relink.util.api.ApiResult;
+import io.sentry.Sentry;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -49,6 +50,7 @@ public class LoginAuthenticationFilter extends AbstractAuthenticationProcessingF
             );
             return this.getAuthenticationManager().authenticate(loginAuthentication);
         } catch (IOException ex) {
+            Sentry.captureException(ex);
             throw new SecurityFilterChainException(ErrorCode.JSON_PARSE_ERROR, ex);
         }
     }

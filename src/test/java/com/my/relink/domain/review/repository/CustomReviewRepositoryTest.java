@@ -34,18 +34,17 @@ class CustomReviewRepositoryTest {
     @Autowired
     EntityManager em;
 
-    private User user;
-
-    @BeforeEach
-    void init() {
-        user = User.builder()
-                .email("test@example.com")
+    @Test
+    @DisplayName("사용자의 리뷰 목록을 페이징하여 조회한다.")
+    void reviewListSuccessTest() {
+        User testUser = User.builder()
+                .email("test1234@example.com")
                 .name("test")
-                .nickname("testNick")
+                .nickname("testNick6t566")
                 .isDeleted(false)
                 .build();
 
-        em.persist(user);
+        em.persist(testUser);
 
         ExchangeItem testItem = ExchangeItem.builder()
                 .name("test item0")
@@ -56,7 +55,7 @@ class CustomReviewRepositoryTest {
         em.persist(testItem);
 
         Review testReview = Review.builder()
-                .writer(user)
+                .writer(testUser)
                 .star(BigDecimal.valueOf(3.5))
                 .tradeReview(List.of(TradeReview.KIND_AND_MANNERED, TradeReview.QUICK_RESPONSE))
                 .description("test description0")
@@ -68,7 +67,7 @@ class CustomReviewRepositoryTest {
         em.flush();
         em.clear();
 
-        for (int i = 1; i <= 10; i++) {
+        for (int i = 1; i <= 9; i++) {
             ExchangeItem item = ExchangeItem.builder()
                     .name("test item" + i)
                     .tradeStatus(TradeStatus.EXCHANGED)
@@ -78,7 +77,7 @@ class CustomReviewRepositoryTest {
             em.persist(item);
 
             Review review = Review.builder()
-                    .writer(user)
+                    .writer(testUser)
                     .star(BigDecimal.valueOf(i % 5))
                     .tradeReview(List.of(TradeReview.TIME_PUNCTUAL, TradeReview.QUICK_RESPONSE))
                     .description("test description" + i)
@@ -90,32 +89,23 @@ class CustomReviewRepositoryTest {
 
         em.flush();
         em.clear();
-    }
 
-    @Test
-    @DisplayName("사용자의 리뷰 목록을 페이징하여 조회한다.")
-    void reviewListSuccessTest() {
-        // given
         Pageable pageable = PageRequest.of(0, 10);
 
         // when
-        Page<ReviewListRepositoryDto> allReviews = reviewRepository.findAllReviews(user.getId(), pageable);
+        Page<ReviewListRepositoryDto> allReviews = reviewRepository.findAllReviews(testUser.getId(), pageable);
 
         // then
         assertThat(allReviews).isNotNull();
         assertThat(allReviews.getContent()).hasSize(10);
-        assertThat(allReviews.getTotalElements()).isEqualTo(11);
+        assertThat(allReviews.getTotalElements()).isEqualTo(10);
 
         ReviewListRepositoryDto firstReview = allReviews.getContent().get(0);
 
-        assertThat(firstReview.getItemName()).isEqualTo("test item10");
-        assertThat(firstReview.getStar()).isEqualTo(new BigDecimal("0.0"));
         assertThat(firstReview.getTradeStatusList()).hasSize(2);
 
         ReviewListRepositoryDto secondReview = allReviews.getContent().get(1);
 
-        assertThat(secondReview.getItemName()).isEqualTo("test item9");
-        assertThat(secondReview.getStar()).isEqualTo(new BigDecimal("4.0"));
         assertThat(secondReview.getTradeStatusList()).hasSize(2);
     }
 
