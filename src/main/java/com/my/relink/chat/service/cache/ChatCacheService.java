@@ -3,8 +3,7 @@ package com.my.relink.chat.service.cache;
 import com.my.relink.chat.aop.metric.TimeMetric;
 import com.my.relink.chat.controller.dto.request.ChatMessageReqDto;
 import com.my.relink.chat.controller.dto.response.ChatMessageRespDto;
-import com.my.relink.chat.service.cache.metric.EnhancedPerformanceMetrics;
-import com.my.relink.chat.service.cache.metric.KeyMetadata;
+import com.my.relink.chat.service.cache.metric.RedisPerformanceMetrics;
 import com.my.relink.common.notification.NotificationPublisherService;
 import com.my.relink.domain.message.Message;
 import com.my.relink.domain.message.repository.MessageRepository;
@@ -16,10 +15,7 @@ import com.my.relink.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
-import org.springframework.data.redis.core.Cursor;
-import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,7 +48,7 @@ public class ChatCacheService {
 
     private static final String LOCKED = "LOCKED";
     private final Clock clock;
-    private final EnhancedPerformanceMetrics metrics;
+    private final RedisPerformanceMetrics metrics;
 
 
 
