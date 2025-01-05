@@ -67,7 +67,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("local")
 @EnableScheduling
-@Tag("local")
 public class ChatSavePerformanceLocalTest {
 
     @Autowired
