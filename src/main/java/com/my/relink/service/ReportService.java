@@ -20,6 +20,7 @@ import com.my.relink.domain.user.User;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import com.my.relink.util.DateTimeUtil;
+import io.sentry.Sentry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -109,6 +110,10 @@ public class ReportService {
         }catch (Exception e){
             handleImagesUploadFail(imageList);
             log.error("[거래 신고 이미지 저장 실패] reportId = {}, cause = {}", report.getId(), e.getMessage(), e);
+            Sentry.configureScope(scope -> {
+                scope.setTag("alertType", "SERVER_ERROR");
+            });
+            Sentry.captureException(e);
             throw new BusinessException(ErrorCode.FAIL_TO_SAVE_IMAGE);
         }
     }
@@ -145,6 +150,12 @@ public class ReportService {
                                     .build());
                         } catch (Exception e) {
                             log.error("[거래 신고 이미지 업로드 실패] reportId = {}, cause = {}", report.getId(), e.getMessage(), e);
+
+                            Sentry.configureScope(scope -> {
+                                scope.setTag("alertType", "SERVER_ERROR");
+                            });
+                            Sentry.captureException(e);
+
                             throw new BusinessException(ErrorCode.IMAGE_UPLOAD_FAILED);
                         }
                     });

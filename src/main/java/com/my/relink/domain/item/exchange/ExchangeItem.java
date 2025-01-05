@@ -14,6 +14,13 @@ import lombok.*;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @ToString
+@Table(indexes = {
+        @Index(
+                name = "idx_exchange_item_search",
+                columnList = "name,trade_status,created_at DESC,id DESC"
+        )
+})
+
 public class ExchangeItem extends BaseEntity {
 
     @Id
