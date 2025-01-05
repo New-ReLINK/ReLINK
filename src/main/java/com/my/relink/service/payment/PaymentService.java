@@ -28,9 +28,7 @@ import com.my.relink.util.DateTimeUtil;
 import com.my.relink.util.page.PageResponse;
 import io.sentry.Scope;
 import io.sentry.Sentry;
-import io.sentry.SentryEvent;
 import io.sentry.SentryLevel;
-import io.sentry.protocol.Message;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -109,13 +107,12 @@ public class PaymentService {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public PointHistory chargePointWithHistory(User user, Payment payment, PaymentReqDto paymentReqDto){
         try {
-            throw new Exception("알 수 없는 오류로 포인트 충전 실패");
-//            Point point = pointService.findByIdOrFail(user);
-//            point.charge(payment.getAmount());
-//            PointHistory pointHistory = pointHistoryRepository.save(PointHistory.createChargeHistory(point));
-//
-//            log.info("[포인트 충전 프로세스 완료] userId = {}, pointId = {}", user.getId(), point.getId());
-//            return pointHistory;
+            Point point = pointService.findByIdOrFail(user);
+            point.charge(payment.getAmount());
+            PointHistory pointHistory = pointHistoryRepository.save(PointHistory.createChargeHistory(point));
+
+            log.info("[포인트 충전 프로세스 완료] userId = {}, pointId = {}", user.getId(), point.getId());
+            return pointHistory;
         } catch (Exception e) {
             log.error("[포인트 충전 프로세스 실패] cause = {}, userId = {}", e.getMessage(), user.getId());
             handlePointChargeFailure(paymentReqDto, user, e, payment);
@@ -127,13 +124,12 @@ public class PaymentService {
     private void handlePointChargeFailure(PaymentReqDto paymentReqDto, User user, Exception originalError, Payment payment) {
         log.info("[결제 취소 프로세스 시작] userId = {}", user.getId());
         try {
-            throw new Exception("결제 취소 프로세스 실패");
-//            TossPaymentRespDto canceledPaymentInfo = processCancelPayment(
-//                    paymentReqDto,
-//                    user,
-//                    PaymentCancelReason.SERVER_ERROR_FAIL_TO_UPDATE_POINT);
-//            updatePaymentStatusToCanceled(payment, canceledPaymentInfo);
-//            log.info("[결제 취소 프로세스 완료] 토스 결제 취소 및 payment 상태 업데이트 성공. userId = {}, paymentId = {}", user.getId(), payment.getId());
+            TossPaymentRespDto canceledPaymentInfo = processCancelPayment(
+                    paymentReqDto,
+                    user,
+                    PaymentCancelReason.SERVER_ERROR_FAIL_TO_UPDATE_POINT);
+            updatePaymentStatusToCanceled(payment, canceledPaymentInfo);
+            log.info("[결제 취소 프로세스 완료] 토스 결제 취소 및 payment 상태 업데이트 성공. userId = {}, paymentId = {}", user.getId(), payment.getId());
         } catch (PaymentCancelFailException e) {
             throw new BusinessException(e.getErrorCode());
         } catch (TossPaymentException e){
