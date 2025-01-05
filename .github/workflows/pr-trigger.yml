@@ -33,7 +33,7 @@ jobs:
         uses: docker/setup-buildx-action@v2
       
       - name: Start containers
-        run: docker compose -f "docker-compose.yml" up -d
+        run: docker compose -f "./docker/elk/docker-compose.yml" up -d
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
