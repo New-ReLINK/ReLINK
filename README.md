@@ -98,8 +98,8 @@
 |  GET   | `/chat/{tradeId}`          | 문의하기 (채팅방 진입) |
 |  GET   | `/chat`                    | 채팅방 커넥션 검증    |
 |  GET   | `/chat/{tradeId}/messages` | 채팅방 이전 내역 보내기 |
-|  POST  | `/chat/{tradeId}/message`  | 채팅 메시지 보내기    |
-|  POST  | `/chat/{tradeId}/image`    | 채팅 이미지 저장하기   |
+|  POST  | `/chats/{tradeId}/message`  | 채팅 메시지 보내기    |
+|  POST  | `/chats/{tradeId}/image`    | 채팅 이미지 저장하기   |
 
 <br>
 
