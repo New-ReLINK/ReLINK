@@ -38,3 +38,5 @@ out/
 application-local.yaml
 *.env
 .env
+
+ChatSavePerformanceLocalTestWithCache.java
