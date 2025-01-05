@@ -71,24 +71,21 @@
     <!--dev 환경 로거 -->
     <springProfile name="dev">
         <!-- Hibernate 로깅 설정 -->
-        <logger name="org.hibernate" level="WARN" additivity="false">
+        <logger name="org.hibernate" level="INFO" additivity="false">
             <appender-ref ref="CONSOLE"/>
         </logger>
 
-        <logger name="org.hibernate.SQL" level="WARN" additivity="false">
+        <logger name="org.hibernate.SQL" level="INFO" additivity="false">
             <appender-ref ref="CONSOLE"/>
         </logger>
 
-        <logger name="org.hibernate.orm.jdbc.bind" level="WARN" additivity="false">
+        <logger name="org.hibernate.orm.jdbc.bind" level="TRACE" additivity="false">
             <appender-ref ref="CONSOLE"/>
         </logger>
 
-        <logger name="org.hibernate.type" level="WARN" additivity="false">
-            <appender-ref ref="CONSOLE"/>
-        </logger>
 
         <!-- 애플리케이션 로거 설정 -->
-        <logger name="com.my.relink" level="INFO" additivity="false">
+        <logger name="com.my.relink" level="DEBUG" additivity="false">
             <appender-ref ref="CONSOLE"/>
         </logger>
 
@@ -97,6 +94,11 @@
         </logger>
 
         <logger name="com.my.relink.config.log.HttpLogFilter" level="INFO" additivity="false">
+            <appender-ref ref="CONSOLE"/>
+        </logger>
+
+        <!-- Spring Framework 로깅 -->
+        <logger name="org.springframework" level="INFO" additivity="false">
             <appender-ref ref="CONSOLE"/>
         </logger>
 
