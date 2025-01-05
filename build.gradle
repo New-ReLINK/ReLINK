@@ -99,5 +99,7 @@ tasks.named('test') {
 
     systemProperty 'spring.profiles.active', System.getProperty('spring.profiles.active')
 
-    exclude '**/ChatSavePerformanceLocalTest.class'
+    filter {
+        excludeTestsMatching "*ChatSavePerformanceLocalTest"
+    }
 }
