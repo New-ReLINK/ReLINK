@@ -120,7 +120,7 @@
 | Method | Endpoint                      | Description        |
 |:------:|:------------------------------|:-------------------|
 |  GET   | `/users/point/history/charge` | 포인트 충전 내역 페이지 (조회) |
-|  POST  | `/users/point`                | 포인트 충전하기           |
+|  POST  | `/users/payment`                | 포인트 충전하기           |
 |  GET   | `/users/point/history/usage`  | 포인트 사용 내역 페이지 (조회) |
 
 <br>
