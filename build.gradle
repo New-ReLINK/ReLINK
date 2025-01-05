@@ -95,9 +95,5 @@ dependencies {
 }
 
 tasks.named('test') {
-    useJUnitPlatform {
-        if (project.hasProperty('excludeTags')) {
-            excludeTags(project.property('excludeTags'))
-        }
-    }
+    useJUnitPlatform ()
 }
