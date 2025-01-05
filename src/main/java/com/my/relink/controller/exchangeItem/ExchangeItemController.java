@@ -5,15 +5,22 @@ import com.my.relink.controller.exchangeItem.dto.req.ChoiceExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.req.CreateExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.req.GetAllExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.req.UpdateExchangeItemReqDto;
+import com.my.relink.controller.exchangeItem.dto.resp.FindAllExchangeItemListRespDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetAllExchangeItemsRespDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemRespDto;
 import com.my.relink.controller.trade.dto.response.TradeIdRespDto;
+import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.service.ExchangeItemService;
 import com.my.relink.util.api.ApiResult;
+import com.my.relink.util.page.PageResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -92,4 +99,64 @@ public class ExchangeItemController {
         TradeIdRespDto tradeId = exchangeItemService.choiceExchangeItem(itemId, reqDto, authUser.getId());
         return new ResponseEntity<>(ApiResult.success(tradeId), HttpStatus.OK);
     }
+
+    @GetMapping("/v0/items/exchange-list")
+    public ResponseEntity<ApiResult<PageResponse<FindAllExchangeItemListRespDto>>> exchangeItemListV0(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String sortBy,
+            @RequestParam(required = false, defaultValue = "DESC") String direction,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) TradeStatus tradeStatus,
+            @PageableDefault(size = 20) Pageable pageable
+    ) {
+        Sort.Direction sortDirection = Sort.Direction.fromString(direction);
+        PageRequest pageRequest = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                Sort.by(sortDirection, sortBy != null ? sortBy : "createdAt")
+        );
+
+        PageResponse<FindAllExchangeItemListRespDto> result
+                = exchangeItemService.getExchangeItemListV0(keyword, categoryId, tradeStatus, pageRequest);
+        return ResponseEntity.status(HttpStatus.OK).body(ApiResult.success(result));
+    }
+
+    @GetMapping("/v1/items/exchange-list")
+    public ResponseEntity<ApiResult<PageResponse<FindAllExchangeItemListRespDto>>> exchangeItemListV1(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String sortBy,
+            @RequestParam(required = false, defaultValue = "DESC") String direction,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) TradeStatus tradeStatus,
+            @PageableDefault(size = 20) Pageable pageable
+    ) {
+        Sort.Direction sortDirection = Sort.Direction.fromString(direction);
+        PageRequest pageRequest = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                Sort.by(sortDirection, sortBy != null ? sortBy : "createdAt")
+        );
+
+        PageResponse<FindAllExchangeItemListRespDto> result
+                = exchangeItemService.getExchangeItemListV1(keyword, categoryId, tradeStatus, pageRequest);
+        return ResponseEntity.status(HttpStatus.OK).body(ApiResult.success(result));
+    }
+
+    @GetMapping("/v2/items/exchange-list")
+    public ResponseEntity<ApiResult<PageResponse<FindAllExchangeItemListRespDto>>> exchangeItemListV2(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String sortBy,
+            @RequestParam(required = false, defaultValue = "DESC") String direction,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false, name = "itemId") Long itemId,
+            @RequestParam(required = false) TradeStatus tradeStatus
+    ) {
+        Sort.Direction sortDirection = Sort.Direction.fromString(direction);
+        Sort orders = Sort.by(sortDirection, sortBy != null ? sortBy : "createdAt");
+        PageResponse<FindAllExchangeItemListRespDto> result
+                = exchangeItemService.getExchangeItemListV2(keyword, categoryId, tradeStatus, itemId, orders);
+        return ResponseEntity.status(HttpStatus.OK).body(ApiResult.success(result));
+    }
+
+
 }

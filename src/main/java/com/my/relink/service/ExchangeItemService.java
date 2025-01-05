@@ -1,10 +1,10 @@
 package com.my.relink.service;
 
-import com.my.relink.chat.service.ChatService;
 import com.my.relink.controller.exchangeItem.dto.req.ChoiceExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.req.CreateExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.req.GetAllExchangeItemReqDto;
 import com.my.relink.controller.exchangeItem.dto.req.UpdateExchangeItemReqDto;
+import com.my.relink.controller.exchangeItem.dto.resp.FindAllExchangeItemListRespDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetAllExchangeItemsRespDto;
 import com.my.relink.controller.exchangeItem.dto.resp.GetExchangeItemRespDto;
 import com.my.relink.controller.trade.dto.response.TradeIdRespDto;
@@ -13,6 +13,7 @@ import com.my.relink.domain.category.repository.CategoryRepository;
 import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.item.exchange.ExchangeItem;
 import com.my.relink.domain.item.exchange.repository.ExchangeItemRepository;
+import com.my.relink.domain.item.exchange.repository.dto.FindExchangeItemListRepositoryDto;
 import com.my.relink.domain.point.Point;
 import com.my.relink.domain.point.repository.PointRepository;
 import com.my.relink.domain.trade.Trade;
@@ -21,11 +22,13 @@ import com.my.relink.domain.user.User;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import com.my.relink.util.MetricConstants;
+import com.my.relink.util.page.PageResponse;
 import io.micrometer.core.annotation.Timed;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -207,6 +210,46 @@ public class ExchangeItemService {
     public ExchangeItem findByIdFetchUser(Long itemId) {
         return exchangeItemRepository.findByIdWithUser(itemId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EXCHANGE_ITEM_NOT_FOUND));
+    }
+
+    public PageResponse<FindAllExchangeItemListRespDto> getExchangeItemListV0(
+            String keyword,
+            Long categoryId,
+            TradeStatus tradeStatus,
+            Pageable pageable
+    ) {
+        Page<FindExchangeItemListRepositoryDto> results
+                = exchangeItemRepository.findAllExchangeItemV0(keyword, categoryId, tradeStatus, pageable);
+        Page<FindAllExchangeItemListRespDto> exchangeItemListRespDto
+                = results.map(FindAllExchangeItemListRespDto::new);
+        return PageResponse.of(exchangeItemListRespDto);
+    }
+
+    public PageResponse<FindAllExchangeItemListRespDto> getExchangeItemListV1(
+            String keyword,
+            Long categoryId,
+            TradeStatus tradeStatus,
+            Pageable pageable
+    ) {
+        Page<FindExchangeItemListRepositoryDto> results
+                = exchangeItemRepository.findAllExchangeItemV1(keyword, categoryId, tradeStatus, pageable);
+        Page<FindAllExchangeItemListRespDto> exchangeItemListRespDto
+                = results.map(FindAllExchangeItemListRespDto::new);
+        return PageResponse.of(exchangeItemListRespDto);
+    }
+
+    public PageResponse<FindAllExchangeItemListRespDto> getExchangeItemListV2(
+            String keyword,
+            Long categoryId,
+            TradeStatus tradeStatus,
+            Long itemId,
+            Sort orders
+    ) {
+        Page<FindExchangeItemListRepositoryDto> results
+                = exchangeItemRepository.findAllExchangeItemV2(keyword, categoryId, tradeStatus, itemId, orders);
+        Page<FindAllExchangeItemListRespDto> exchangeItemListRespDto
+                = results.map(FindAllExchangeItemListRespDto::new);
+        return PageResponse.of(exchangeItemListRespDto);
     }
 
 }
