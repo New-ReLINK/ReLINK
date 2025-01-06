@@ -117,47 +117,47 @@
     <!-- prod 환경 로거 설정 -->
     <springProfile name="prod">
         <!-- Hibernate 로깅 설정 -->
-        <logger name="org.hibernate" level="WARN" additivity="false">
-            <appender-ref ref="CONSOLE"/>
-            <appender-ref ref="ASYNC_SYSTEM_LOGSTASH"/>
-        </logger>
+<!--        <logger name="org.hibernate" level="WARN" additivity="false">-->
+<!--            <appender-ref ref="CONSOLE"/>-->
+<!--            <appender-ref ref="ASYNC_SYSTEM_LOGSTASH"/>-->
+<!--        </logger>-->
 
-        <logger name="org.hibernate.SQL" level="WARN" additivity="false">
-            <appender-ref ref="CONSOLE"/>
-            <appender-ref ref="ASYNC_SYSTEM_LOGSTASH"/>
-        </logger>
+<!--        <logger name="org.hibernate.SQL" level="WARN" additivity="false">-->
+<!--            <appender-ref ref="CONSOLE"/>-->
+<!--            <appender-ref ref="ASYNC_SYSTEM_LOGSTASH"/>-->
+<!--        </logger>-->
 
-        <logger name="org.hibernate.orm.jdbc.bind" level="WARN" additivity="false">
-            <appender-ref ref="CONSOLE"/>
-            <appender-ref ref="ASYNC_SYSTEM_LOGSTASH"/>
-        </logger>
+<!--        <logger name="org.hibernate.orm.jdbc.bind" level="WARN" additivity="false">-->
+<!--            <appender-ref ref="CONSOLE"/>-->
+<!--            <appender-ref ref="ASYNC_SYSTEM_LOGSTASH"/>-->
+<!--        </logger>-->
 
-        <logger name="org.hibernate.type" level="WARN" additivity="false">
-            <appender-ref ref="CONSOLE"/>
-            <appender-ref ref="ASYNC_SYSTEM_LOGSTASH"/>
-        </logger>
+<!--        <logger name="org.hibernate.type" level="WARN" additivity="false">-->
+<!--            <appender-ref ref="CONSOLE"/>-->
+<!--            <appender-ref ref="ASYNC_SYSTEM_LOGSTASH"/>-->
+<!--        </logger>-->
 
-        <!-- 애플리케이션 로거 설정 -->
-        <logger name="com.my.relink" level="INFO" additivity="false">
-            <appender-ref ref="CONSOLE"/>
-            <appender-ref ref="ASYNC_SYSTEM_LOGSTASH"/>
-        </logger>
+<!--        &lt;!&ndash; 애플리케이션 로거 설정 &ndash;&gt;-->
+<!--        <logger name="com.my.relink" level="INFO" additivity="false">-->
+<!--            <appender-ref ref="CONSOLE"/>-->
+<!--            <appender-ref ref="ASYNC_SYSTEM_LOGSTASH"/>-->
+<!--        </logger>-->
 
-        <logger name="com.my.relink.config.log.SystemLogAspect" level="INFO" additivity="false">
-            <appender-ref ref="CONSOLE"/>
-            <appender-ref ref="SYSTEM_LOGSTASH"/>
-        </logger>
+<!--        <logger name="com.my.relink.config.log.SystemLogAspect" level="INFO" additivity="false">-->
+<!--            <appender-ref ref="CONSOLE"/>-->
+<!--            <appender-ref ref="SYSTEM_LOGSTASH"/>-->
+<!--        </logger>-->
 
-        <logger name="com.my.relink.config.log.HttpLogFilter" level="INFO" additivity="false">
-            <appender-ref ref="CONSOLE"/>
-            <appender-ref ref="HTTP_LOGSTASH"/>
-        </logger>
+<!--        <logger name="com.my.relink.config.log.HttpLogFilter" level="INFO" additivity="false">-->
+<!--            <appender-ref ref="CONSOLE"/>-->
+<!--            <appender-ref ref="HTTP_LOGSTASH"/>-->
+<!--        </logger>-->
 
-        <root level="INFO">
-            <appender-ref ref="CONSOLE"/>
-            <appender-ref ref="ASYNC_SYSTEM_LOGSTASH"/>
-            <appender-ref ref="Sentry"/>
-        </root>
+<!--        <root level="INFO">-->
+<!--            <appender-ref ref="CONSOLE"/>-->
+<!--            <appender-ref ref="ASYNC_SYSTEM_LOGSTASH"/>-->
+<!--            <appender-ref ref="Sentry"/>-->
+<!--        </root>-->
     </springProfile>
 
 
