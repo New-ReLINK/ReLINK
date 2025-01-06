@@ -10,17 +10,17 @@
 
     <!-- HTTP 로그 Logstash Appender -->
     <springProfile name="prod">
-        <appender name="HTTP_LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
-            <destination>localhost:5001</destination>
-            <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-                <level>INFO</level>
-            </filter>
-            <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-                <includeContext>true</includeContext>
-                <includeMdc>true</includeMdc>
-                <customFields>{"application":"ReLINK","logType":"HTTP"}</customFields>
-            </encoder>
-        </appender>
+<!--        <appender name="HTTP_LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">-->
+<!--            <destination>localhost:5001</destination>-->
+<!--            <filter class="ch.qos.logback.classic.filter.ThresholdFilter">-->
+<!--                <level>INFO</level>-->
+<!--            </filter>-->
+<!--            <encoder class="net.logstash.logback.encoder.LogstashEncoder">-->
+<!--                <includeContext>true</includeContext>-->
+<!--                <includeMdc>true</includeMdc>-->
+<!--                <customFields>{"application":"ReLINK","logType":"HTTP"}</customFields>-->
+<!--            </encoder>-->
+<!--        </appender>-->
 
         <!-- Sentry Appender -->
         <appender name="Sentry" class="io.sentry.logback.SentryAppender">
