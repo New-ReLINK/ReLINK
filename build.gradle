@@ -74,6 +74,14 @@ dependencies {
     // embedded tomcat
     providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
 
+
+    //cache
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+    implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
+
+    //redis
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
     //sentry
     implementation 'io.sentry:sentry-spring-boot-starter:6.27.0'
     implementation 'io.sentry:sentry-logback:6.27.0'
@@ -83,8 +91,15 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.micrometer:micrometer-registry-prometheus'
 
+
 }
 
 tasks.named('test') {
-    useJUnitPlatform()
+    useJUnitPlatform ()
+
+    systemProperty 'spring.profiles.active', System.getProperty('spring.profiles.active')
+
+    filter {
+        excludeTestsMatching "*ChatSavePerformanceLocalTest"
+    }
 }
