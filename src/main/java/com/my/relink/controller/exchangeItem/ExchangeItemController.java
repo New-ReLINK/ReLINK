@@ -72,7 +72,7 @@ public class ExchangeItemController {
     }
 
     @GetMapping("/items/exchanges")
-    public ResponseEntity<ApiResult<GetAllExchangeItemsRespDto>> getAllExchangeItems(@Valid @RequestBody GetAllExchangeItemReqDto reqDto) {
+    public ResponseEntity<ApiResult<GetAllExchangeItemsRespDto>> getAllExchangeItems(@Valid GetAllExchangeItemReqDto reqDto) {
         GetAllExchangeItemsRespDto respDto = exchangeItemService.getAllExchangeItems(reqDto);
         return new ResponseEntity<>(ApiResult.success(respDto), HttpStatus.OK);
     }
