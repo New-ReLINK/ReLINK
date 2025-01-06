@@ -26,6 +26,9 @@ import com.my.relink.service.payment.dto.PaymentValidation;
 import com.my.relink.service.payment.ex.PaymentCancelFailException;
 import com.my.relink.util.DateTimeUtil;
 import com.my.relink.util.page.PageResponse;
+import io.sentry.Scope;
+import io.sentry.Sentry;
+import io.sentry.SentryLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -50,7 +53,6 @@ public class PaymentService {
     private final PointHistoryRepository pointHistoryRepository;
     private final PointService pointService;
     private final DateTimeUtil dateTimeUtil;
-    // TODO 구현 예정.  private final AlertService alertService;
 
 
     public PageResponse<PointChargeHistoryRespDto> getPointChargeHistories(Long userId, int page, int size){
@@ -259,7 +261,7 @@ public class PaymentService {
 
 
     /**
-     * TODO 구현 예정
+     *
      * 결제 취소 실패 시 관리자 알림을 발송
      *
      * @param paymentReqDto 결제 요청 정보
@@ -268,26 +270,45 @@ public class PaymentService {
      * @param cancelError 취소 시 발생한 예외
      */
     private void sendPaymentCancelFailureAlert(PaymentReqDto paymentReqDto, User user, Exception originalError, Exception cancelError) {
-        String title = String.format("[결제 취소 실패] - merchantUid: %s", paymentReqDto.getOrderId());
-        String detailedLog = String.format("""
-                    결제취소실패 - 수동 개입 필요
-                    시간: %s
-                    주문번호: %s
-                    결제키: %s
-                    사용자 ID: %d
-                    결제금액: %d
-                    최초에러: %s
-                    취소실패원인: %s
-                    """,
-                LocalDateTime.now(),
-                paymentReqDto.getOrderId(),
-                paymentReqDto.getPaymentKey(),
-                user.getId(),
-                paymentReqDto.getAmount(),
-                originalError.getMessage(),
-                cancelError.getMessage()
-        );
-        // TODO 구현 예정; 알람 보내기 ex)  alertService.sendEmergencyAlert(title, detailedLog);
+        try {
+            String title = String.format("[결제 취소 실패] - merchantUid: %s\n", paymentReqDto.getOrderId());
+            String detailedLog = String.format("""
+                결제취소실패 - 수동 개입 필요
+                시간: %s
+                주문번호: %s
+                결제키: %s
+                사용자 ID: %d
+                결제금액: %d
+                최초에러: %s
+                취소실패원인: %s
+                """,
+                    LocalDateTime.now(),
+                    paymentReqDto.getOrderId(),
+                    paymentReqDto.getPaymentKey(),
+                    user.getId(),
+                    paymentReqDto.getAmount(),
+                    originalError.getMessage(),
+                    cancelError.getMessage()
+            );
+
+            Sentry.configureScope(scope -> {
+                scope.setLevel(SentryLevel.ERROR);
+                scope.setTag("alertType", "SERVER_ERROR");
+                scope.setTag("order_id", paymentReqDto.getOrderId());
+                scope.setTag("payment_key", paymentReqDto.getPaymentKey());
+                scope.setExtra("user_id", user.getId().toString());
+                scope.setExtra("amount", paymentReqDto.getAmount().toString());
+                scope.setExtra("original_error", originalError.getMessage());
+                scope.setExtra("cancel_error", cancelError.getMessage());
+                scope.setExtra("details", title + detailedLog);
+            });
+
+            Exception chainedException = new Exception("결제 취소 실패: " + title, originalError);
+            Sentry.captureException(chainedException);
+            log.info("[결제 취소 실패] Sentry 알림 발송 완료. OrderId: {}", paymentReqDto.getOrderId(), chainedException.getMessage());
+        } finally {
+            Sentry.configureScope(Scope::clear);
+        }
     }
 
 
