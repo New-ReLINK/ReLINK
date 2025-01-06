@@ -126,6 +126,7 @@ class GlobalExceptionHandlerTest {
 
     static class MockConstraintViolation{
         public static ConstraintViolation<?> of (String propertyPath, String message){
+            @SuppressWarnings("unchecked")
             ConstraintViolation<Object> violation = mock(ConstraintViolation.class);
             Path path = mock(Path.class);
             Path.Node node = mock(Path.Node.class);

@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import static com.my.relink.domain.trade.QTrade.trade;
@@ -21,7 +22,7 @@ public class CustomTradeRepositoryImpl implements CustomTradeRepository {
     private final JPAQueryFactory queryFactory;
     private static final QExchangeItem ownerExchangeItem = QExchangeItem.exchangeItem;
     private static final QUser owner = QUser.user;
-    private static final  QExchangeItem requesterExchangeItem = QExchangeItem.exchangeItem;
+    private static final QExchangeItem requesterExchangeItem = QExchangeItem.exchangeItem;
     private static final QUser requester = QUser.user;
 
     @Override
@@ -57,10 +58,11 @@ public class CustomTradeRepositoryImpl implements CustomTradeRepository {
 
     @Override
     public boolean existsByRequesterIdAndTradeStatus(Long userId, TradeStatus tradeStatus) {
-        long count = queryFactory.selectFrom(trade)
+        long count = Objects.requireNonNull(queryFactory.select(trade.count())
+                .from(trade)
                 .where(trade.requester.id.eq(userId)
                         .and(trade.tradeStatus.eq(tradeStatus)))
-                .fetchCount();
+                .fetchOne());
 
         return count > 0;
     }
@@ -81,7 +83,7 @@ public class CustomTradeRepositoryImpl implements CustomTradeRepository {
 
     @Override
     public Optional<Trade> findByExchangeItemId(Long itemId) {
-        Trade contents =  queryFactory
+        Trade contents = queryFactory
                 .selectFrom(trade)
                 .join(trade.ownerExchangeItem, ownerExchangeItem).fetchJoin()
                 .join(ownerExchangeItem.user, owner).fetchJoin()
