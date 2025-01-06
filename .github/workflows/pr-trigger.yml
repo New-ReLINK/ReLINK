@@ -33,7 +33,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build with Gradle
-        run: ./gradlew build -Dspring.profiles.active=dev
+        run: ./gradlew build 
 
       - name: Run tests
-        run: ./gradlew test -Dspring.profiles.active=dev
+        run: ./gradlew test 
