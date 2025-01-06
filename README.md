@@ -245,6 +245,6 @@
 5. ✨ **피드백 문화**
     - 서로의 코드를 존중해요
 
-<br><br><br><br><br><br><br><br><br><br><br>
+<br><br><br><br><br><br><br><br><br><br>
 ---
 © 2025 Staccato. All rights reserved.
