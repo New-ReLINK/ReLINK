@@ -8,64 +8,64 @@
     </appender>
 
 
-    <!-- HTTP 로그 Logstash Appender -->
-<!--    <springProfile name="prod">-->
-<!--        <appender name="HTTP_LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">-->
-<!--            <destination>localhost:5001</destination>-->
-<!--            <filter class="ch.qos.logback.classic.filter.ThresholdFilter">-->
-<!--                <level>INFO</level>-->
-<!--            </filter>-->
-<!--            <encoder class="net.logstash.logback.encoder.LogstashEncoder">-->
-<!--                <includeContext>true</includeContext>-->
-<!--                <includeMdc>true</includeMdc>-->
-<!--                <customFields>{"application":"ReLINK","logType":"HTTP"}</customFields>-->
-<!--            </encoder>-->
-<!--        </appender>-->
+     HTTP 로그 Logstash Appender
+    <springProfile name="prod">
+        <appender name="HTTP_LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+            <destination>localhost:5001</destination>
+            <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+                <level>INFO</level>
+            </filter>
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+                <includeContext>true</includeContext>
+                <includeMdc>true</includeMdc>
+                <customFields>{"application":"ReLINK","logType":"HTTP"}</customFields>
+            </encoder>
+        </appender>
 
-        <!-- Sentry Appender -->
-<!--        <appender name="Sentry" class="io.sentry.logback.SentryAppender">-->
-<!--            <filter class="ch.qos.logback.classic.filter.ThresholdFilter">-->
-<!--                <level>WARN</level>-->
-<!--            </filter>-->
-<!--            <encoder>-->
-<!--                <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>-->
-<!--            </encoder>-->
-<!--        </appender>-->
-<!--        &lt;!&ndash; 시스템 로그 Logstash Appender &ndash;&gt;-->
-<!--        <appender name="SYSTEM_LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">-->
-<!--            <destination>localhost:5000</destination>-->
-<!--            <filter class="ch.qos.logback.classic.filter.ThresholdFilter">-->
-<!--                <level>INFO</level>-->
-<!--            </filter>-->
-<!--            <encoder class="net.logstash.logback.encoder.LogstashEncoder">-->
-<!--                <includeContext>true</includeContext>-->
-<!--                <includeMdc>true</includeMdc>-->
-<!--                <customFields>{"application":"ReLINK","logType":"SYSTEM"}</customFields>-->
-<!--            </encoder>-->
-<!--        </appender>-->
-
-
-<!--        &lt;!&ndash; 시스템 로그용 Async Appender &ndash;&gt;-->
-<!--        <appender name="ASYNC_SYSTEM_LOGSTASH" class="ch.qos.logback.classic.AsyncAppender">-->
-<!--            <appender-ref ref="SYSTEM_LOGSTASH"/>-->
-<!--            <queueSize>512</queueSize>-->
-<!--            <discardingThreshold>0</discardingThreshold>-->
-<!--            <maxFlushTime>1000</maxFlushTime>-->
-<!--            <includeCallerData>true</includeCallerData>-->
-<!--            <neverBlock>true</neverBlock>-->
-<!--        </appender>-->
+         Sentry Appender
+        <appender name="Sentry" class="io.sentry.logback.SentryAppender">
+            <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+                <level>WARN</level>
+            </filter>
+            <encoder>
+                <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            </encoder>
+        </appender>
+        <!-- 시스템 로그 Logstash Appender -->
+        <appender name="SYSTEM_LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+            <destination>localhost:5000</destination>
+            <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+                <level>INFO</level>
+            </filter>
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+                <includeContext>true</includeContext>
+                <includeMdc>true</includeMdc>
+                <customFields>{"application":"ReLINK","logType":"SYSTEM"}</customFields>
+            </encoder>
+        </appender>
 
 
-<!--        &lt;!&ndash; HTTP 로그용 Async Appender &ndash;&gt;-->
-<!--        <appender name="ASYNC_HTTP_LOGSTASH" class="ch.qos.logback.classic.AsyncAppender">-->
-<!--            <appender-ref ref="HTTP_LOGSTASH"/>-->
-<!--            <queueSize>512</queueSize>-->
-<!--            <discardingThreshold>0</discardingThreshold>-->
-<!--            <maxFlushTime>1000</maxFlushTime>-->
-<!--            <includeCallerData>true</includeCallerData>-->
-<!--            <neverBlock>true</neverBlock>-->
-<!--        </appender>-->
-<!--    </springProfile>-->
+        <!-- 시스템 로그용 Async Appender -->
+        <appender name="ASYNC_SYSTEM_LOGSTASH" class="ch.qos.logback.classic.AsyncAppender">
+            <appender-ref ref="SYSTEM_LOGSTASH"/>
+            <queueSize>512</queueSize>
+            <discardingThreshold>0</discardingThreshold>
+            <maxFlushTime>1000</maxFlushTime>
+            <includeCallerData>true</includeCallerData>
+            <neverBlock>true</neverBlock>
+        </appender>
+
+
+        <!-- HTTP 로그용 Async Appender -->
+        <appender name="ASYNC_HTTP_LOGSTASH" class="ch.qos.logback.classic.AsyncAppender">
+            <appender-ref ref="HTTP_LOGSTASH"/>
+            <queueSize>512</queueSize>
+            <discardingThreshold>0</discardingThreshold>
+            <maxFlushTime>1000</maxFlushTime>
+            <includeCallerData>true</includeCallerData>
+            <neverBlock>true</neverBlock>
+        </appender>
+    </springProfile>
 
 
     <!--dev 환경 로거 -->
@@ -114,79 +114,79 @@
         </root>
     </springProfile>
 
-    <!-- prod 환경 로거 설정 -->
-<!--    <springProfile name="prod">-->
-        <!-- Hibernate 로깅 설정 -->
-<!--        <logger name="org.hibernate" level="WARN" additivity="false">-->
-<!--            <appender-ref ref="CONSOLE"/>-->
-<!--            <appender-ref ref="ASYNC_SYSTEM_LOGSTASH"/>-->
-<!--        </logger>-->
+     prod 환경 로거 설정
+    <springProfile name="prod">
+         Hibernate 로깅 설정
+        <logger name="org.hibernate" level="WARN" additivity="false">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="ASYNC_SYSTEM_LOGSTASH"/>
+        </logger>
 
-<!--        <logger name="org.hibernate.SQL" level="WARN" additivity="false">-->
-<!--            <appender-ref ref="CONSOLE"/>-->
-<!--            <appender-ref ref="ASYNC_SYSTEM_LOGSTASH"/>-->
-<!--        </logger>-->
+        <logger name="org.hibernate.SQL" level="WARN" additivity="false">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="ASYNC_SYSTEM_LOGSTASH"/>
+        </logger>
 
-<!--        <logger name="org.hibernate.orm.jdbc.bind" level="WARN" additivity="false">-->
-<!--            <appender-ref ref="CONSOLE"/>-->
-<!--            <appender-ref ref="ASYNC_SYSTEM_LOGSTASH"/>-->
-<!--        </logger>-->
+        <logger name="org.hibernate.orm.jdbc.bind" level="WARN" additivity="false">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="ASYNC_SYSTEM_LOGSTASH"/>
+        </logger>
 
-<!--        <logger name="org.hibernate.type" level="WARN" additivity="false">-->
-<!--            <appender-ref ref="CONSOLE"/>-->
-<!--            <appender-ref ref="ASYNC_SYSTEM_LOGSTASH"/>-->
-<!--        </logger>-->
+        <logger name="org.hibernate.type" level="WARN" additivity="false">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="ASYNC_SYSTEM_LOGSTASH"/>
+        </logger>
 
-<!--        &lt;!&ndash; 애플리케이션 로거 설정 &ndash;&gt;-->
-<!--        <logger name="com.my.relink" level="INFO" additivity="false">-->
-<!--            <appender-ref ref="CONSOLE"/>-->
-<!--            <appender-ref ref="ASYNC_SYSTEM_LOGSTASH"/>-->
-<!--        </logger>-->
+        <!-- 애플리케이션 로거 설정 -->
+        <logger name="com.my.relink" level="INFO" additivity="false">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="ASYNC_SYSTEM_LOGSTASH"/>
+        </logger>
 
-<!--        <logger name="com.my.relink.config.log.SystemLogAspect" level="INFO" additivity="false">-->
-<!--            <appender-ref ref="CONSOLE"/>-->
-<!--            <appender-ref ref="SYSTEM_LOGSTASH"/>-->
-<!--        </logger>-->
+        <logger name="com.my.relink.config.log.SystemLogAspect" level="INFO" additivity="false">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="SYSTEM_LOGSTASH"/>
+        </logger>
 
-<!--        <logger name="com.my.relink.config.log.HttpLogFilter" level="INFO" additivity="false">-->
-<!--            <appender-ref ref="CONSOLE"/>-->
-<!--            <appender-ref ref="HTTP_LOGSTASH"/>-->
-<!--        </logger>-->
+        <logger name="com.my.relink.config.log.HttpLogFilter" level="INFO" additivity="false">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="HTTP_LOGSTASH"/>
+        </logger>
 
-<!--        <root level="INFO">-->
-<!--            <appender-ref ref="CONSOLE"/>-->
-<!--            <appender-ref ref="ASYNC_SYSTEM_LOGSTASH"/>-->
-<!--            <appender-ref ref="Sentry"/>-->
-<!--        </root>-->
-<!--    </springProfile>-->
-
-
-    <!--    ======================================-->
-    <!--    &lt;!&ndash; 전체 애플리케이션 패키지에 대한 로거 설정 &ndash;&gt;-->
-    <!--    <logger name="com.my.relink" level="INFO" additivity="false">-->
-    <!--        <appender-ref ref="CONSOLE" />-->
-    <!--        <appender-ref ref="ASYNC_SYSTEM_LOGSTASH" />-->
-    <!--    </logger>-->
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="ASYNC_SYSTEM_LOGSTASH"/>
+            <appender-ref ref="Sentry"/>
+        </root>
+    </springProfile>
 
 
-    <!--    &lt;!&ndash; 시스템 로그를 위한 Logger &ndash;&gt;-->
-    <!--    <logger name="com.my.relink.config.log.SystemLogAspect" level="INFO" additivity="false">-->
-    <!--        <appender-ref ref="SYSTEM_LOGSTASH" />-->
-    <!--        <appender-ref ref="CONSOLE" />-->
-    <!--    </logger>-->
+        ======================================
+        <!-- 전체 애플리케이션 패키지에 대한 로거 설정 -->
+        <logger name="com.my.relink" level="INFO" additivity="false">
+            <appender-ref ref="CONSOLE" />
+            <appender-ref ref="ASYNC_SYSTEM_LOGSTASH" />
+        </logger>
 
 
-    <!--    &lt;!&ndash; HTTP 로그를 위한 Logger &ndash;&gt;-->
-    <!--    <logger name="com.my.relink.config.log.HttpLogFilter" level="INFO" additivity="false">-->
-    <!--        <appender-ref ref="HTTP_LOGSTASH" />-->
-    <!--        <appender-ref ref="CONSOLE" />-->
-    <!--    </logger>-->
+        <!-- 시스템 로그를 위한 Logger -->
+        <logger name="com.my.relink.config.log.SystemLogAspect" level="INFO" additivity="false">
+            <appender-ref ref="SYSTEM_LOGSTASH" />
+            <appender-ref ref="CONSOLE" />
+        </logger>
 
 
-    <!--    &lt;!&ndash; Logger 설정 &ndash;&gt;-->
-    <!--    <root level="INFO">-->
-    <!--        <appender-ref ref="CONSOLE" />-->
-    <!--        <appender-ref ref="ASYNC_SYSTEM_LOGSTASH" />-->
-    <!--    </root>-->
+        <!-- HTTP 로그를 위한 Logger -->
+        <logger name="com.my.relink.config.log.HttpLogFilter" level="INFO" additivity="false">
+            <appender-ref ref="HTTP_LOGSTASH" />
+            <appender-ref ref="CONSOLE" />
+        </logger>
+
+
+        <!-- Logger 설정 -->
+        <root level="INFO">
+            <appender-ref ref="CONSOLE" />
+            <appender-ref ref="ASYNC_SYSTEM_LOGSTASH" />
+        </root>
 
 </configuration>
