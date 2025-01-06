@@ -9,7 +9,7 @@
 
 
     <!-- HTTP 로그 Logstash Appender -->
-    <springProfile name="prod">
+<!--    <springProfile name="prod">-->
 <!--        <appender name="HTTP_LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">-->
 <!--            <destination>localhost:5001</destination>-->
 <!--            <filter class="ch.qos.logback.classic.filter.ThresholdFilter">-->
@@ -65,7 +65,7 @@
 <!--            <includeCallerData>true</includeCallerData>-->
 <!--            <neverBlock>true</neverBlock>-->
 <!--        </appender>-->
-    </springProfile>
+<!--    </springProfile>-->
 
 
     <!--dev 환경 로거 -->
@@ -115,7 +115,7 @@
     </springProfile>
 
     <!-- prod 환경 로거 설정 -->
-    <springProfile name="prod">
+<!--    <springProfile name="prod">-->
         <!-- Hibernate 로깅 설정 -->
 <!--        <logger name="org.hibernate" level="WARN" additivity="false">-->
 <!--            <appender-ref ref="CONSOLE"/>-->
@@ -158,7 +158,7 @@
 <!--            <appender-ref ref="ASYNC_SYSTEM_LOGSTASH"/>-->
 <!--            <appender-ref ref="Sentry"/>-->
 <!--        </root>-->
-    </springProfile>
+<!--    </springProfile>-->
 
 
     <!--    ======================================-->
