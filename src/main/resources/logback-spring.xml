@@ -70,6 +70,32 @@
 
     <!--dev 환경 로거 -->
     <springProfile name="dev">
+
+        <appender name="HTTP_LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+            <destination>localhost:5001</destination>
+            <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+                <level>INFO</level>
+            </filter>
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+                <includeContext>true</includeContext>
+                <includeMdc>true</includeMdc>
+                <customFields>{"application":"ReLINK","logType":"HTTP"}</customFields>
+            </encoder>
+        </appender>
+
+
+        <!-- HTTP 로그용 Async Appender -->
+        <appender name="ASYNC_HTTP_LOGSTASH" class="ch.qos.logback.classic.AsyncAppender">
+            <appender-ref ref="HTTP_LOGSTASH"/>
+            <queueSize>512</queueSize>
+            <discardingThreshold>0</discardingThreshold>
+            <maxFlushTime>1000</maxFlushTime>
+            <includeCallerData>true</includeCallerData>
+            <neverBlock>true</neverBlock>
+        </appender>
+
+
+
         <!-- Hibernate 로깅 설정 -->
         <logger name="org.hibernate" level="WARN" additivity="false">
             <appender-ref ref="CONSOLE"/>
@@ -98,11 +124,13 @@
 
         <logger name="com.my.relink.config.log.HttpLogFilter" level="INFO" additivity="false">
             <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="HTTP_LOGSTASH"/>
         </logger>
 
         <root level="INFO">
             <appender-ref ref="Sentry"/>
             <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="ASYNC_HTTP_LOGSTASH"/>
         </root>
     </springProfile>
 
@@ -157,6 +185,7 @@
             <appender-ref ref="CONSOLE"/>
             <appender-ref ref="ASYNC_SYSTEM_LOGSTASH"/>
             <appender-ref ref="Sentry"/>
+            <appender-ref ref="KINESIS"/>
         </root>
     </springProfile>
 
