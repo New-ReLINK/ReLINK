@@ -49,7 +49,7 @@ class StompHandlerTest {
     @LocalServerPort
     private int port;
 
-    @MockitoBean
+    @Autowired
     private JwtProvider jwtProvider;
 
     private final StompHandler stompHandler;
