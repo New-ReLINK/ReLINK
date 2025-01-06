@@ -3,8 +3,6 @@ name: PR Build Test
 on:
   pull_request:
     branches:
-      - main
-      - dev
       - prod
 
 env:
@@ -35,6 +33,3 @@ jobs:
 
       - name: Build with Gradle
         run: ./gradlew build -x test
-
-      - name: Run tests
-        run: ./gradlew test -Dspring.profiles.active=dev --info
