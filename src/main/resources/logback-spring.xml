@@ -23,48 +23,48 @@
 <!--        </appender>-->
 
         <!-- Sentry Appender -->
-        <appender name="Sentry" class="io.sentry.logback.SentryAppender">
-            <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-                <level>WARN</level>
-            </filter>
-            <encoder>
-                <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-            </encoder>
-        </appender>
-        <!-- 시스템 로그 Logstash Appender -->
-        <appender name="SYSTEM_LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
-            <destination>localhost:5000</destination>
-            <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-                <level>INFO</level>
-            </filter>
-            <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-                <includeContext>true</includeContext>
-                <includeMdc>true</includeMdc>
-                <customFields>{"application":"ReLINK","logType":"SYSTEM"}</customFields>
-            </encoder>
-        </appender>
+<!--        <appender name="Sentry" class="io.sentry.logback.SentryAppender">-->
+<!--            <filter class="ch.qos.logback.classic.filter.ThresholdFilter">-->
+<!--                <level>WARN</level>-->
+<!--            </filter>-->
+<!--            <encoder>-->
+<!--                <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>-->
+<!--            </encoder>-->
+<!--        </appender>-->
+<!--        &lt;!&ndash; 시스템 로그 Logstash Appender &ndash;&gt;-->
+<!--        <appender name="SYSTEM_LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">-->
+<!--            <destination>localhost:5000</destination>-->
+<!--            <filter class="ch.qos.logback.classic.filter.ThresholdFilter">-->
+<!--                <level>INFO</level>-->
+<!--            </filter>-->
+<!--            <encoder class="net.logstash.logback.encoder.LogstashEncoder">-->
+<!--                <includeContext>true</includeContext>-->
+<!--                <includeMdc>true</includeMdc>-->
+<!--                <customFields>{"application":"ReLINK","logType":"SYSTEM"}</customFields>-->
+<!--            </encoder>-->
+<!--        </appender>-->
 
 
-        <!-- 시스템 로그용 Async Appender -->
-        <appender name="ASYNC_SYSTEM_LOGSTASH" class="ch.qos.logback.classic.AsyncAppender">
-            <appender-ref ref="SYSTEM_LOGSTASH"/>
-            <queueSize>512</queueSize>
-            <discardingThreshold>0</discardingThreshold>
-            <maxFlushTime>1000</maxFlushTime>
-            <includeCallerData>true</includeCallerData>
-            <neverBlock>true</neverBlock>
-        </appender>
+<!--        &lt;!&ndash; 시스템 로그용 Async Appender &ndash;&gt;-->
+<!--        <appender name="ASYNC_SYSTEM_LOGSTASH" class="ch.qos.logback.classic.AsyncAppender">-->
+<!--            <appender-ref ref="SYSTEM_LOGSTASH"/>-->
+<!--            <queueSize>512</queueSize>-->
+<!--            <discardingThreshold>0</discardingThreshold>-->
+<!--            <maxFlushTime>1000</maxFlushTime>-->
+<!--            <includeCallerData>true</includeCallerData>-->
+<!--            <neverBlock>true</neverBlock>-->
+<!--        </appender>-->
 
 
-        <!-- HTTP 로그용 Async Appender -->
-        <appender name="ASYNC_HTTP_LOGSTASH" class="ch.qos.logback.classic.AsyncAppender">
-            <appender-ref ref="HTTP_LOGSTASH"/>
-            <queueSize>512</queueSize>
-            <discardingThreshold>0</discardingThreshold>
-            <maxFlushTime>1000</maxFlushTime>
-            <includeCallerData>true</includeCallerData>
-            <neverBlock>true</neverBlock>
-        </appender>
+<!--        &lt;!&ndash; HTTP 로그용 Async Appender &ndash;&gt;-->
+<!--        <appender name="ASYNC_HTTP_LOGSTASH" class="ch.qos.logback.classic.AsyncAppender">-->
+<!--            <appender-ref ref="HTTP_LOGSTASH"/>-->
+<!--            <queueSize>512</queueSize>-->
+<!--            <discardingThreshold>0</discardingThreshold>-->
+<!--            <maxFlushTime>1000</maxFlushTime>-->
+<!--            <includeCallerData>true</includeCallerData>-->
+<!--            <neverBlock>true</neverBlock>-->
+<!--        </appender>-->
     </springProfile>
 
 
