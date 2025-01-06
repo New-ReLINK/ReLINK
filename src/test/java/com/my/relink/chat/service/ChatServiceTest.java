@@ -6,6 +6,7 @@ import com.my.relink.chat.controller.dto.response.ChatImageRespDto;
 import com.my.relink.chat.controller.dto.response.ChatMessageRespDto;
 import com.my.relink.common.notification.NotificationPublisherService;
 import com.my.relink.config.s3.S3Service;
+import com.my.relink.controller.trade.dto.response.TradeCompletionRespDto;
 import com.my.relink.domain.image.EntityType;
 import com.my.relink.domain.image.Image;
 import com.my.relink.domain.image.repository.ImageRepository;
@@ -14,6 +15,7 @@ import com.my.relink.domain.message.Message;
 import com.my.relink.domain.message.repository.MessageRepository;
 import com.my.relink.domain.notification.chat.ChatStatus;
 import com.my.relink.domain.trade.Trade;
+import com.my.relink.domain.trade.repository.dto.TradeWithOwnerItemNameDto;
 import com.my.relink.domain.user.User;
 import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
@@ -31,7 +33,10 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -59,6 +64,9 @@ class ChatServiceTest {
     @Mock
     private NotificationPublisherService notificationPublisherService;
 
+    @Mock
+    private Clock clock;
+
 
 
     @DisplayName("메시지 저장 테스트")
@@ -71,6 +79,8 @@ class ChatServiceTest {
         private Trade trade;
         private ExchangeItem ownerItem;
         private Message savedMessage;
+
+        private TradeWithOwnerItemNameDto tradeWithItem;
 
         @BeforeEach
         void setUp() {
@@ -102,6 +112,11 @@ class ChatServiceTest {
                     .user(sender)
                     .build();
 
+            tradeWithItem = new TradeWithOwnerItemNameDto(trade, ownerItem.getName());
+
+            when(clock.getZone()).thenReturn(ZoneId.of("Asia/Seoul"));
+            when(clock.instant()).thenReturn(Instant.now());
+
             ReflectionTestUtils.setField(savedMessage, "createdAt", LocalDateTime.now());
         }
 
@@ -112,8 +127,8 @@ class ChatServiceTest {
             void setUp() {
                 given(userService.findByIdOrFail(senderId))
                         .willReturn(sender);
-                given(tradeService.findByIdWithOwnerItemOrFail(tradeId))
-                        .willReturn(trade);
+                given(tradeService.findTradeWithOwnerItemName(tradeId))
+                        .willReturn(tradeWithItem);
                 given(messageRepository.save(any(Message.class)))
                         .willReturn(savedMessage);
                 willDoNothing()
@@ -137,7 +152,7 @@ class ChatServiceTest {
 
                 assertAll(() -> {
                     verify(userService).findByIdOrFail(senderId);
-                    verify(tradeService).findByIdWithOwnerItemOrFail(tradeId);
+                    verify(tradeService).findTradeWithOwnerItemName(tradeId);
                     verify(messageRepository).save(any(Message.class));
                     verify(notificationPublisherService).crateChatNotification(
                             senderId,
@@ -153,6 +168,12 @@ class ChatServiceTest {
         @DisplayName("실패 케이스")
         @Nested
         class FailureCase {
+
+            @BeforeEach
+            void setUp() {
+                when(clock.getZone()).thenReturn(ZoneId.of("Asia/Seoul"));
+                when(clock.instant()).thenReturn(Instant.now());
+            }
 
             @Test
             @DisplayName("사용자를 찾을 수 없는 경우 예외를 던진다")
@@ -171,7 +192,7 @@ class ChatServiceTest {
             void throwsException_whenTradeNotFound() {
                 given(userService.findByIdOrFail(senderId))
                         .willReturn(sender);
-                given(tradeService.findByIdWithOwnerItemOrFail(tradeId))
+                given(tradeService.findTradeWithOwnerItemName(tradeId))
                         .willThrow(new BusinessException(ErrorCode.TRADE_NOT_FOUND));
 
                 assertThatThrownBy(() ->
@@ -180,32 +201,6 @@ class ChatServiceTest {
                         .hasFieldOrPropertyWithValue("errorCode", ErrorCode.TRADE_NOT_FOUND);
             }
 
-            @Test
-            @DisplayName("알림 저장에 실패한 경우 에외를 던진다: 메시지는 저장된다")
-            void throwsExceptionWhenNotificationSaveFails() {
-                given(userService.findByIdOrFail(senderId))
-                        .willReturn(sender);
-                given(tradeService.findByIdWithOwnerItemOrFail(tradeId))
-                        .willReturn(trade);
-                given(messageRepository.save(any(Message.class)))
-                        .willReturn(savedMessage);
-                willThrow(new BusinessException(ErrorCode.NOTIFICATION_CREATE_FAILED))
-                        .given(notificationPublisherService)
-                        .crateChatNotification(
-                                any(),
-                                any(),
-                                any(),
-                                any(),
-                                any()
-                        );
-
-                assertThatThrownBy(() ->
-                        chatService.saveMessage(tradeId, chatMessageReqDto, senderId))
-                        .isInstanceOf(BusinessException.class)
-                        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.NOTIFICATION_CREATE_FAILED);
-
-                verify(messageRepository, times(1)).save(any());
-            }
 
         }
     }

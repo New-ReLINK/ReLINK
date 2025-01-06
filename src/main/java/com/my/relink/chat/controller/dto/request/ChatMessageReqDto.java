@@ -7,6 +7,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 
 @NoArgsConstructor
 @Getter
@@ -24,5 +26,9 @@ public class ChatMessageReqDto {
                 .user(sender)
                 .trade(trade)
                 .build();
+    }
+
+    public Message toEntityWithCreateTime(Trade trade, User sender, LocalDateTime createdAt){
+        return Message.createWithTime(trade, sender, content, createdAt);
     }
 }
