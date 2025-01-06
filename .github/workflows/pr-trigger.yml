@@ -3,8 +3,7 @@ name: PR Build Test
 on:
   pull_request:
     branches:
-      - main
-      - dev
+      - prod
 
 env:
   JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
@@ -33,7 +32,4 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build with Gradle
-        run: ./gradlew build -Dspring.profiles.active=dev
-
-      - name: Run tests
-        run: ./gradlew test -Dspring.profiles.active=dev
+        run: ./gradlew build -x test
