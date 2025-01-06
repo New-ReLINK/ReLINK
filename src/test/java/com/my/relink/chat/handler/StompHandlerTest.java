@@ -52,7 +52,6 @@ class StompHandlerTest {
     @MockitoBean
     private JwtProvider jwtProvider;
 
-    @Autowired
     private final StompHandler stompHandler;
     private final MessageChannel messageChannel;
 

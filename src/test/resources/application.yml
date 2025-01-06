@@ -20,6 +20,9 @@ spring:
     properties:
       '[hibernate.default_batch_fetch_size]': 100
       '[hibernate.format_sql]': true
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+
     show-sql: true
   output:
     ansi:
