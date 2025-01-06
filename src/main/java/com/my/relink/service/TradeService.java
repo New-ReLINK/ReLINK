@@ -13,6 +13,7 @@ import com.my.relink.domain.point.pointHistory.repository.PointHistoryRepository
 import com.my.relink.domain.trade.Trade;
 import com.my.relink.domain.trade.TradeStatus;
 import com.my.relink.domain.trade.repository.TradeRepository;
+import com.my.relink.domain.trade.repository.dto.TradeWithOwnerItemNameDto;
 import com.my.relink.domain.user.Address;
 import com.my.relink.domain.user.User;
 import com.my.relink.domain.user.repository.UserRepository;
@@ -22,6 +23,8 @@ import com.my.relink.util.DateTimeUtil;
 import com.my.relink.util.MetricConstants;
 import io.micrometer.core.annotation.Timed;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -73,6 +76,14 @@ public class TradeService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
     }
 
+
+    @Cacheable(value = "tradeStatus", key = "#tradeId")
+    public TradeStatus findByIdOrFailWhenSend(Long tradeId) {
+        return tradeRepository.findById(tradeId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND))
+                .getTradeStatus();
+    }
+
     public Trade findByIdWithUsersOrFail(Long tradeId) {
         return tradeRepository.findByIdWithUsers(tradeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
@@ -90,6 +101,7 @@ public class TradeService {
     }
 
     @Transactional
+    @CacheEvict(value = "tradeStatus", key = "#tradeId")
     public TradeRequestRespDto requestTrade(Long tradeId, AuthUser authUser) {
 
         User currentUser = userRepository.findById(authUser.getId())
@@ -136,6 +148,7 @@ public class TradeService {
     }
 
     @Transactional
+    @CacheEvict(value = "tradeStatus", key = "#tradeId")
     public void cancelTradeRequest(Long tradeId, AuthUser authUser) {
 
         User currentUser = userRepository.findById(authUser.getId())
@@ -206,6 +219,7 @@ public class TradeService {
     }
 
     @Transactional
+    @CacheEvict(value = "tradeStatus", key = "#tradeId")
     public TradeCompleteRespDto completeTrade(Long tradeId, AuthUser authUser) {
         User currentUser = userRepository.findById(authUser.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
@@ -240,6 +254,7 @@ public class TradeService {
     }
 
     @Transactional
+    @CacheEvict(value = "tradeStatus", key = "#tradeId")
     public void getExchangeItemTrackingNumber(Long tradeId, TrackingNumberReqDto reqDto, AuthUser authUser) {
         User currentUser = userRepository.findById(authUser.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
@@ -316,6 +331,7 @@ public class TradeService {
     }
 
     @Transactional
+    @CacheEvict(value = "tradeStatus", key = "#tradeId")
     public TradeCancelRespDto cancelTrade(Long tradeId, TradeCancelReqDto reqDto, AuthUser authUser) {
         User currentUser = userRepository.findById(authUser.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
@@ -407,6 +423,12 @@ public class TradeService {
                     tradeRepository.delete(trade);
                     messageRepository.deleteMessage(trade.getId());
                 });
+    }
+
+    @Cacheable(value = "tradeInfo", key = "#tradeId")
+    public TradeWithOwnerItemNameDto findTradeWithOwnerItemName(Long tradeId) {
+        return tradeRepository.findTradeWithOwnerItemNameById(tradeId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.TRADE_NOT_FOUND));
     }
 }
 

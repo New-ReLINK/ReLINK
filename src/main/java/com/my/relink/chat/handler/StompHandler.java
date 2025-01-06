@@ -1,6 +1,8 @@
 package com.my.relink.chat.handler;
 
 import com.my.relink.chat.config.ChatPrincipal;
+import com.my.relink.chat.config.WebSocketSessionManager;
+import com.my.relink.chat.handler.metric.OperationMetrics;
 import com.my.relink.config.security.AuthUser;
 import com.my.relink.config.security.jwt.JwtProvider;
 import com.my.relink.domain.trade.Trade;
@@ -9,6 +11,7 @@ import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import com.my.relink.ex.SecurityFilterChainException;
 import com.my.relink.service.TradeService;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
@@ -21,7 +24,16 @@ import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
+
+import static com.my.relink.chat.handler.metric.OperationMetrics.*;
 
 @Component
 @RequiredArgsConstructor
@@ -30,6 +42,9 @@ public class StompHandler implements ChannelInterceptor {
 
     private final JwtProvider jwtProvider;
     private final TradeService tradeService;
+    private final Map<String, AtomicReference<OperationMetrics>> metricsMap = new ConcurrentHashMap<>();
+    private final WebSocketSessionManager sessionManager;
+
 
 
     /**
@@ -47,13 +62,21 @@ public class StompHandler implements ChannelInterceptor {
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
+        long startTime = System.currentTimeMillis();
+
         try {
             if (StompCommand.CONNECT.equals(accessor.getCommand())) {
                 handleConnect(accessor);
+                recordMetrics("CONNECT", System.currentTimeMillis() - startTime);
+                sessionManager.addSession(accessor.getSessionId());
             } else if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())){
                 handleSubscribe(accessor);
+                recordMetrics("SUBSCRIBE", System.currentTimeMillis() - startTime);
             } else if (StompCommand.SEND.equals(accessor.getCommand())){
                 handleSend(accessor);
+                recordMetrics("SEND", System.currentTimeMillis() - startTime);
+            } else if (StompCommand.DISCONNECT.equals(accessor.getCommand())){
+                sessionManager.removeSession(accessor.getSessionId());
             }
             return message;
         }catch (BusinessException e){
@@ -61,6 +84,30 @@ public class StompHandler implements ChannelInterceptor {
             return createErrorMessage(accessor, e);
         }
     }
+
+    private void recordMetrics(String operation, long latency) {
+        metricsMap.computeIfAbsent(operation,
+                        k -> new AtomicReference<>(new OperationMetrics()))
+                .updateAndGet(metrics -> metrics.addLatency(latency));
+    }
+
+
+    public Map<String, MetricsDTO> getMetrics() {
+        return metricsMap.entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> {
+                            OperationMetrics metrics = entry.getValue().get();
+                            return new MetricsDTO(
+                                    metrics.getCount(),
+                                    metrics.getAverageLatency(),
+                                    metrics.getMaxLatency(),
+                                    metrics.get95thPercentile()
+                            );
+                        }
+                ));
+    }
+
 
     private Message<?> createErrorMessage(StompHeaderAccessor accessor, BusinessException e){
         StompHeaderAccessor errorAccessor = StompHeaderAccessor.create(StompCommand.ERROR);
@@ -83,8 +130,8 @@ public class StompHandler implements ChannelInterceptor {
 
         if(destination != null && destination.startsWith("/app/chats")){
             Long tradeId = extractTradeIdFromSendPath(destination);
-            Trade trade = tradeService.findByIdWithUsersOrFail(tradeId);
-            validateTradeStatus(trade.getTradeStatus());
+            TradeStatus tradeStatus = tradeService.findByIdOrFailWhenSend(tradeId);
+            validateTradeStatus(tradeStatus);
         }
     }
 
@@ -159,7 +206,7 @@ public class StompHandler implements ChannelInterceptor {
      */
     private void validateTradeStatus(TradeStatus tradeStatus) {
         log.info("거래 상태 검증: {}", tradeStatus);
-        if (List.of(TradeStatus.CANCELED, TradeStatus.EXCHANGED, TradeStatus.UNAVAILABLE).contains(tradeStatus)) {
+        if (!TradeStatus.isChatAccessStatus(tradeStatus)) {
             log.debug("더 이상 채팅 세션을 제공하지 않는 거래 채팅방에 접근 시도 - tradeStatus : {}", tradeStatus);
             throw new BusinessException(ErrorCode.CHATROOM_ACCESS_DENIED);
         }
@@ -180,5 +227,6 @@ public class StompHandler implements ChannelInterceptor {
         String[] paths = destination.split("/");
         return Long.parseLong(paths[paths.length - 2]);
     }
+
 
 }

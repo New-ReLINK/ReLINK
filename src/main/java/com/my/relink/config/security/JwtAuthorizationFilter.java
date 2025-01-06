@@ -45,6 +45,6 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
     private boolean isTestEndpoint(HttpServletRequest request) {
         String uri = request.getRequestURI();
-        return uri.contains("charge") || uri.contains("/favicon.ico") ||uri.contains("payment");
+        return uri.contains("charge/users") || uri.contains("/favicon.ico") ||uri.contains("payment") ||uri.contains("charge-success");
     }
 }

@@ -9,6 +9,7 @@ import com.my.relink.ex.BusinessException;
 import com.my.relink.ex.ErrorCode;
 import com.my.relink.util.DateTimeUtil;
 import com.my.relink.util.DummyObject;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -19,6 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import java.time.*;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -45,19 +47,33 @@ class MessageServiceTest extends DummyObject {
     @Mock
     private DateTimeUtil dateTimeUtil;
 
+    @Mock
+    private Clock clock;
+
     @Nested
     @DisplayName("채팅 메시지 내역 조회 테스트")
     class GetChatRoomMessage{
         private final Long tradeId = 1L;
         private final int size = 10;
-        private final Long cursor = 100L;
+        private final Long cursor = System.currentTimeMillis();
         private final int DEFAULT_PAGE = 0;
+        private final ZoneId zoneId = ZoneId.systemDefault();
+        private LocalDateTime cursorDateTime;  //cursor에 해당하는 LocalDateTime
+        private LocalDateTime nowDateTime;     //현재 시간에 해당하는 LocalDateTime
 
         private Trade trade = mock(Trade.class);
 
         @Nested
         @DisplayName("성공 케이스")
         class SuccessCase{
+
+            @BeforeEach
+            void setUp() {
+                cursorDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(cursor), zoneId);
+                nowDateTime = LocalDateTime.now(zoneId);
+                when(clock.getZone()).thenReturn(zoneId);
+                when(clock.instant()).thenReturn(nowDateTime.toInstant(ZoneOffset.UTC));
+            }
 
             @Test
             @DisplayName("채팅 메시지 내역을 정상적으로 조회한다")
@@ -67,7 +83,7 @@ class MessageServiceTest extends DummyObject {
                 when(tradeService.findByIdOrFail(tradeId)).thenReturn(trade);
                 when(messageRepository.findMessagesBeforeCursor(
                         eq(tradeId),
-                        eq(cursor),
+                        eq(cursorDateTime),
                         eq(PageRequest.of(DEFAULT_PAGE, size+1))
                 )).thenReturn(messageList);
 
@@ -75,10 +91,15 @@ class MessageServiceTest extends DummyObject {
 
                 assertAll(
                         () -> assertThat(result.getMessageList()).hasSize(size),
-                        () -> assertThat(result.getNextCursor()).isEqualTo(messageList.get(size - 1).getId()),
+                        () -> assertThat(result.getNextCursor()).isEqualTo(
+                                messageList.get(size).getMessageTime()
+                                        .atZone(zoneId)
+                                        .toInstant()
+                                        .toEpochMilli()
+                        ),
                         () -> verify(messageRepository).findMessagesBeforeCursor(
                                 eq(tradeId),
-                                eq(cursor),
+                                eq(cursorDateTime),
                                 eq(PageRequest.of(DEFAULT_PAGE, size+1))
                         )
                 );
@@ -86,14 +107,14 @@ class MessageServiceTest extends DummyObject {
             }
 
             @Test
-            @DisplayName("cursor가 null일 때 MAX_VALUE로 설정하여 조회한다")
+            @DisplayName("cursor가 null일 때 현재 시간으로 설정하여 조회한다")
             void getChatRoomMessage_whenCursorIsNull(){
                 List<Message> messageList = createMessageList(size+1);
 
                 when(tradeService.findByIdOrFail(tradeId)).thenReturn(trade);
                 when(messageRepository.findMessagesBeforeCursor(
                         eq(tradeId),
-                        eq(Long.MAX_VALUE),
+                        any(LocalDateTime.class),
                         eq(PageRequest.of(DEFAULT_PAGE, size+1))
                 )).thenReturn(messageList);
 
@@ -101,11 +122,16 @@ class MessageServiceTest extends DummyObject {
 
                 assertAll(
                         () -> assertThat(result.getMessageList()).hasSize(size),
-                        () -> assertThat(result.getNextCursor()).isEqualTo(messageList.get(size - 1).getId()),
+                        () -> assertThat(result.getNextCursor()).isEqualTo(
+                                messageList.get(size).getMessageTime()
+                                        .atZone(zoneId)
+                                        .toInstant()
+                                        .toEpochMilli()
+                        ),
                         () -> verify(messageRepository).findMessagesBeforeCursor(
                                 eq(tradeId),
-                                eq(Long.MAX_VALUE),
-                                eq(PageRequest.of(DEFAULT_PAGE, size+1))
+                                any(LocalDateTime.class),
+                                eq(PageRequest.of(DEFAULT_PAGE, size + 1))
                         )
                 );
 
@@ -119,7 +145,7 @@ class MessageServiceTest extends DummyObject {
                 when(tradeService.findByIdOrFail(tradeId)).thenReturn(trade);
                 when(messageRepository.findMessagesBeforeCursor(
                         eq(tradeId),
-                        eq(cursor),
+                        eq(cursorDateTime),
                         eq(PageRequest.of(DEFAULT_PAGE, size+1))
                 )).thenReturn(messageList);
 
@@ -139,7 +165,7 @@ class MessageServiceTest extends DummyObject {
                 when(tradeService.findByIdOrFail(tradeId)).thenReturn(trade);
                 when(messageRepository.findMessagesBeforeCursor(
                         eq(tradeId),
-                        eq(cursor),
+                        eq(cursorDateTime),
                         eq(PageRequest.of(DEFAULT_PAGE, size+1))
 
                 )).thenReturn(messageList);
@@ -154,6 +180,8 @@ class MessageServiceTest extends DummyObject {
 
 
             private List<Message> createMessageList(int size) {
+                LocalDateTime baseTime = LocalDateTime.now(clock);
+
                 return IntStream.range(0, size)
                         .mapToObj(i -> {
                             return Message.builder()
@@ -164,6 +192,7 @@ class MessageServiceTest extends DummyObject {
                                                 .build()
                                         )
                                         .id((long) (100 - i))
+                                        .messageTime(baseTime.minusMinutes(i))
                                         .build();
                         })
                         .collect(Collectors.toList());
@@ -190,7 +219,7 @@ class MessageServiceTest extends DummyObject {
                 assertThatThrownBy(() -> messageService.getChatRoomMessages(tradeId, size, cursor))
                         .isInstanceOf(BusinessException.class);
 
-                verify(messageRepository, never()).findMessagesBeforeCursor(anyLong(), anyLong(), any(Pageable.class));
+                verify(messageRepository, never()).findMessagesBeforeCursor(anyLong(), any(LocalDateTime.class), any(Pageable.class));
 
             }
         }
