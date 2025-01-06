@@ -4,11 +4,21 @@ services:
     image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTIC_VERSION}
     environment:
       - discovery.type=single-node
-      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - ES_JAVA_OPTS=-Xms256m -Xmx256m
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
       - xpack.security.enabled=true
       - xpack.security.transport.ssl.enabled=false
       - xpack.security.http.ssl.enabled=false
+      # 추가 최적화 설정
+#      - bootstrap.memory_lock=true
+#      - cluster.name=docker-cluster
+#      # 캐시 설정 추가
+#      - indices.memory.index_buffer_size=10%
+#      - indices.queries.cache.size=5%
+#      # 샤드 수 제한
+#      - cluster.routing.allocation.total_shards_per_node=100
+#      # 필드 데이터 캐시 제한
+#      - indices.fielddata.cache.size=10%
     volumes:
       - ./elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/elasticsearch.yml
       - elasticsearch-data:/usr/share/elasticsearch/data
@@ -22,6 +32,7 @@ services:
     environment:
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
       - XPACK_MONITORING_ENABLED=false
+      - LS_JAVA_OPTS=-Xms128m -Xmx256m  # 메모리 최소화
     volumes:
       - ./logstash/logstash.yml:/usr/share/logstash/config/logstash.yml
       - ./logstash/pipeline:/usr/share/logstash/pipeline
