@@ -27,6 +27,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.client.WebSocketClient;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
@@ -48,9 +49,10 @@ class StompHandlerTest {
     @LocalServerPort
     private int port;
 
-    @Autowired
+    @MockitoBean
     private JwtProvider jwtProvider;
 
+    @Autowired
     private final StompHandler stompHandler;
     private final MessageChannel messageChannel;
 
