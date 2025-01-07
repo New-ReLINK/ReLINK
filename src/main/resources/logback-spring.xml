@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- 콘솔 Appender -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+
+    <!-- HTTP 로그 Logstash Appender -->
+    <springProfile name="prod">
+        <!-- Sentry Appender -->
+        <appender name="Sentry" class="io.sentry.logback.SentryAppender">
+            <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+                <level>WARN</level>
+            </filter>
+            <encoder>
+                <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            </encoder>
+        </appender>
+    </springProfile>
+
+    <springProfile name="local">
+        <!-- 콘솔 Appender -->
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            </encoder>
+        </appender>
+
+        <!-- Hibernate 바인딩 파라미터 로깅 -->
+        <logger name="org.hibernate.orm.jdbc.bind" level="TRACE" additivity="false">
+            <appender-ref ref="CONSOLE" />
+        </logger>
+
+        <!-- 애플리케이션 로깅 -->
+        <logger name="com.my.relink" level="DEBUG" additivity="false">
+            <appender-ref ref="CONSOLE" />
+        </logger>
+
+        <!-- WebSocket 로깅 -->
+        <logger name="org.springframework.web.socket" level="DEBUG" additivity="false">
+            <appender-ref ref="CONSOLE" />
+        </logger>
+
+        <!-- 메시징 로깅 -->
+        <logger name="org.springframework.messaging" level="DEBUG" additivity="false">
+            <appender-ref ref="CONSOLE" />
+        </logger>
+
+        <!-- Redis 로깅 -->
+        <logger name="org.springframework.data.redis" level="DEBUG" additivity="false">
+            <appender-ref ref="CONSOLE" />
+        </logger>
+
+        <!-- Root 레벨은 INFO로 설정 -->
+        <root level="INFO">
+            <appender-ref ref="CONSOLE" />
+        </root>
+    </springProfile>
+
+
+    <!--dev 환경 로거 -->
+    <springProfile name="dev">
+
+        <!-- Hibernate 로깅 설정 -->
+        <logger name="org.hibernate" level="INFO" additivity="false">
+            <appender-ref ref="CONSOLE"/>
+        </logger>
+
+        <logger name="org.hibernate.SQL" level="INFO" additivity="false">
+            <appender-ref ref="CONSOLE"/>
+        </logger>
+
+        <logger name="org.hibernate.orm.jdbc.bind" level="TRACE" additivity="false">
+            <appender-ref ref="CONSOLE"/>
+        </logger>
+
+
+        <!-- 애플리케이션 로거 설정 -->
+        <logger name="com.my.relink" level="DEBUG" additivity="false">
+            <appender-ref ref="CONSOLE"/>
+        </logger>
+
+        <logger name="com.my.relink.config.log.SystemLogAspect" level="INFO" additivity="false">
+            <appender-ref ref="CONSOLE"/>
+        </logger>
+
+        <logger name="com.my.relink.config.log.HttpLogFilter" level="INFO" additivity="false">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="HTTP_LOGSTASH"/>
+        </logger>
+
+        <!-- Spring Framework 로깅 -->
+        <logger name="org.springframework" level="INFO" additivity="false">
+            <appender-ref ref="CONSOLE"/>
+        </logger>
+
+        <root level="INFO">
+            <appender-ref ref="Sentry"/>
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="ASYNC_HTTP_LOGSTASH"/>
+        </root>
+    </springProfile>
+
+    <!-- Default Profile (e.g., local) -->
+    <springProfile name="local">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="Sentry"/>
+        </root>
+    </springProfile>
+
+    <!-- prod 환경 로거 설정 -->
+    <springProfile name="prod">
+
+        <!-- HTTP 로그 Logstash Appender -->
+        <appender name="HTTP_LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+            <destination>3.38.94.177:5001</destination>
+            <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+                <level>INFO</level>
+            </filter>
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+                <includeContext>true</includeContext>
+                <includeMdc>true</includeMdc>
+                <customFields>{"application":"ReLINK","logType":"HTTP"}</customFields>
+            </encoder>
+        </appender>
+
+
+        <!-- HTTP 로그용 Async Appender -->
+        <appender name="ASYNC_HTTP_LOGSTASH" class="ch.qos.logback.classic.AsyncAppender">
+            <appender-ref ref="HTTP_LOGSTASH"/>
+            <queueSize>512</queueSize>
+            <discardingThreshold>0</discardingThreshold>
+            <maxFlushTime>1000</maxFlushTime>
+            <includeCallerData>true</includeCallerData>
+            <neverBlock>true</neverBlock>
+        </appender>
+
+
+        <!-- 시스템 로그 Logstash Appender -->
+        <appender name="SYSTEM_LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+            <destination>3.38.94.177:5000</destination>
+            <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+                <level>INFO</level>
+            </filter>
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+                <includeContext>true</includeContext>
+                <includeMdc>true</includeMdc>
+                <customFields>{"application":"ReLINK","logType":"SYSTEM"}</customFields>
+            </encoder>
+        </appender>
+
+
+        <!-- 시스템 로그용 Async Appender -->
+        <appender name="ASYNC_SYSTEM_LOGSTASH" class="ch.qos.logback.classic.AsyncAppender">
+            <appender-ref ref="SYSTEM_LOGSTASH"/>
+            <queueSize>512</queueSize>
+            <discardingThreshold>0</discardingThreshold>
+            <maxFlushTime>1000</maxFlushTime>
+            <includeCallerData>true</includeCallerData>
+            <neverBlock>true</neverBlock>
+        </appender>
+
+        <!-- Hibernate 로깅 설정 -->
+        <logger name="org.hibernate" level="INFO" additivity="false">
+            <appender-ref ref="CONSOLE"/>
+        </logger>
+
+        <logger name="org.hibernate.SQL" level="INFO" additivity="false">
+            <appender-ref ref="CONSOLE"/>
+        </logger>
+
+        <logger name="org.hibernate.orm.jdbc.bind" level="TRACE" additivity="false">
+            <appender-ref ref="CONSOLE"/>
+        </logger>
+
+
+        <!-- 애플리케이션 로거 설정 -->
+        <logger name="com.my.relink" level="DEBUG" additivity="false">
+            <appender-ref ref="CONSOLE"/>
+        </logger>
+
+        <logger name="com.my.relink.config.log.SystemLogAspect" level="INFO" additivity="false">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="SYSTEM_LOGSTASH"/>
+        </logger>
+
+        <logger name="com.my.relink.config.log.HttpLogFilter" level="INFO" additivity="false">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="HTTP_LOGSTASH"/>
+        </logger>
+
+        <!-- Spring Framework 로깅 -->
+        <logger name="org.springframework" level="INFO" additivity="false">
+            <appender-ref ref="CONSOLE"/>
+        </logger>
+
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="Sentry"/>
+        </root>
+    </springProfile>
+
+
+
+</configuration>

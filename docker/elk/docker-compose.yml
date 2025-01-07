@@ -1,0 +1,69 @@
+
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTIC_VERSION}
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms256m -Xmx256m
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - xpack.security.enabled=true
+      - xpack.security.transport.ssl.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      # 추가 최적화 설정
+#      - bootstrap.memory_lock=true
+#      - cluster.name=docker-cluster
+#      # 캐시 설정 추가
+#      - indices.memory.index_buffer_size=10%
+#      - indices.queries.cache.size=5%
+#      # 샤드 수 제한
+#      - cluster.routing.allocation.total_shards_per_node=100
+#      # 필드 데이터 캐시 제한
+#      - indices.fielddata.cache.size=10%
+    volumes:
+      - ./elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/elasticsearch.yml
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    networks:
+      - elk
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:${ELASTIC_VERSION}
+    environment:
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - XPACK_MONITORING_ENABLED=false
+      - LS_JAVA_OPTS=-Xms128m -Xmx256m  # 메모리 최소화
+    volumes:
+      - ./logstash/logstash.yml:/usr/share/logstash/config/logstash.yml
+      - ./logstash/pipeline:/usr/share/logstash/pipeline
+    ports:
+      - 5000:5000 #시스템 로그
+      - 5001:5001 #http 로그
+      - 9600:9600
+    depends_on:
+      - elasticsearch
+    networks:
+      - elk
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:${ELASTIC_VERSION}
+    environment:
+      - KIBANA_SYSTEM_PASSWORD=${KIBANA_SYSTEM_PASSWORD}
+      - ELASTICSEARCH_USERNAME=kibana_system
+      - ELASTICSEARCH_PASSWORD=${KIBANA_SYSTEM_PASSWORD}
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    volumes:
+      - ./kibana/kibana.yml:/usr/share/kibana/kibana.yml
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    networks:
+      - elk
+
+networks:
+  elk:
+    driver: bridge
+
+volumes:
+  elasticsearch-data:

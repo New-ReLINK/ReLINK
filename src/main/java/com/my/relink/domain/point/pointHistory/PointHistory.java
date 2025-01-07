@@ -5,13 +5,15 @@ import com.my.relink.domain.BaseEntity;
 import com.my.relink.domain.point.Point;
 import com.my.relink.domain.trade.Trade;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
+import java.time.LocalDate;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
+@AllArgsConstructor
+@Builder
 public class PointHistory extends BaseEntity {
 
     @Id
@@ -31,4 +33,25 @@ public class PointHistory extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     private PointTransactionType pointTransactionType;
+
+    public static PointHistory createChargeHistory(Point point){
+        return PointHistory.builder()
+                .point(point)
+                .pointTransactionType(PointTransactionType.CHARGE)
+                .amount(point.getAmount())
+                .build();
+    }
+
+    public static PointHistory create(Integer amount, PointTransactionType pointTransactionType, Point point, Trade trade) {
+        PointHistory pointHistory = new PointHistory();
+        pointHistory.amount = amount;
+        pointHistory.pointTransactionType = pointTransactionType;
+        pointHistory.point = point;
+        pointHistory.trade = trade;
+        return pointHistory;
+    }
+
+    public boolean isRefunded(){
+        return this.pointTransactionType == PointTransactionType.RETURN;
+    }
 }
